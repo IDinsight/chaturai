@@ -1,0 +1,2322 @@
+{
+    "data": [
+        {
+            "id": "67e527a6f8b697fadc0b6f18",
+            "name": "Electronics Mechanic",
+            "code": "AO591194",
+            "short_description": null,
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 1,
+            "gender_type": "Male",
+            "stipend_from": 15000,
+            "stipend_upto": 16000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "664839e50d0c7951fa003cfc",
+            "updated_by": null,
+            "created_at": {
+                "date": "2025-03-27 15:55:42.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "1 minute ago",
+            "updated_at": {
+                "date": "2025-03-27 15:55:42.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "5c80cb308efcd77ab34f670e",
+                "name": "Electronics Mechanic",
+                "type": "designated",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e848b",
+                    "name": "Electronics",
+                    "code": "S10",
+                    "is_pwd": null,
+                    "chairman_name": "Mr. Amrit Manwani",
+                    "chairman_logo": "documents\/user\/chairman_logo\/0Ll0pBPkzqzO2qYkbgrojh1Hc2JzRAdHFfhI8MweX02esd12F2F9MbqgCgvJ.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/1R4jNrJ8dUxRrj2iAHSADWDF6Q6ur4fXmF0jtvWDw4XcMg5JTWdT3kLFGZfh.jpeg",
+                    "ceo_name": "Dr. Abhilasha Gaur",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/JygikIkda2FA4LsCaZ3i4G4Baernzt76j2f9yFaRONaO4BIH3a0hRyzfLWIa.jpg",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "5e52c04a8efcd74f36634eeb",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "5f76d2a744f7d72e9562ba64",
+                    "bt_duration": 1000,
+                    "ojt_duration": 3120,
+                    "bt_days_duration": 180,
+                    "ojt_days_duration": 540,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "L G Balakrishnan and Bros Ltd",
+                "code": "E05242700007",
+                "employer_details": 515,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 3
+            },
+            "locations": [
+                {
+                    "id": "66484a45b2ca27d4e90995e9",
+                    "location_name": "L G Balakrishnan and Bros Ltd",
+                    "code": "LOC-165934",
+                    "address": {
+                        "id": "66484a45b2ca27d4e90995ea",
+                        "address_1": "Plot No A-9\/1 Additional Butibori Industrial Area MIDC Village Tarsi Nagpur Maharashtra -441122",
+                        "address_2": null,
+                        "city": "Butibori",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5acbb46e1f174875c650612d",
+                        "district_name": "Nagpur",
+                        "zip_code": "441122",
+                        "landmark": null,
+                        "location_name": "L G Balakrishnan and Bros Ltd",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5279311eae6c0f003a56f",
+            "name": "Automotive Maintenance Technician-Electrical",
+            "code": "AO591193",
+            "short_description": "ITI Electrical \/ Assembly Technician",
+            "naps_benefit": true,
+            "number_of_vacancies": 20,
+            "available_vacancies": 20,
+            "gender_type": "Male,Female",
+            "stipend_from": 5000,
+            "stipend_upto": 15000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "675fbd65b0b1691a3e003004",
+            "updated_by": "675fbd65b0b1691a3e003004",
+            "created_at": {
+                "date": "2025-03-27 15:55:23.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "1 minute ago",
+            "updated_at": {
+                "date": "2025-03-27 15:55:50.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "61ad89054e6a026fb94a1b0b",
+                "name": "Automotive Maintenance Technician-Electrical",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8485",
+                    "name": "Automotive",
+                    "code": "S04",
+                    "is_pwd": null,
+                    "chairman_name": "F R Singhvi",
+                    "chairman_logo": "documents\/user\/chairman_logo\/k7T87vtxAuNV1QrrK40B1eOsAcYKwrvbPCLT0Mk1reopKk1EtcsOpcQjIPB0.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/8fq1wUecoHN8xUMhkVUtgDYIREbeXenexqjqTUUnrGIIf3jbCP8K4qOSytP7.jpeg",
+                    "ceo_name": "Arindam Lahiri",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/2It9O7PSqmlqPs4GX8m27ri5wJRpV05lLEKGYn2UugkxGYPxJmx7pMPJX33b.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "679223418192a3985f057c08",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 4
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "pursuing continuous schooling",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "67922342cb3c2eed83006007",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5692",
+                            "title": "ITI",
+                            "minimum_stipend_amount": 7000,
+                            "level": 10
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "61d32c79f1c92036b925c1c4",
+                            "title": "Any"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "8th grade pass with 2 years of NTC",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5692",
+                            "title": "ITI"
+                        },
+                        "scheme": {
+                            "id": "61d32c79f1c92036b925c1c4",
+                            "title": null
+                        }
+                    },
+                    {
+                        "id": "679223425d6ec9cb66094a54",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62d1108d4b8fd17ab15f365a",
+                    "bt_duration": null,
+                    "ojt_duration": 4032,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 720,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "Reflections Interior Products Pvt Ltd",
+                "code": "E12242900030",
+                "employer_details": 200,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 2
+            },
+            "locations": [
+                {
+                    "id": "67e52347bb194d092a0a44b1",
+                    "location_name": "ITI Industrial Estate, Mahadevpura post, Bengaluru",
+                    "code": "LOC-189182",
+                    "address": {
+                        "id": "67e52347bb194d092a0a44b2",
+                        "address_1": "B-56, 5th Cross, ITI Industrial Estate",
+                        "address_2": "Mahadevapura Post,  Whitefield Main Road",
+                        "city": "Bangalore",
+                        "state_id": "5acbb46e1f174875c6506097",
+                        "state_name": "Karnataka",
+                        "district_id": "5acbb46e1f174875c65060b1",
+                        "district_name": "Bengaluru Urban",
+                        "zip_code": "560048",
+                        "landmark": null,
+                        "location_name": "ITI Industrial Estate, Mahadevpura post, Bengaluru",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5278c233d6f366e0d5060",
+            "name": "Retail Sales Executive",
+            "code": "AO591192",
+            "short_description": "Retail Sales Executive",
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 1,
+            "gender_type": "Male,Female",
+            "stipend_from": 5000,
+            "stipend_upto": 20000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ce4d07044f7d72daa348e56",
+            "updated_by": "5ce4d07044f7d72daa348e56",
+            "created_at": {
+                "date": "2025-03-27 15:55:16.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "1 minute ago",
+            "updated_at": {
+                "date": "2025-03-27 15:55:16.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "674874307cb433d1f2082835",
+                "name": "Retail Sales Executive",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e84a0",
+                    "name": "Retail",
+                    "code": "S31",
+                    "is_pwd": null,
+                    "chairman_name": "Hari Menon",
+                    "chairman_logo": "documents\/user\/chairman_logo\/6UIznDMNBuEZnCUoKFmZ0osBp0KwbD83U6i4ahHcL7eKin9ZFmxsPh7N118A.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/vwIbq4myWZAtDEoXBlIFxlT0ujGbWO8gbiqYoE6aevtb9lnWs9ph29AdkNtp.png",
+                    "ceo_name": "James A. Raphael",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/926nN5JHKlfY1a32QBil3oo92AvPsk2lwsNYa96jy1so2yO6vEJsgTfGMgz8.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "674874314e66c9d7ea08b7e9",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "3 -year relevant experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "6749ae230b5ded7c44086829",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566d",
+                            "title": "Humanity"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "Science, Commerce, Humanity, in any Discipline",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566d",
+                            "title": null
+                        }
+                    },
+                    {
+                        "id": "674d7c2acf8cf0db680f2624",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others",
+                            "minimum_stipend_amount": 5000,
+                            "level": 1
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": "Previous relevant Qualification of NSQF Level 3.0",
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "3-year relevant experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "6748743bd1120147b90fc0e2",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 180,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "YASHASWI ACADEMY FOR SKILLS",
+                "code": "E07192700003",
+                "employer_details": 55500,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 3
+            },
+            "locations": [
+                {
+                    "id": "617a7fe3c98fe00c625259b6",
+                    "location_name": "DANGEE DUMS LIMITED",
+                    "code": "LOC-95731",
+                    "address": {
+                        "id": "617a7fe3c98fe00c625259b7",
+                        "address_1": "4\/A, Ketan Society Nr. Sardar Patel Colony, Naranpura Ahmedabad",
+                        "address_2": null,
+                        "city": "Ahmedabad",
+                        "state_id": "5acbb46f1f174875c65062ff",
+                        "state_name": "Gujarat",
+                        "district_id": "5acbb46f1f174875c6506301",
+                        "district_name": "Ahmedabad",
+                        "zip_code": "380014",
+                        "landmark": null,
+                        "location_name": "DANGEE DUMS LIMITED",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e52784d476a7b9a40f2252",
+            "name": "Electrician",
+            "code": "AO591191",
+            "short_description": null,
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 1,
+            "gender_type": "Male",
+            "stipend_from": 6000,
+            "stipend_upto": 8050,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ae01ec497489e6a85ff917c",
+            "updated_by": null,
+            "created_at": {
+                "date": "2025-03-27 15:55:08.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "1 minute ago",
+            "updated_at": {
+                "date": "2025-03-27 15:55:08.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "5c80ca298efcd779f709b202",
+                "name": "Electrician",
+                "type": "designated",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5f5675648efcd749b831b046",
+                    "name": "Electrical (Including New and Renewable Energy)",
+                    "code": "SD05",
+                    "is_pwd": null,
+                    "chairman_name": null,
+                    "chairman_logo": null,
+                    "chairman_signatureimage": null,
+                    "ceo_name": null,
+                    "ceo_signatureimage": null,
+                    "default_signature": null
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "5e52c04a8efcd74f36634ee7",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "Science and Mathematics",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "5f9d8399f6f9d752726ee09f",
+                    "bt_duration": 1000,
+                    "ojt_duration": 2880,
+                    "bt_days_duration": 180,
+                    "ojt_days_duration": 540,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "LUBRIZOL ADVANCED MATERIALS INDIA PRIVATE LIMITED",
+                "code": "E06172400053",
+                "employer_details": 80,
+                "registration_type": "company",
+                "working_days": 6,
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "5ad998f69294f7a831b6c15f",
+                    "location_name": "DAHEJ",
+                    "code": "LOC-026035",
+                    "address": {
+                        "id": "5c45ce83ffa5e909b475f2c2",
+                        "address_1": "Lubrizol Advanced Materials India Pvt Ltd.,  Plot no D-2 \/ 11\/ B \/ 1,  GIDC Dahej- II ,",
+                        "address_2": "Taluka Vagra, District- Bharuch,  Gujarat- 392130. India.",
+                        "city": "DAHEJ",
+                        "state_id": "5acbb46f1f174875c65062ff",
+                        "state_name": "Gujarat",
+                        "district_id": "5acbb46f1f174875c6506318",
+                        "district_name": "Bharuch",
+                        "zip_code": "392130",
+                        "landmark": null,
+                        "location_name": "DAHEJ",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e52721927d09de790aa126",
+            "name": "Automotive Quality Control Assistant",
+            "code": "AO591190",
+            "short_description": "Quality Asst",
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 1,
+            "gender_type": "Male,Female",
+            "stipend_from": 5000,
+            "stipend_upto": 13500,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "60100b508efcd756d523c6e6",
+            "updated_by": "60100b508efcd756d523c6e6",
+            "created_at": {
+                "date": "2025-03-27 15:53:29.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "3 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:53:29.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "6195cdb387d928091d30f909",
+                "name": "Automotive Quality Control Assistant",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8485",
+                    "name": "Automotive",
+                    "code": "S04",
+                    "is_pwd": null,
+                    "chairman_name": "F R Singhvi",
+                    "chairman_logo": "documents\/user\/chairman_logo\/k7T87vtxAuNV1QrrK40B1eOsAcYKwrvbPCLT0Mk1reopKk1EtcsOpcQjIPB0.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/8fq1wUecoHN8xUMhkVUtgDYIREbeXenexqjqTUUnrGIIf3jbCP8K4qOSytP7.jpeg",
+                    "ceo_name": "Arindam Lahiri",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/2It9O7PSqmlqPs4GX8m27ri5wJRpV05lLEKGYn2UugkxGYPxJmx7pMPJX33b.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "6792120befaff33ff80091f9",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5661",
+                            "title": "5th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 1
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "4 Years of relevant experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5661",
+                            "title": "5th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "6792120c005bee620e03eab7",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 4
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "and continuous studying",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "67921217688ba2f64b011762",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5665",
+                            "title": "9th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 5
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "Any",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5665",
+                            "title": "9th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62d03949a7fd251f423a623c",
+                    "bt_duration": null,
+                    "ojt_duration": 2016,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "ANATATECH PRIVATE LIMITED",
+                "code": "E01232800038",
+                "employer_details": 7200,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "63ce25f82000fb6e3b06f158",
+                    "location_name": "Anatatech Private Limited",
+                    "code": "LOC-126870",
+                    "address": {
+                        "id": "63ce25f82000fb6e3b06f159",
+                        "address_1": "Survey No 579\/1, 577\/3, 572\/2,571,578,580\/2,580\/1,415-Part,417,",
+                        "address_2": "Munimadugu Village, Penukonda Mandal,",
+                        "city": "PUTTAPARTHI",
+                        "state_id": "5acbb46e1f174875c6506020",
+                        "state_name": "Andhra Pradesh",
+                        "district_id": "631b7c76f1c920341e66b6fd",
+                        "district_name": "Sri Sathya Sai",
+                        "zip_code": "515110",
+                        "landmark": null,
+                        "location_name": "Anatatech Private Limited",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e527137ea8f6655c030a2c",
+            "name": "UNARMED SECURITY GUARD",
+            "code": "AO591189",
+            "short_description": "7 th",
+            "naps_benefit": false,
+            "number_of_vacancies": 3,
+            "available_vacancies": 2,
+            "gender_type": null,
+            "stipend_from": 5000,
+            "stipend_upto": 9000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ae01e9e97489e6a85fedea7",
+            "updated_by": "5ae01e9e97489e6a85fedea7",
+            "created_at": {
+                "date": "2025-03-27 15:53:15.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "3 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:53:59.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "643e2a06e1b73232f719ed52",
+                "name": "UNARMED SECURITY GUARD",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8499",
+                    "name": "Management & Entrepreneurship and Professional Skills",
+                    "code": "S24",
+                    "is_pwd": null,
+                    "chairman_name": "R. Mukundan",
+                    "chairman_logo": "documents\/user\/chairman_logo\/NirRiSwRZPVD4KIZeVbUp2Be2CUtjx8TrXmN4BKasxtArSlUweLNJBqKfnZs.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/IJ4lcs7seQoUpdd71N5yCUH3c5IUebpJBas2zqDesIRjUEP01D6Xe0TfCNPA.jpg",
+                    "ceo_name": "Col. Anil Kumar Pokhriyal",
+                    "ceo_signatureimage": "documents\/user\/signature_image\/gAYS6nSdcU2Zph67njyee5EFxr1BHcqnvMFa05iiNVs6rF3DapEtf4fDwv1x.jpg",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "643e2a07e1b73232f67126d2",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5661",
+                            "title": "5th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 1
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5661",
+                            "title": "5th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "643e2a078c6d300d855a2eba",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "TIRTH AGRO TECHNOLOGY PVT. LTD.",
+                "code": "E12152400259",
+                "employer_details": 2000,
+                "registration_type": "company",
+                "working_days": 6,
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "5ad998e49294f7a831b60e8a",
+                    "location_name": "TIRTH AGRO TECHNOLOGY PRIVATE LIMITED UNIT-I",
+                    "code": "LOC-003148",
+                    "address": {
+                        "id": "5c45cd5cffa5e909b47495fa",
+                        "address_1": "\"SHAKTIMAN\" Survey No-108\/1, Plto No-b, NH-27, Nr-Bharudi Toll Plaza(village), Tal-Gondal.",
+                        "address_2": null,
+                        "city": "rajkot",
+                        "state_id": "5acbb46f1f174875c65062ff",
+                        "state_name": "Gujarat",
+                        "district_id": "5acbb46f1f174875c6506304",
+                        "district_name": "Rajkot",
+                        "zip_code": "360311",
+                        "landmark": null,
+                        "location_name": "TIRTH AGRO TECHNOLOGY PRIVATE LIMITED UNIT-I",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5270f643f81ecba001836",
+            "name": "Electrician",
+            "code": "AO591188",
+            "short_description": null,
+            "naps_benefit": true,
+            "number_of_vacancies": 25,
+            "available_vacancies": 21,
+            "gender_type": null,
+            "stipend_from": 6000,
+            "stipend_upto": 12000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ce4d07044f7d72daa348e56",
+            "updated_by": null,
+            "created_at": {
+                "date": "2025-03-27 15:53:11.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "3 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:56:45.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "5c80ca298efcd779f709b202",
+                "name": "Electrician",
+                "type": "designated",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5f5675648efcd749b831b046",
+                    "name": "Electrical (Including New and Renewable Energy)",
+                    "code": "SD05",
+                    "is_pwd": null,
+                    "chairman_name": null,
+                    "chairman_logo": null,
+                    "chairman_signatureimage": null,
+                    "ceo_name": null,
+                    "ceo_signatureimage": null,
+                    "default_signature": null
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "5e52c04a8efcd74f36634ee7",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "Science and Mathematics",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "5f9d8399f6f9d752726ee09f",
+                    "bt_duration": 1000,
+                    "ojt_duration": 2880,
+                    "bt_days_duration": 180,
+                    "ojt_days_duration": 540,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "INTERNATIONAL TRACTORS LIMITED",
+                "code": "E05200300135",
+                "employer_details": 3219,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "5f4788f844f7d724c57dc7a6",
+                    "location_name": "INTERNATIONAL TRACTORS LTD",
+                    "code": "LOC-71618",
+                    "address": {
+                        "id": "5f4788f844f7d724c57dc7a7",
+                        "address_1": "VILLAGE CHAK GUJRAN",
+                        "address_2": "JALANDHAR ROAD",
+                        "city": "HOSHIARPUR",
+                        "state_id": "5acbb46e1f174875c650617d",
+                        "state_name": "Punjab",
+                        "district_id": "5acbb46e1f174875c6506186",
+                        "district_name": "Hoshiarpur",
+                        "zip_code": "146001",
+                        "landmark": null,
+                        "location_name": "INTERNATIONAL TRACTORS LTD",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e52669a523f10c8403f2c8",
+            "name": "Accounts Assistant v1.0",
+            "code": "AO591187",
+            "short_description": "Accounts Assistant V1.0",
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 0,
+            "gender_type": "Male,Female",
+            "stipend_from": 7000,
+            "stipend_upto": 20000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ce4d07044f7d72daa348e56",
+            "updated_by": "5ce4d07044f7d72daa348e56",
+            "created_at": {
+                "date": "2025-03-27 15:50:25.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "6 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:51:14.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "66c6f5b6c01c0c478b0616f2",
+                "name": "Accounts Assistant v1.0",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8486",
+                    "name": "Banking, Financial Services & Insurance (BFSI)",
+                    "code": "S05",
+                    "is_pwd": null,
+                    "chairman_name": "V R Iyer",
+                    "chairman_logo": "documents\/user\/chairman_logo\/lAhw2KUoWhwrgHHPRGngNWVjkNETSL0vUaPr5aSi79D86XkTHitXYrOybjW7.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/dP3usEPI8ZZ9bc8Ez3ingS8sJFpSKkFtDTwKr2vyQAsnebF6WGf6ScWjFTWt.jpg",
+                    "ceo_name": "Soumya Ranjan",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/DA2Dm3ouiS7UL1dDEl8LTUvjLpmm1ydokwFVtZhimRETT2tsrFKhxx7bvF3b.jpg",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "66c6f5b7a89faa208b0e4453",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": "Commerce"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": null
+                        }
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "66c6f5b78fc3e357c40b3ec2",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "Garware Hi-Tech Films Limited",
+                "code": "E03232700213",
+                "employer_details": 1594,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "641c31b1977ed1487156fb5f",
+                    "location_name": "M\/s Garware Hi-Tech Films Limited Waluj",
+                    "code": "LOC-132201",
+                    "address": {
+                        "id": "641c31b1977ed1487156fb60",
+                        "address_1": "Naigaon, Aurangabad Pune Road, Waluj, Aurangabad, Maharashtra",
+                        "address_2": null,
+                        "city": "Aurangabad",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5cf9c66d8efcd776763b975a",
+                        "district_name": "Chhatrapati Sambhajinagar",
+                        "zip_code": "431133",
+                        "landmark": null,
+                        "location_name": "M\/s Garware Hi-Tech Films Limited Waluj",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5266812dc6cbfb30753ab",
+            "name": "Automotive Machining Operator",
+            "code": "AO591186",
+            "short_description": "Automotive Machining Operator",
+            "naps_benefit": false,
+            "number_of_vacancies": 1,
+            "available_vacancies": 0,
+            "gender_type": "Male,Female",
+            "stipend_from": 12900,
+            "stipend_upto": 12901,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5d7b1bca8efcd734f01635e3",
+            "updated_by": "5d7b1bca8efcd734f01635e3",
+            "created_at": {
+                "date": "2025-03-27 15:50:24.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "6 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:54:15.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "616ddaa1c98fe02b9c78e518",
+                "name": "Automotive Machining Operator",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8485",
+                    "name": "Automotive",
+                    "code": "S04",
+                    "is_pwd": null,
+                    "chairman_name": "F R Singhvi",
+                    "chairman_logo": "documents\/user\/chairman_logo\/k7T87vtxAuNV1QrrK40B1eOsAcYKwrvbPCLT0Mk1reopKk1EtcsOpcQjIPB0.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/8fq1wUecoHN8xUMhkVUtgDYIREbeXenexqjqTUUnrGIIf3jbCP8K4qOSytP7.jpeg",
+                    "ceo_name": "Arindam Lahiri",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/2It9O7PSqmlqPs4GX8m27ri5wJRpV05lLEKGYn2UugkxGYPxJmx7pMPJX33b.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "6799f0b1d6d3b0395b00a782",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5665",
+                            "title": "9th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 5
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5665",
+                            "title": "9th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "6799f0b227216736da0f4ed1",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th",
+                            "minimum_stipend_amount": 5000,
+                            "level": 4
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "1 Years of experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5664",
+                            "title": "8th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "6799f0b3d6d3b0395b00a786",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others",
+                            "minimum_stipend_amount": 5000,
+                            "level": 1
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": "Certificate-NSQF",
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "(Automotive Machining Assistant Level 2) with 2 Years of experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62d021c6a7fd25164d1391d6",
+                    "bt_duration": null,
+                    "ojt_duration": 2016,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "ENDURANCE TECHNOLOGIES LTD",
+                "code": "E05202701553",
+                "employer_details": 11800,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 3
+            },
+            "locations": [
+                {
+                    "id": "5eb44ba18c2ad4516bc06d68",
+                    "location_name": "K 226\/1 and K227,",
+                    "code": "LOC-60534",
+                    "address": {
+                        "id": "5eb44ba18c2ad4516bc06d69",
+                        "address_1": "E 92, MIDC INDUSTRIAL AREA, WALUJ, AURANGABAD",
+                        "address_2": null,
+                        "city": "AURANGABAD",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5cf9c66d8efcd776763b975a",
+                        "district_name": "Chhatrapati Sambhajinagar",
+                        "zip_code": "431136",
+                        "landmark": null,
+                        "location_name": "K 226\/1 and K227,",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5261d377d32a9560457cf",
+            "name": "Goods  Packaging  Machine  Operator",
+            "code": "AO591185",
+            "short_description": "packaging",
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 1,
+            "gender_type": "Male,Female",
+            "stipend_from": 6000,
+            "stipend_upto": 13500,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "60100b508efcd756d523c6e6",
+            "updated_by": "60100b508efcd756d523c6e6",
+            "created_at": {
+                "date": "2025-03-27 15:49:09.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "7 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:49:09.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "62d7aba8a7fd2573c0105da1",
+                "name": "Goods  Packaging  Machine  Operator",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8498",
+                    "name": "Logistics",
+                    "code": "S23",
+                    "is_pwd": null,
+                    "chairman_name": "Cyrus Jamshed Guzder",
+                    "chairman_logo": "documents\/user\/chairman_logo\/dXjLlzGDTap08nR747SbWzMvZNvaZEoQ8Je4IsaxLVl6CXTTGvsDoYcA6wlP.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/3n8oyL0bVdsBKRzsLT3s3U2YV12sgi1Yr9aFkLEFiqB8PsXUcMKFOvvuJnp6.png",
+                    "ceo_name": "Mr. Ravikanth Yamarthy",
+                    "ceo_signatureimage": "documents\/user\/signature_image\/AdKbogKtwMIZ4KslbGShOq2bbQ7mlOkbCZCFFaYNX6wSLKBeZymPf70EZHeV.jpg",
+                    "default_signature": "ceo"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "62d7aba99710fe5e5a07cbf8",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62d7aba9a7fd2573a96a6acc",
+                    "bt_duration": null,
+                    "ojt_duration": 2016,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "ANATATECH PRIVATE LIMITED",
+                "code": "E01232800038",
+                "employer_details": 7200,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "63ce25f82000fb6e3b06f158",
+                    "location_name": "Anatatech Private Limited",
+                    "code": "LOC-126870",
+                    "address": {
+                        "id": "63ce25f82000fb6e3b06f159",
+                        "address_1": "Survey No 579\/1, 577\/3, 572\/2,571,578,580\/2,580\/1,415-Part,417,",
+                        "address_2": "Munimadugu Village, Penukonda Mandal,",
+                        "city": "PUTTAPARTHI",
+                        "state_id": "5acbb46e1f174875c6506020",
+                        "state_name": "Andhra Pradesh",
+                        "district_id": "631b7c76f1c920341e66b6fd",
+                        "district_name": "Sri Sathya Sai",
+                        "zip_code": "515110",
+                        "landmark": null,
+                        "location_name": "Anatatech Private Limited",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e525db9b457978f90edcea",
+            "name": "Software Developer_V3",
+            "code": "AO591184",
+            "short_description": "Software Developer_V3",
+            "naps_benefit": true,
+            "number_of_vacancies": 50,
+            "available_vacancies": 50,
+            "gender_type": "Female,Male",
+            "stipend_from": 7000,
+            "stipend_upto": 40000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5cd3f9cbf6f9d73a596c053c",
+            "updated_by": "5cd3f9cbf6f9d73a596c053c",
+            "created_at": {
+                "date": "2025-03-27 15:48:03.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "8 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:48:03.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 0,
+            "course": {
+                "id": "62cd38fc9710fe18b14ef284",
+                "name": "Software Developer_V3",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8495",
+                    "name": "IT-ITeS",
+                    "code": "S20",
+                    "is_pwd": null,
+                    "chairman_name": "Krishnan Ramanujam",
+                    "chairman_logo": "documents\/user\/chairman_logo\/Y46lAJ1vhWWdpK2L1xyMsVtl5MwYSDzK2oamjq5dbdql5vBeiFE0Q5mw1IEW.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/Ktg9eBtglPXQJVQCDRyj376rqVhyMm6qWLGLM8qOORBJE7003QjBKisiqx37.jpg",
+                    "ceo_name": "Dr Abhilasha Gaur",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/XgvArgXZlpiu4RzKGRpMbRDz5jNjtFqXTlzWHl8tzJguU93ljETDAf6zQsxZ.png",
+                    "default_signature": "ceo"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "63dcaec29e4ccf158d57fb12",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566c",
+                            "title": "Science"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566c",
+                            "title": null
+                        }
+                    },
+                    {
+                        "id": "63dcaec3db9c16454a251933",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": "Commerce"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": null
+                        }
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62cd38fc4b8fd11a652be857",
+                    "bt_duration": null,
+                    "ojt_duration": 1008,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 180,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "LNW India Solutions Private Limited",
+                "code": "E05243300006",
+                "employer_details": 1682,
+                "registration_type": "company",
+                "working_days": "5",
+                "state_count": 3
+            },
+            "locations": [
+                {
+                    "id": "664ae29de9930c36cf06681f",
+                    "location_name": "LNW - Bangalore",
+                    "code": "LOC-166042",
+                    "address": {
+                        "id": "664ae29de9930c36cf066820",
+                        "address_1": "Level 8, Navigator Block, ITPB",
+                        "address_2": null,
+                        "city": "Bangalore",
+                        "state_id": "5acbb46e1f174875c6506097",
+                        "state_name": "Karnataka",
+                        "district_id": "5acbb46e1f174875c65060b1",
+                        "district_name": "Bengaluru Urban",
+                        "zip_code": "560066",
+                        "landmark": null,
+                        "location_name": "LNW - Bangalore",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5257ee52ae26c66082a82",
+            "name": "Loader Operator (Mining)",
+            "code": "AO591183",
+            "short_description": "Loader operator",
+            "naps_benefit": true,
+            "number_of_vacancies": 5,
+            "available_vacancies": 4,
+            "gender_type": null,
+            "stipend_from": 6000,
+            "stipend_upto": 15000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "672cb35c9bbfcbda2b0f6be8",
+            "updated_by": "672cb35c9bbfcbda2b0f6be8",
+            "created_at": {
+                "date": "2025-03-27 15:46:30.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "10 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:53:38.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "64e9a5388c6d3036f1581e07",
+                "name": "Loader Operator (Mining)",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e849b",
+                    "name": "Mining",
+                    "code": "S26",
+                    "is_pwd": null,
+                    "chairman_name": "Pankaj Kumar Satija",
+                    "chairman_logo": "documents\/user\/chairman_logo\/pzm7v0YGubtkgfrpn5r2qYkWRGTaTOBCt2uTF33TBntdXRpVhkA42GxKZgnw.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/kwI1kkDB6xAZDcFYLdhvlpEx0AT44Mau64O19rtPtNudBztfHvwroImg3de7.png",
+                    "ceo_name": "Navneet Kumar",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/t01I2akRtnxBfelKleemLlJUyevajIPmj6ILP8QG3trmDjRNzDKDTCr7XrYb.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "64e9a538ce770227263c6b93",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "64e9a538effe1e438d3f6969",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "SMS Limited \u2013 Mining Division",
+                "code": "E11242700036",
+                "employer_details": 70,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "672cbc20e4a542fff308e971",
+                    "location_name": "SMS Corporate",
+                    "code": "LOC-179476",
+                    "address": {
+                        "id": "672cbc20e4a542fff308e972",
+                        "address_1": "20 IT PARK STPI GAYATRI NAGAR",
+                        "address_2": null,
+                        "city": "Nagpur",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5acbb46e1f174875c650612d",
+                        "district_name": "Nagpur",
+                        "zip_code": "440022",
+                        "landmark": null,
+                        "location_name": "SMS Corporate",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5254a00d2daf74e0ba162",
+            "name": "Back Office Associate - Financial Servicesv1.0",
+            "code": "AO591182",
+            "short_description": "---",
+            "naps_benefit": true,
+            "number_of_vacancies": 1,
+            "available_vacancies": 0,
+            "gender_type": "Female",
+            "stipend_from": 19000,
+            "stipend_upto": 21000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "62503350e743db320e3ce2c7",
+            "updated_by": "62503350e743db320e3ce2c7",
+            "created_at": {
+                "date": "2025-03-27 15:45:38.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "11 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:46:32.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "66b9e9b2ff8677432f0c0e72",
+                "name": "Back Office Associate - Financial Servicesv1.0",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8486",
+                    "name": "Banking, Financial Services & Insurance (BFSI)",
+                    "code": "S05",
+                    "is_pwd": null,
+                    "chairman_name": "V R Iyer",
+                    "chairman_logo": "documents\/user\/chairman_logo\/lAhw2KUoWhwrgHHPRGngNWVjkNETSL0vUaPr5aSi79D86XkTHitXYrOybjW7.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/dP3usEPI8ZZ9bc8Ez3ingS8sJFpSKkFtDTwKr2vyQAsnebF6WGf6ScWjFTWt.jpg",
+                    "ceo_name": "Soumya Ranjan",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/DA2Dm3ouiS7UL1dDEl8LTUvjLpmm1ydokwFVtZhimRETT2tsrFKhxx7bvF3b.jpg",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "66b9e9b37c4106189d0c4f67",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": "Commerce"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": null
+                        }
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "66b9e9b37eb1d5325f089d60",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "SARASWAT CO-OPERATIVE BANK LTD.",
+                "code": "E04222700068",
+                "employer_details": 4804,
+                "registration_type": "soc",
+                "working_days": "6",
+                "state_count": 6
+            },
+            "locations": [
+                {
+                    "id": "67c53aa4b3d23230120097c7",
+                    "location_name": "NEW SHAHUPURI BRANCH, KOLHAPUR",
+                    "code": "LOC-187632",
+                    "address": {
+                        "id": "67c53aa4b3d23230120097c8",
+                        "address_1": "E Ward, 514\/B\/1B\/, New Shahupuri, Kolhapur",
+                        "address_2": null,
+                        "city": "Kolhapur",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5acbb46e1f174875c6506125",
+                        "district_name": "Kolhapur",
+                        "zip_code": "416001",
+                        "landmark": null,
+                        "location_name": "NEW SHAHUPURI BRANCH, KOLHAPUR",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e525416fa9d874e009b44f",
+            "name": "Accounts Assistant v1.0",
+            "code": "AO591181",
+            "short_description": "Sales & Purchase entry in SAP",
+            "naps_benefit": false,
+            "number_of_vacancies": 1,
+            "available_vacancies": 0,
+            "gender_type": "Male",
+            "stipend_from": 7000,
+            "stipend_upto": 9000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "5ae01ebd97489e6a85ff7142",
+            "updated_by": "5ae01ebd97489e6a85ff7142",
+            "created_at": {
+                "date": "2025-03-27 15:45:29.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "11 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:46:41.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "66c6f5b6c01c0c478b0616f2",
+                "name": "Accounts Assistant v1.0",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8486",
+                    "name": "Banking, Financial Services & Insurance (BFSI)",
+                    "code": "S05",
+                    "is_pwd": null,
+                    "chairman_name": "V R Iyer",
+                    "chairman_logo": "documents\/user\/chairman_logo\/lAhw2KUoWhwrgHHPRGngNWVjkNETSL0vUaPr5aSi79D86XkTHitXYrOybjW7.jpg",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/dP3usEPI8ZZ9bc8Ez3ingS8sJFpSKkFtDTwKr2vyQAsnebF6WGf6ScWjFTWt.jpg",
+                    "ceo_name": "Soumya Ranjan",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/DA2Dm3ouiS7UL1dDEl8LTUvjLpmm1ydokwFVtZhimRETT2tsrFKhxx7bvF3b.jpg",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "66c6f5b7a89faa208b0e4453",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th",
+                            "minimum_stipend_amount": 7000,
+                            "level": 8
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": "Commerce"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d566b",
+                            "title": "12th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d566e",
+                            "title": null
+                        }
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "66c6f5b78fc3e357c40b3ec2",
+                    "bt_duration": null,
+                    "ojt_duration": null,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 360,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "MICAS ORGANICS LIMITED UNIT II",
+                "code": "E02172400126",
+                "employer_details": 100,
+                "registration_type": "company",
+                "working_days": 6,
+                "state_count": 1
+            },
+            "locations": [
+                {
+                    "id": "62e6cc1da7fd257ce70d456a",
+                    "location_name": "MICAS ORGANICS LIMITED UNIT II",
+                    "code": "LOC-114957",
+                    "address": {
+                        "id": "62e6cc1da7fd257ce70d456b",
+                        "address_1": "3 rd phase",
+                        "address_2": null,
+                        "city": "vapi",
+                        "state_id": "5acbb46f1f174875c65062ff",
+                        "state_name": "Gujarat",
+                        "district_id": "5acbb46f1f174875c6506312",
+                        "district_name": "Valsad",
+                        "zip_code": "396195",
+                        "landmark": null,
+                        "location_name": "MICAS ORGANICS LIMITED UNIT II",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        },
+        {
+            "id": "67e5252dcf2571fe3605dcaa",
+            "name": "Automotive CNC Machining Technician",
+            "code": "AO591180",
+            "short_description": "Automotive Cnc Machining Technician",
+            "naps_benefit": false,
+            "number_of_vacancies": 1,
+            "available_vacancies": 0,
+            "gender_type": "Male",
+            "stipend_from": 15000,
+            "stipend_upto": 16000,
+            "status": true,
+            "approval_status": "no_approval",
+            "document": false,
+            "has_applied": false,
+            "applied_date": null,
+            "created_by": "664839e50d0c7951fa003cfc",
+            "updated_by": "664839e50d0c7951fa003cfc",
+            "created_at": {
+                "date": "2025-03-27 15:45:09.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "posted_time": "11 minutes ago",
+            "updated_at": {
+                "date": "2025-03-27 15:47:28.000000",
+                "timezone_type": 3,
+                "timezone": "Asia\/Kolkata"
+            },
+            "application_count": 1,
+            "course": {
+                "id": "612e0bed7e392157bd29e47b",
+                "name": "Automotive CNC Machining Technician",
+                "type": "optional",
+                "is_pwd_course": false,
+                "sector": {
+                    "id": "5c4065aec8eeab70b57e8485",
+                    "name": "Automotive",
+                    "code": "S04",
+                    "is_pwd": null,
+                    "chairman_name": "F R Singhvi",
+                    "chairman_logo": "documents\/user\/chairman_logo\/k7T87vtxAuNV1QrrK40B1eOsAcYKwrvbPCLT0Mk1reopKk1EtcsOpcQjIPB0.png",
+                    "chairman_signatureimage": "documents\/user\/chairman_signatureimage\/8fq1wUecoHN8xUMhkVUtgDYIREbeXenexqjqTUUnrGIIf3jbCP8K4qOSytP7.jpeg",
+                    "ceo_name": "Arindam Lahiri",
+                    "ceo_signatureimage": "documents\/user\/ceo_signatureimage\/2It9O7PSqmlqPs4GX8m27ri5wJRpV05lLEKGYn2UugkxGYPxJmx7pMPJX33b.png",
+                    "default_signature": "chairman"
+                },
+                "minimum_qualification": [
+                    {
+                        "id": "6799fb4f22e4fca09c0d31f2",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5667",
+                            "title": "11th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 7
+                        },
+                        "other_qualification_type": null,
+                        "qualification": {
+                            "id": "5c406444c8eeab700c2d5669",
+                            "title": "Humanity"
+                        },
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": null,
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5667",
+                            "title": "11th"
+                        },
+                        "scheme": {
+                            "id": "5c406444c8eeab700c2d5669",
+                            "title": null
+                        }
+                    },
+                    {
+                        "id": "6799fb5136a7243cb800be3e",
+                        "type": "academic",
+                        "is_minimum": false,
+                        "qualification_type": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th",
+                            "minimum_stipend_amount": 6000,
+                            "level": 6
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": null,
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "+1 year ITI",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c406444c8eeab700c2d5666",
+                            "title": "10th"
+                        },
+                        "scheme": null
+                    },
+                    {
+                        "id": "6799fb52b32671cda3025e3e",
+                        "type": "academic",
+                        "is_minimum": true,
+                        "qualification_type": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others",
+                            "minimum_stipend_amount": 5000,
+                            "level": 1
+                        },
+                        "other_qualification_type": null,
+                        "qualification": null,
+                        "other_qualification": "Certificate-NSQF",
+                        "qualification_check": "",
+                        "qualification_type_check": "",
+                        "specialization": "Automotive Machining Operator Level 3 with 2 Years of experience",
+                        "rebate": "",
+                        "rebate_allowed": "",
+                        "nsqf_level": null,
+                        "sector_id": null,
+                        "sector": "",
+                        "qp_id": null,
+                        "qp_name": "",
+                        "minimum_qualification": {
+                            "id": "5c8326438efcd751705c38c6",
+                            "title": "Others"
+                        },
+                        "scheme": null
+                    }
+                ]
+            },
+            "trainings": [
+                {
+                    "id": "62d108b94b8fd174722dfa93",
+                    "bt_duration": null,
+                    "ojt_duration": 4032,
+                    "bt_days_duration": null,
+                    "ojt_days_duration": 720,
+                    "additionalCurriculum": null,
+                    "duration_extension_remarks": null,
+                    "training_duration_extension_flag": null
+                }
+            ],
+            "establishment": {
+                "establishment_name": "L G Balakrishnan and Bros Ltd",
+                "code": "E05242700007",
+                "employer_details": 515,
+                "registration_type": "company",
+                "working_days": "6",
+                "state_count": 3
+            },
+            "locations": [
+                {
+                    "id": "66484a45b2ca27d4e90995e9",
+                    "location_name": "L G Balakrishnan and Bros Ltd",
+                    "code": "LOC-165934",
+                    "address": {
+                        "id": "66484a45b2ca27d4e90995ea",
+                        "address_1": "Plot No A-9\/1 Additional Butibori Industrial Area MIDC Village Tarsi Nagpur Maharashtra -441122",
+                        "address_2": null,
+                        "city": "Butibori",
+                        "state_id": "5acbb46e1f174875c650610d",
+                        "state_name": "Maharashtra",
+                        "district_id": "5acbb46e1f174875c650612d",
+                        "district_name": "Nagpur",
+                        "zip_code": "441122",
+                        "landmark": null,
+                        "location_name": "L G Balakrishnan and Bros Ltd",
+                        "address_proof_type": null,
+                        "address_proof_document": false,
+                        "branch_office_proof_document": false
+                    }
+                }
+            ],
+            "ssc_approvals": [],
+            "nsdc_approvals": [],
+            "disabled_through_course": null,
+            "disabled_through_mode": null,
+            "enable_disable_remarks": null,
+            "is_pmnam_engaged": false
+        }
+    ],
+    "links": {
+        "first": "http:\/\/api.apprenticeshipindia.gov.in\/opportunities\/search\/?page=1",
+        "last": "http:\/\/api.apprenticeshipindia.gov.in\/opportunities\/search\/?page=4171",
+        "prev": null,
+        "next": "http:\/\/api.apprenticeshipindia.gov.in\/opportunities\/search\/?page=2"
+    },
+    "meta": {
+        "current_page": "1",
+        "from": 1,
+        "last_page": 4171,
+        "path": "http:\/\/api.apprenticeshipindia.gov.in\/opportunities\/search",
+        "per_page": 15,
+        "to": 15,
+        "total": 62559
+    }
+}
+
