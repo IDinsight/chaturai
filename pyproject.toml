@@ -15,7 +15,7 @@ python-dotenv = "^1.0.0"
 boto3 = "^1.34.34"
 alembic = "^1.13.1"
 pydantic = "^2.6.3"
-fastapi = "^0.110.0"
+fastapi = "^0.115.12"
 uvicorn = "^0.27.1"
 schedule = "^1.2.1"
 
