@@ -3,6 +3,7 @@ from typing import List, Optional
 from ..recommendation.engine import StudentProfile, RecommendationResult
 from ..recommendation.implementations.basic_engine import BasicRecommendationEngine
 from .auth import get_api_key
+from .config import settings
 import logging
 
 # Configure logging
@@ -12,7 +13,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Naukriwaala API",
     description="API for getting personalized apprenticeship recommendations",
-    version="1.0.0"
+    version="1.0.0",
+    root_path=settings.BACKEND_ROOT_PATH,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 @app.get(

@@ -2,7 +2,7 @@ import schedule
 import time
 import logging
 from datetime import datetime
-from opportunities_scraper import main as run_scraper
+from .opportunities_scraper import main as run_scraper
 
 # Configure logging
 logging.basicConfig(

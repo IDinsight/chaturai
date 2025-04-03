@@ -1,16 +1,30 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
+LABEL maintainer="IDinsight"
 
-WORKDIR /app
+ARG NAME=naukriwaala
+ARG PORT=8000
+ARG HOME_DIR=/usr/src/${NAME}
+RUN apt-get update && apt-get install -y \
+    gcc libpq-dev wget git curl
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN set -ex && apt-get autoremove -y --purge wget && rm -rf /var/lib/apt/lists/*
 
-# Copy the rest of the application
-COPY . .
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+ENV POETRY_VIRTUALENVS_CREATE=false
+COPY pyproject.toml poetry.lock ${HOME_DIR}/
 
-# Expose the port
-EXPOSE 8000
+WORKDIR ${HOME_DIR}
+RUN poetry install --no-root --without dev
 
-# Run the FastAPI application with uvicorn
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"] 
+ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
+ENV PORT=${PORT}
+
+COPY . ${HOME_DIR}
+
+WORKDIR ${HOME_DIR}
+RUN ["chmod", "+x", "startup.sh"]
+
+EXPOSE ${PORT}
+
+CMD ["./startup.sh"]

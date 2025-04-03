@@ -1,15 +1,26 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
+LABEL maintainer="IDinsight"
 
-WORKDIR /app
+ARG PORT=8000
+ARG HOME_DIR=/app
+RUN apt-get update && apt-get install -y \
+    gcc libpq-dev wget git curl
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+RUN set -ex && apt-get autoremove -y --purge wget && rm -rf /var/lib/apt/lists/*
 
-# Install additional requirements for scheduling
-RUN pip install --no-cache-dir -r requirements.txt schedule
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+ENV POETRY_VIRTUALENVS_CREATE=false
+COPY pyproject.toml poetry.lock /${HOME_DIR}/
 
-# Copy the rest of the application
-COPY . .
+WORKDIR ${HOME_DIR}
+RUN poetry install --no-root --without dev
 
+ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
+ENV PORT=${PORT}
+
+COPY . ${HOME_DIR}
+
+WORKDIR ${HOME_DIR}
 # Run the scheduled scraper
 CMD ["python", "-m", "src.scrapers.run_scheduled"] 

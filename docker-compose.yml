@@ -1,12 +1,36 @@
-version: '3.8'
-
 services:
+  caddy:
+    image: caddy:2.7.6
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    env_file:
+      - .env
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: naukriwaala
+      - POSTGRES_HOST=db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -17,28 +41,7 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/naukriwaala
-      - API_KEY=${API_KEY:-default_dev_key}
-    depends_on:
-      db:
-        condition: service_healthy
-
-  scraper:
-    build:
-      context: .
-      dockerfile: Dockerfile.scraper
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/naukriwaala
-    depends_on:
-      db:
-        condition: service_healthy
-
 volumes:
-  postgres_data: 
+  postgres_data:
+  caddy_data:
+  caddy_config:
