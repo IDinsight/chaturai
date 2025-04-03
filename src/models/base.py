@@ -8,15 +8,17 @@ load_dotenv()
 
 Base = declarative_base()
 
+
 def get_engine():
     """Create SQLAlchemy engine from environment variables."""
-    db_url = os.getenv('DATABASE_URL')
+    db_url = os.getenv("DATABASE_URL")
     if not db_url:
         raise ValueError("DATABASE_URL environment variable not set")
     return create_engine(db_url)
+
 
 def get_session():
     """Create a new database session."""
     engine = get_engine()
     Session = sessionmaker(bind=engine)
-    return Session() 
+    return Session()

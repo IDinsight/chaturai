@@ -23,4 +23,4 @@ COPY . ${HOME_DIR}
 
 WORKDIR ${HOME_DIR}
 # Run the scheduled scraper
-CMD ["python", "-m", "src.scrapers.run_scheduled"] 
+CMD ["python", "-m", "src.scrapers.run_scheduled"]

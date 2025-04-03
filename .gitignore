@@ -50,4 +50,4 @@ ENV/
 
 # Alembic
 alembic/versions/*
-!alembic/versions/.gitkeep 
+!alembic/versions/.gitkeep
