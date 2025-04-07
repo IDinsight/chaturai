@@ -1,0 +1,27 @@
+services:
+  caddy:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "naukriwaala-testing"
+        awslogs-stream: "caddy-container-{container_id}"
+        awslogs-create-group: "true"
+
+  api:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "naukriwaala-testing"
+        awslogs-stream: "api-container-{container_id}"
+        awslogs-create-group: "true"
+
+  db:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "naukriwaala-testing"
+        awslogs-stream: "db-container-{container_id}"
+        awslogs-create-group: "true"
