@@ -5,7 +5,7 @@ services:
       options:
         awslogs-region: "ap-south-1"
         awslogs-group: "naukriwaala-testing"
-        awslogs-stream: "caddy-container-{container_id}"
+        awslogs-stream: caddy-container
         awslogs-create-group: "true"
 
   api:
@@ -14,7 +14,7 @@ services:
       options:
         awslogs-region: "ap-south-1"
         awslogs-group: "naukriwaala-testing"
-        awslogs-stream: "api-container-{container_id}"
+        awslogs-stream: api-container
         awslogs-create-group: "true"
 
   db:
@@ -23,5 +23,5 @@ services:
       options:
         awslogs-region: "ap-south-1"
         awslogs-group: "naukriwaala-testing"
-        awslogs-stream: "db-container-{container_id}"
+        awslogs-stream: db-container
         awslogs-create-group: "true"
