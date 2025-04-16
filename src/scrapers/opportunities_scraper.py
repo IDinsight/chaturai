@@ -2,8 +2,11 @@ import requests
 import logging
 import time
 from typing import Optional, Dict
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from ..models.base import get_session
 from ..models.opportunity import Opportunity, Establishment
+from ..settings import DefaultSettings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,59 +43,28 @@ class OpportunitiesScraper:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error making request to {url}: {str(e)}")
+            logger.error(
+                f"Error making request to {url}: {str(e)}" f"with parameters: {params}"
+            )
             raise
         finally:
             time.sleep(self.delay)  # Rate limiting
-
-    def _process_establishment(self, establishment_data: Dict) -> Establishment:
-        """Process establishment data and return Establishment instance."""
-        establishment = (
-            self.session.query(Establishment)
-            .filter_by(code=establishment_data["code"])
-            .first()
-        )
-
-        if not establishment:
-            establishment = Establishment(
-                id=establishment_data["code"],  # Using code as ID
-                establishment_name=establishment_data["establishment_name"],
-                code=establishment_data["code"],
-                registration_type=establishment_data["registration_type"],
-                working_days=establishment_data["working_days"],
-                state_count=establishment_data["state_count"],
-            )
-            self.session.add(establishment)
-
-        return establishment
-
-    def _process_opportunity(
-        self, opportunity_data: Dict, establishment: Establishment
-    ) -> None:
-        """Process opportunity data and update database."""
-        opportunity = (
-            self.session.query(Opportunity).filter_by(id=opportunity_data["id"]).first()
-        )
-
-        if opportunity:
-            # Update existing opportunity
-            opportunity.update_from_api(opportunity_data)
-        else:
-            # Create new opportunity
-            opportunity = Opportunity(
-                id=opportunity_data["id"], establishment_id=establishment.id
-            )
-            opportunity.update_from_api(opportunity_data)
-            self.session.add(opportunity)
 
     def scrape_opportunities(self) -> None:
         """Main method to scrape all opportunities."""
         current_page = 1
         total_pages = None
         processed_count = 0
+        six_months_ago = datetime.now(ZoneInfo(DefaultSettings.TIMEZONE)) - timedelta(
+            days=DefaultSettings.MAX_VALID_DAYS
+        )  # 6 months ago
+        updated_opportunity_ids = set()  # Track which opportunities were updated
+        should_continue = True  # Flag to control when to stop scraping
 
         try:
-            while total_pages is None or current_page <= total_pages:
+            while should_continue and (
+                total_pages is None or current_page <= total_pages
+            ):
                 logger.info(f"Processing page {current_page}")
 
                 # Fetch page of opportunities
@@ -109,13 +81,30 @@ class OpportunitiesScraper:
                 # Process opportunities
                 for opp_data in response["data"]:
                     try:
+                        # Check if opportunity is older than 6 months
+                        created_at = datetime.strptime(
+                            opp_data["created_at"]["date"], "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                        if created_at < six_months_ago:
+                            logger.info(
+                                f"Reached opportunities older than 6 months at page {current_page}. "
+                                "Stopping scrape."
+                            )
+                            should_continue = False
+                            break
+
                         # Process establishment first
-                        establishment = self._process_establishment(
-                            opp_data["establishment"]
+                        establishment = (
+                            Establishment.create_establishment_if_not_exists(
+                                self.session, opp_data["establishment"]
+                            )
                         )
 
                         # Process opportunity
-                        self._process_opportunity(opp_data, establishment)
+                        Opportunity.create_or_update_opportunity(
+                            self.session, opp_data, establishment.id
+                        )
+                        updated_opportunity_ids.add(opp_data["id"])
 
                         processed_count += 1
 
@@ -130,7 +119,18 @@ class OpportunitiesScraper:
                         )
                         self.session.rollback()
 
-                current_page += 1
+                if should_continue:
+                    current_page += 1
+
+            # Update statuses for all opportunities
+            logger.info("Updating opportunity statuses...")
+            status_counts = Opportunity.update_opportunity_statuses(
+                self.session, updated_opportunity_ids, six_months_ago
+            )
+            logger.info(
+                f"Marked {status_counts['outdated']} opportunities as outdated and "
+                f"{status_counts['filled']} opportunities as filled"
+            )
 
             # Final commit
             self.session.commit()

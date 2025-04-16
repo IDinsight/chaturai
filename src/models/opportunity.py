@@ -1,8 +1,14 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import relationship, Session
-from typing import List
+from typing import List, Literal, Dict, Set
 from .base import Base
+from ..settings import DefaultSettings
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+# Define the possible status values
+ProcessedStatus = Literal["outdated", "filled", "open"]
 
 
 class Opportunity(Base):
@@ -26,6 +32,7 @@ class Opportunity(Base):
     stipend_upto = Column(Integer)
     status = Column(Boolean, default=True)
     approval_status = Column(String)
+    processed_status = Column(String, default="open")
 
     # Metadata
     created_by = Column(String)
@@ -61,6 +68,7 @@ class Opportunity(Base):
         self.approval_status = api_data["approval_status"]
         self.created_by = api_data["created_by"]
         self.updated_by = api_data["updated_by"]
+        self.processed_status = "open"
 
         # Parse datetime strings
         self.created_at = datetime.strptime(
@@ -75,7 +83,7 @@ class Opportunity(Base):
         self.trainings_data = api_data.get("trainings")
         self.locations_data = api_data.get("locations")
 
-        self.last_checked = datetime.utcnow()
+        self.last_checked = datetime.now(ZoneInfo(DefaultSettings.TIMEZONE))
 
     def to_dict(self) -> dict:
         """Convert opportunity to dictionary format."""
@@ -109,6 +117,72 @@ class Opportunity(Base):
             session.query(cls).filter(cls.is_active, cls.available_vacancies > 0).all()
         )
 
+    @classmethod
+    def create_or_update_opportunity(
+        cls, session: Session, opportunity_data: Dict, establishment_id: str
+    ) -> "Opportunity":
+        """Create or update an opportunity from API data.
+
+        Args:
+            session: SQLAlchemy session
+            opportunity_data: Dictionary containing opportunity data from API
+            establishment_id: ID of the associated establishment
+
+        Returns:
+            The created or updated Opportunity instance
+        """
+        opportunity = session.query(cls).filter_by(id=opportunity_data["id"]).first()
+
+        if opportunity:
+            # Update existing opportunity
+            opportunity.update_from_api(opportunity_data)
+        else:
+            # Create new opportunity
+            opportunity = cls(
+                id=opportunity_data["id"], establishment_id=establishment_id
+            )
+            opportunity.update_from_api(opportunity_data)
+            session.add(opportunity)
+
+        return opportunity
+
+    @classmethod
+    def update_opportunity_statuses(
+        cls,
+        session: Session,
+        updated_opportunity_ids: Set[str],
+        cutoff_date: datetime,
+    ) -> Dict[str, int]:
+        """Update the status of opportunities based on their age and update status.
+
+        Args:
+            session: SQLAlchemy session
+            updated_opportunity_ids: Set of opportunity IDs that were updated in this run
+            cutoff_date: Date before which opportunities are considered outdated
+
+        Returns:
+            Dictionary with counts of opportunities marked as outdated and filled
+        """
+        # Mark opportunities older than cutoff date as outdated
+        outdated_count = (
+            session.query(cls)
+            .filter(cls.created_at < cutoff_date, cls.processed_status != "outdated")
+            .update({"processed_status": "outdated"}, synchronize_session=False)
+        )
+
+        # Mark opportunities not updated during this run as filled
+        filled_count = (
+            session.query(cls)
+            .filter(
+                cls.id.notin_(updated_opportunity_ids),
+                cls.processed_status == "open",
+                cls.created_at >= cutoff_date,
+            )
+            .update({"processed_status": "filled"}, synchronize_session=False)
+        )
+
+        return {"outdated": outdated_count, "filled": filled_count}
+
 
 class Establishment(Base):
     """SQLAlchemy model representing an establishment offering apprenticeships.
@@ -128,3 +202,33 @@ class Establishment(Base):
 
     # Relationships
     opportunities = relationship("Opportunity", back_populates="establishment")
+
+    @classmethod
+    def create_establishment_if_not_exists(
+        cls, session: Session, establishment_data: Dict
+    ) -> "Establishment":
+        """Create an establishment if it doesn't exist.
+
+        Args:
+            session: SQLAlchemy session
+            establishment_data: Dictionary containing establishment data from API
+
+        Returns:
+            The existing or newly created Establishment instance
+        """
+        establishment = (
+            session.query(cls).filter_by(code=establishment_data["code"]).first()
+        )
+
+        if not establishment:
+            establishment = cls(
+                id=establishment_data["code"],  # Using code as ID
+                establishment_name=establishment_data["establishment_name"],
+                code=establishment_data["code"],
+                registration_type=establishment_data["registration_type"],
+                working_days=establishment_data["working_days"],
+                state_count=establishment_data["state_count"],
+            )
+            session.add(establishment)
+
+        return establishment

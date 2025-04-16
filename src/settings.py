@@ -1,5 +1,6 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 class DefaultSettings(BaseSettings):
@@ -11,6 +12,17 @@ class DefaultSettings(BaseSettings):
     DOMAIN: str = "localhost"
     BACKEND_ROOT_PATH: str = ""
     API_KEY: str
+    TIMEZONE: str = "Asia/Kolkata"
+    MAX_VALID_DAYS: int = 182
+
+    @field_validator("TIMEZONE")
+    def validate_timezone(cls, v):
+        """Make sure timezone value is a valid input for ZoneInfo"""
+        try:
+            ZoneInfo(v)
+            return v
+        except ZoneInfoNotFoundError:
+            raise ValueError(f"Invalid timezone: {v}")
 
 
 class AppDBSettings(BaseSettings):
