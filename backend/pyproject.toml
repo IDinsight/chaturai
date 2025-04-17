@@ -26,6 +26,7 @@ schedule = "^1.2.1"
 prometheus-client = "^0.21.1"
 uvicorn = "^0.34.0"
 pydantic-settings = "^2.8.1"
+asyncpg = "^0.30.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
