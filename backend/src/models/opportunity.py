@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, Foreign
 from sqlalchemy.orm import relationship, Session
 from typing import List, Literal, Dict, Set
 from .base import Base
-from ..settings import DefaultSettings
+from ..settings import settings
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -50,7 +50,10 @@ class Opportunity(Base):
     locations_data = Column(JSON)
 
     # Tracking fields
-    last_checked = Column(DateTime, default=datetime.utcnow)
+    last_checked = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(ZoneInfo(settings.TIMEZONE)),
+    )
     is_active = Column(Boolean, default=True)
 
     def update_from_api(self, api_data):
@@ -83,7 +86,7 @@ class Opportunity(Base):
         self.trainings_data = api_data.get("trainings")
         self.locations_data = api_data.get("locations")
 
-        self.last_checked = datetime.now(ZoneInfo(DefaultSettings.TIMEZONE))
+        self.last_checked = datetime.now(ZoneInfo(settings.TIMEZONE))
 
     def to_dict(self) -> dict:
         """Convert opportunity to dictionary format."""

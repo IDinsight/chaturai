@@ -1,0 +1,9 @@
+services:
+  api:
+    volumes:
+      - ./backend:/usr/src/naukriwaala
+    restart: always
+    command: >
+      /bin/sh -c "
+      python -m alembic upgrade head &&
+      python main.py"

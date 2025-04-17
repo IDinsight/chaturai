@@ -1,7 +1,7 @@
 """This module contains the gunicorn hooks configuration for the application."""
 
 from gunicorn.arbiter import Arbiter
-from main import Worker
+from backend.main import Worker
 from prometheus_client import multiprocess
 
 

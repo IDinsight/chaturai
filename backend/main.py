@@ -3,8 +3,7 @@
 import logging
 
 import uvicorn
-from src.api.app import app
-from src.api.config import settings
+from src.settings import settings
 from fastapi.logger import logger
 from uvicorn.workers import UvicornWorker
 
@@ -19,7 +18,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger.setLevel(logging.DEBUG)
     uvicorn.run(
-        app,
+        "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,

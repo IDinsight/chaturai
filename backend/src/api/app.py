@@ -3,7 +3,7 @@ from typing import List
 from ..recommendation.engine import StudentProfile, RecommendationResult
 from ..recommendation.implementations.basic_engine import BasicRecommendationEngine
 from .auth import get_api_key
-from .config import settings
+from ..settings import settings
 import logging
 
 # Configure logging

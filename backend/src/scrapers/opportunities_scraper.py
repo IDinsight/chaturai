@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from ..models.base import get_session
 from ..models.opportunity import Opportunity, Establishment
-from ..settings import DefaultSettings
+from ..settings import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,8 +55,8 @@ class OpportunitiesScraper:
         current_page = 1
         total_pages = None
         processed_count = 0
-        six_months_ago = datetime.now(ZoneInfo(DefaultSettings.TIMEZONE)) - timedelta(
-            days=DefaultSettings.MAX_VALID_DAYS
+        six_months_ago = datetime.now(ZoneInfo(settings.TIMEZONE)) - timedelta(
+            days=settings.MAX_VALID_DAYS
         )  # 6 months ago
         updated_opportunity_ids = set()  # Track which opportunities were updated
         should_continue = True  # Flag to control when to stop scraping
@@ -84,7 +84,7 @@ class OpportunitiesScraper:
                         # Check if opportunity is older than 6 months
                         created_at = datetime.strptime(
                             opp_data["created_at"]["date"], "%Y-%m-%d %H:%M:%S.%f"
-                        )
+                        ).replace(tzinfo=ZoneInfo(settings.TIMEZONE))
                         if created_at < six_months_ago:
                             logger.info(
                                 f"Reached opportunities older than 6 months at page {current_page}. "
