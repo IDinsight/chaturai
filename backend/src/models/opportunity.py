@@ -169,7 +169,7 @@ class Opportunity(Base):
         # Mark opportunities older than cutoff date as outdated
         outdated_count = (
             session.query(cls)
-            .filter(cls.created_at < cutoff_date, cls.processed_status != "outdated")
+            .filter(cls.updated_at < cutoff_date, cls.processed_status != "outdated")
             .update({"processed_status": "outdated"}, synchronize_session=False)
         )
 
@@ -179,7 +179,7 @@ class Opportunity(Base):
             .filter(
                 cls.id.notin_(updated_opportunity_ids),
                 cls.processed_status == "open",
-                cls.created_at >= cutoff_date,
+                cls.updated_at >= cutoff_date,
             )
             .update({"processed_status": "filled"}, synchronize_session=False)
         )
