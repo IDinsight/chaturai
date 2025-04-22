@@ -7,3 +7,11 @@ stop:
 scrape:
 	docker compose -f docker-compose.scrape.yml -p naukriwaala-scrape build scraper
 	docker compose -f docker-compose.scrape.yml -p naukriwaala-scrape run --rm scraper
+
+ecr-login:
+	aws ecr get-login-password --profile ${AWS_PROFILE} --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+ecr-build-push:
+	docker build -f backend/Dockerfile.scraper -t naps-scraper ./backend
+	docker tag naps-scraper:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/naps-scraper:latest
+	docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/naps-scraper:latest

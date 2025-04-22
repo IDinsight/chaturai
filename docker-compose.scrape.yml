@@ -12,8 +12,8 @@ services:
     ports:
       - "8001:8001"
     networks:
-      - naukriwaala-default
+      - naukriwaala-dev_default
 
 networks:
-  naukriwaala-default:
+  naukriwaala-dev_default:
     external: true

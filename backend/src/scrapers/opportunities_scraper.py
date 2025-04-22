@@ -5,6 +5,7 @@ import time
 from typing import Optional, Dict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from sqlalchemy import text
 from ..models.base import get_session
 from ..models.opportunity import Opportunity, Establishment
 from ..settings import settings
@@ -204,10 +205,24 @@ class OpportunitiesScraper:
             self.session.close()
 
 
+def test_db_connection() -> None:
+    """Test the database connection."""
+    try:
+        session = get_session()
+        session.execute(text("SELECT 1 FROM public.opportunities"))
+        logger.info("Database connection successful.")
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        raise
+    finally:
+        session.close()
+
+
 def main(
     start_date: str, end_date: str, stop_at_outdated: bool, outdated_after: int
 ) -> None:
     """Entry point for the scraper."""
+    test_db_connection()
     try:
         scraper = OpportunitiesScraper(page_size=100, delay_between_requests=1.0)
         scraper.scrape_opportunities(
