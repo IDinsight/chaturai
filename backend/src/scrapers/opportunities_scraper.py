@@ -241,10 +241,18 @@ if __name__ == "__main__":
         description="Scrape apprenticeship opportunities from apprenticeshipindia.gov.in"
     )
     parser.add_argument(
-        "start_date", type=str, help="Start date for scraping (YYYY-MM-DD)"
+        "start_date",
+        type=str,
+        nargs="?",  # Makes the argument optional
+        default=None,
+        help="Start date for scraping (YYYY-MM-DD)",
     )
     parser.add_argument(
-        "end_date", type=str, help="End date for scraping (YYYY-MM-DD)", default=None
+        "end_date",
+        type=str,
+        nargs="?",  # Makes the argument optional
+        default=None,
+        help="End date for scraping (YYYY-MM-DD)",
     )
     parser.add_argument(
         "--stop_at_outdated",

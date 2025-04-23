@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 LABEL maintainer="IDinsight"
 
 ARG PORT=8000
@@ -8,19 +8,25 @@ RUN apt-get update && apt-get install -y \
 
 RUN set -ex && apt-get autoremove -y --purge wget && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
+# Install Poetry using pip and explicitly disable virtualenvs
+RUN pip install poetry
 ENV POETRY_VIRTUALENVS_CREATE=false
-COPY pyproject.toml poetry.lock /${HOME_DIR}/
+ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 
 WORKDIR ${HOME_DIR}
-RUN poetry install --no-root --without dev
+
+# Copy only dependency files first to leverage Docker caching
+COPY pyproject.toml poetry.lock ${HOME_DIR}/
+
+# Install dependencies
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --without dev
+
+# Copy the rest of the application
+COPY . ${HOME_DIR}
 
 ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
 ENV PORT=${PORT}
 
-COPY . ${HOME_DIR}
-
-WORKDIR ${HOME_DIR}
 # Run the scheduled scraper
-CMD ["poetry", "run", "python", "-m", "src.scrapers.opportunities_scraper"]
+CMD ["python", "-m", "src.scrapers.opportunities_scraper"]
