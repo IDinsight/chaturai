@@ -28,5 +28,5 @@ COPY . ${HOME_DIR}
 ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
 ENV PORT=${PORT}
 
-# Run the scheduled scraper
+# Run the scraper directly
 CMD ["python", "-m", "src.scrapers.opportunities_scraper"]
