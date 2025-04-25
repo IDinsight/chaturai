@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 # Add the parent directory to sys.path to make backend imports work
-backend_path = str(Path(__file__).parent.parent / "backend")
+backend_path = str(Path(__file__).parent.parent)
 if backend_path not in sys.path:
     sys.path.append(backend_path)
 
