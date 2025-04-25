@@ -1,9 +1,172 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from sqlalchemy.orm import Session
 from ..models.base import get_session
 from ..models.opportunity import Opportunity
+from enum import Enum
+
+
+class Gender(str, Enum):
+    """Enum for gender"""
+
+    Male = "Male"
+    Female = "Female"
+    Transgender = "Transgender"
+
+
+class QualificationType(str, Enum):
+    """Qualification type for students"""
+
+    academic = "academic"
+    trained_under_scheme = "trained_under_scheme"
+
+
+AcademicQualification = Literal[
+    "5th",
+    "6th",
+    "7th",
+    "8th",
+    "9th",
+    "10th",
+    "11th",
+    "12th",
+    "ITI",
+    "MSBSVET",
+    "ITI Dual",
+    "ITI Result Awaited",
+    "Diploma Pursuing",
+    "Advanced Diploma",
+    "Graduate Pursuing",
+    "Graduate",
+    "Post Graduate",
+    "Doctoral",
+    "Others",
+]
+
+
+class AcademicQualificationOrdinal:
+    """
+    Defines academic qualifications and their ordinal relationships.
+
+    This class combines the literal type definition with ordinal ranking functionality
+    to provide a clean interface for qualification comparisons.
+    """
+
+    # Define all possible values in a ranks dictionary
+    Ranks = {
+        # School education
+        "5th": 5,
+        "6th": 6,
+        "7th": 7,
+        "8th": 8,
+        "9th": 9,
+        "10th": 10,
+        "11th": 11,
+        "12th": 12,
+        # Vocational qualifications (all considered equivalent)
+        "ITI": 13,
+        "MSBSVET": 13,
+        "ITI Dual": 13,
+        "ITI Result Awaited": 13,
+        # Higher education
+        "Diploma Pursuing": 14,
+        "Advanced Diploma": 15,
+        "Graduate Pursuing": 16,
+        "Graduate": 17,
+        "Post Graduate": 18,
+        "Doctoral": 19,
+        # Special case
+        "Others": 0,  # Lowest rank for unknown qualifications
+    }
+
+    @classmethod
+    def meets_minimum_requirement(
+        cls, student_qual: AcademicQualification, required_qual: AcademicQualification
+    ) -> bool:
+        """
+        Check if a student's qualification meets or exceeds the required
+        qualification.
+        """
+        return cls.Ranks[student_qual] >= cls.Ranks[required_qual]
+
+
+TrainedUnderSchemesQualification = Literal[
+    "NULM",
+    "DDUGKY",
+    "State Specific Schemes",
+    "PMKVY",
+    "SDI-MES",
+    "Central Schemes",
+    "Vocationalization of School Education (VSE)-MHRD",
+    "PMKVY-MSDE",
+    "DDUGKY-MoRD",
+    "EST&P-NULM",
+    "PMAYG-MoSJE",
+    "CPWD-MoUD",
+    "NSKFDC-MoSJE",
+    "NBCFDC-MoSJE",
+    "NSDFDC-MoSJE",
+    "ISDS-MoTextiles",
+    "Seekho aur Kamao-MoMA",
+    "SSC-fee based courses",
+]
+
+
+class Qualification(BaseModel):
+    """Qualification model for student profiles."""
+
+    qualification_type: QualificationType
+    qualification: AcademicQualification | TrainedUnderSchemesQualification
+
+    @field_validator("qualification")
+    def validate_qualification(
+        cls, v: AcademicQualification | TrainedUnderSchemesQualification, info
+    ) -> AcademicQualification | TrainedUnderSchemesQualification:
+        """Validator for qualification"""
+        qualification_type = info.data.get("qualification_type")
+
+        # Check for academic qualifications
+        academic_quals = set(AcademicQualificationOrdinal.Ranks.keys())
+        trained_quals = set(
+            [
+                "NULM",
+                "DDUGKY",
+                "State Specific Schemes",
+                "PMKVY",
+                "SDI-MES",
+                "Central Schemes",
+                "Vocationalization of School Education (VSE)-MHRD",
+                "PMKVY-MSDE",
+                "DDUGKY-MoRD",
+                "EST&P-NULM",
+                "PMAYG-MoSJE",
+                "CPWD-MoUD",
+                "NSKFDC-MoSJE",
+                "NBCFDC-MoSJE",
+                "NSDFDC-MoSJE",
+                "ISDS-MoTextiles",
+                "Seekho aur Kamao-MoMA",
+                "SSC-fee based courses",
+            ]
+        )
+
+        if v in academic_quals:
+            if qualification_type != QualificationType.academic:
+                raise ValueError(
+                    f"Qualification type must be {QualificationType.academic} "
+                    "for academic qualifications"
+                )
+        elif v in trained_quals:
+            if qualification_type != QualificationType.trained_under_scheme:
+                raise ValueError(
+                    f"Qualification type must be "
+                    f"{QualificationType.trained_under_scheme} for trained "
+                    "under schemes qualifications"
+                )
+        else:
+            raise ValueError("Invalid qualification")
+        return v
 
 
 class StudentProfile(BaseModel):
@@ -22,7 +185,7 @@ class StudentProfile(BaseModel):
         None,
         description="Field of study or specialization (e.g., 'Electronics', 'Mechanical')",
     )
-    gender: Optional[str] = Field(None, description="Gender of the student")
+    gender: Optional[Gender] = Field(None, description="Gender of the student")
 
     # Preferences
     preferred_locations: List[str] = Field(

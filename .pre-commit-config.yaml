@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: interrogate
         name: interrogate
-        exclude: ^(core_backend/migrations|core_backend/tests|core_backend/validation|optional_components/speech_api/tests)
+        exclude: ^(backend/notebooks)
         entry: interrogate
         args: [-v, --fail-under=95, --ignore-module]
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -24,11 +24,12 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        exclude: ^backend/notebooks/
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.1 # Use the sha / tag you want to point at
     hooks:
       - id: mypy
-        exclude: ^data/|^scripts/
+        exclude: ^data/|^scripts/|^backend/notebooks/
         additional_dependencies:
           [types-PyYAML==6.0.12.12, types-python-dateutil, redis, types-requests]
         args: [--ignore-missing-imports, --explicit-package-base]

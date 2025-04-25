@@ -51,3 +51,6 @@ ENV/
 # Alembic
 alembic/versions/*
 !alembic/versions/.gitkeep
+
+# Data
+**/data/**
