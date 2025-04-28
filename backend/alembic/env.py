@@ -1,12 +1,26 @@
+# Standard Library
+import os
+import sys
+
 from logging.config import fileConfig
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
+from pathlib import Path
 
+# Third Party Library
 from alembic import context  # type: ignore
-from src.settings import app_db_settings
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, engine_from_config, pool
 
-# Import your models here
-from src.models.base import Base
+# Append the framework path.
+PACKAGE_PATH_ROOT = str(Path(__file__).resolve())
+PACKAGE_PATH_SPLIT = PACKAGE_PATH_ROOT.split(os.path.join("backend"))
+PACKAGE_PATH = Path(PACKAGE_PATH_SPLIT[0]) / "backend" / "src"
+if PACKAGE_PATH not in sys.path:
+    print(f"Appending '{PACKAGE_PATH}' to system path...")
+    sys.path.append(str(PACKAGE_PATH))
+
+# Package Library
+from naukriwaala.config import BackendSettings
+from naukriwaala.db.utils import Base
 
 # Load environment variables
 load_dotenv()
@@ -33,15 +47,13 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    This configures the context with just a URL and not an Engine, though an Engine is
+    acceptable here as well. By skipping the Engine creation we don't even need a DBAPI
+    to be available.
 
-    Calls to context.execute() here emit the given string to the
-    script output.
-
+    Calls to context.execute() here emit the given string to the script output.
     """
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -57,13 +69,25 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
+    In normal migration scenarios, we need to create an Engine and associate a
+    connection with the context.
+
+    For `pytest-alembic`, the connection is provided by `pytest-alembic` at runtime.
+    Thus, we create a check to see if `connectable` already exists. This allows the same
+    `env.py` to be used for both `pytest-alembic` and regular migrations.
     """
-    # Override the default sqlalchemy.url with a constructed URL using psycopg2
-    db_url = f"postgresql+{app_db_settings.APP_DB_SYNC_API}://{app_db_settings.APP_DB_USER}:{app_db_settings.APP_DB_PASSWORD}@{app_db_settings.APP_DB_HOST}:{app_db_settings.APP_DB_PORT}/{app_db_settings.APP_DB}"
+
+    # Override the default sqlalchemy.url with a constructed URL using psycopg2.
+    db_url = f"postgresql+{BackendSettings.POSTGRES_SYNC_API}://{BackendSettings.POSTGRES_USER}:{BackendSettings.POSTGRES_PASSWORD}@{BackendSettings.POSTGRES_HOST}:{BackendSettings.POSTGRES_PORT}/{BackendSettings.POSTGRES_DB}"
 
     connectable = create_engine(db_url)
+
+    if connectable is None:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
     with connectable.connect() as connection:
         context.configure(

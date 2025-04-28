@@ -1,0 +1,57 @@
+# Define all credentials here for centralized management.
+credential_list:
+  - credential_name: default_openai_credential
+    credential_info:
+      description": "Default OpenAI credentials for all models."
+    credential_values:
+      api_key: "os.environ/OPENAI_API_KEY"  # pragma: allowlist secret
+
+  - credential_name: default_vertexai_credential
+    credential_info:
+      description": "Default VertexAI credentials for all models."
+    credential_values:
+      vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
+      vertex_location: "os.environ/VERTEXAI_LOCATION"
+
+# General LiteLLM settings.
+litellm_settings:
+  drop_params: True
+  num_retries: 3
+  json_logs: True
+  request_timeout: 10
+  set_verbose: False
+  telemetry: False
+  vertex_ai_safety_settings:
+    - category: HARM_CATEGORY_HARASSMENT
+      threshold: BLOCK_ONLY_HIGH
+    - category: HARM_CATEGORY_HATE_SPEECH
+      threshold: BLOCK_ONLY_HIGH
+    - category: HARM_CATEGORY_SEXUALLY_EXPLICIT
+      threshold: BLOCK_ONLY_HIGH
+    - category: HARM_CATEGORY_DANGEROUS_CONTENT
+      threshold: BLOCK_ONLY_HIGH
+
+# Define all models here.
+model_list:
+  # Do NOT change the model name for chat unless you really know what you are doing since it is used in the backend code!
+  - model_name: chat
+    litellm_params:
+      litellm_credential_name: default_vertexai_credential
+      model: vertex_ai/gemini-2.0-flash
+
+  - model_name: default
+    litellm_params:
+      litellm_credential_name: default_openai_credential
+      model: gpt-4o
+
+  - model_name: embedding
+    litellm_params:
+      litellm_credential_name: default_openai_credential
+      model: text-embedding-3-large
+
+# Define router settings here.
+router_settings:
+  num_retries: 3
+  # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
+  routing_strategy: "simple-shuffle"
+  timeout: 30

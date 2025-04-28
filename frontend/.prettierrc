@@ -1,0 +1,17 @@
+{
+	"arrowParens": "always",
+	"bracketSameLine": false,
+	"bracketSpacing": false,
+	"htmlWhitespaceSensitivity": "css",
+	"jsxSingleQuote": false,
+  "plugins": ["prettier-plugin-tailwindcss"],
+	"printWidth": 88,
+	"quoteProps": "as-needed",
+	"semi": true,
+	"singleAttributePerLine": false,
+	"singleQuote": false,
+	"tabWidth": 2,
+  "tailwindStylesheet": "./src/app/globals.css",
+	"trailingComma": "all",
+	"useTabs": true
+}
