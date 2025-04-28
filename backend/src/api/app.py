@@ -73,6 +73,13 @@ async def get_recommendations(
         engine.close()
 
 
+@app.post("/naps/register")
+async def register_on_naps():
+    """Register on NAPS."""
+    # Placeholder for NAPS registration logic
+    return {"message": "Registered on NAPS"}
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""

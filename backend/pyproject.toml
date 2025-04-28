@@ -28,6 +28,10 @@ uvicorn = "^0.34.0"
 pydantic-settings = "^2.8.1"
 asyncpg = "^0.30.0"
 litellm = "^1.67.2"
+playwright = "^1.51.0"
+pytesseract = "^0.3.13"
+opencv-python = "^4.11.0.86"
+loguru = "^0.7.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
@@ -39,6 +43,7 @@ fsspec = "^2025.3.2"
 s3fs = "^2025.3.2"
 openpyxl = "^3.1.5"
 ipykernel = "^6.29.5"
+opencv-jupyter-ui = "^1.4.2"
 
 [build-system]
 requires = ["poetry-core"]
