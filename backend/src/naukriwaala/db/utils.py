@@ -2,10 +2,8 @@
 
 # pylint: disable=global-statement
 # Standard Library
-import contextlib
 
-from collections.abc import AsyncGenerator, Generator
-from typing import ContextManager
+from collections.abc import AsyncGenerator
 
 # Third Party Library
 from sqlalchemy import URL, Engine, MetaData, create_engine
@@ -137,26 +135,13 @@ def get_engine() -> Engine:
     return _SYNC_ENGINE
 
 
-def get_session() -> Generator[Session, None, None]:
-    """Yield a SQLAlchemy session generator.
-
-    Yields
-    ------
-    Generator[Session, None, None]
-        A SQLAlchemy session generator.
-    """
-
-    with Session(get_engine(), expire_on_commit=False) as session:
-        yield session
-
-
-def get_session_context_manager() -> ContextManager[Session]:
-    """Return a SQLAlchemy session context manager.
+def get_session() -> Session:
+    """Return a SQLAlchemy session.
 
     Returns
     -------
-    ContextManager[Session]
-        A SQLAlchemy session context manager.
+    Session
+        A SQLAlchemy session.
     """
 
-    return contextlib.contextmanager(get_session)()
+    return Session(get_engine(), expire_on_commit=False)

@@ -42,6 +42,10 @@ if __name__ == "__main__":
 from naukriwaala import create_app
 from naukriwaala.config import Settings
 
+assert (
+    sys.version_info.major >= 3 and sys.version_info.minor >= 11
+), "naukriwaala requires at least Python 3.11!"
+
 # Instantiate typer apps for the command line interface.
 cli = typer.Typer()
 

@@ -4,7 +4,6 @@
 from typing import Optional
 
 # Third Party Library
-from dotenv import load_dotenv
 from fastapi import HTTPException, Security, status
 from fastapi.security.api_key import APIKeyHeader
 
@@ -12,14 +11,13 @@ from fastapi.security.api_key import APIKeyHeader
 from naukriwaala.config import Settings
 
 # Globals.
-load_dotenv()
 API_KEY = Settings.API_KEY
 API_KEY_NAME = "X-API-Key"  # pragma: allowlist secret
 
-api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+_api_key_header = APIKeyHeader(auto_error=False, name=API_KEY_NAME)
 
 
-async def get_api_key(api_key_header: Optional[str] = Security(api_key_header)) -> str:
+async def get_api_key(api_key_header: Optional[str] = Security(_api_key_header)) -> str:
     """Validate API key from header.
 
     Parameters

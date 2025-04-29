@@ -1,5 +1,4 @@
 # Standard Library
-import argparse
 import time
 
 from datetime import datetime, timedelta
@@ -10,7 +9,6 @@ from zoneinfo import ZoneInfo
 import requests
 
 from loguru import logger
-from sqlalchemy import text
 
 # Package Library
 from naukriwaala.config import Settings
@@ -61,7 +59,7 @@ class OpportunitiesScraper:
         start_date: str | None = None,
         end_date: str | None = None,
         stop_at_outdated: bool = True,
-        outdated_after: int = Settings.MAX_VALID_DAYS,
+        outdated_after: int = Settings.SCRAPER_MAX_VALID_DAYS,
     ) -> None:
         """Main method to scrape all opportunities.
 
@@ -81,7 +79,7 @@ class OpportunitiesScraper:
                 opportunities older than outdated_after days. Defaults to True.
             outdated_after (int, optional): Number of days after the last
                 updated date which an opportunity will be considered outdated.
-                Defaults to settings.MAX_VALID_DAYS.
+                Defaults to Settings.SCRAPER_MAX_VALID_DAYS.
         """
         current_page = 1
         total_pages = None
@@ -210,79 +208,3 @@ class OpportunitiesScraper:
             raise
         finally:
             self.session.close()
-
-
-def test_db_connection() -> None:
-    """Test the database connection."""
-    try:
-        session = get_session()
-        session.execute(text("SELECT 1 FROM public.opportunities"))
-        logger.info("Database connection successful.")
-    except Exception as e:
-        logger.error(f"Database connection failed: {str(e)}")
-        raise
-    finally:
-        session.close()
-
-
-def main(
-    start_date: str, end_date: str, stop_at_outdated: bool, outdated_after: int
-) -> None:
-    """Entry point for the scraper."""
-    test_db_connection()
-    try:
-        scraper = OpportunitiesScraper(page_size=100, delay_between_requests=1.0)
-        scraper.scrape_opportunities(
-            start_date=start_date,
-            end_date=end_date,
-            stop_at_outdated=stop_at_outdated,
-            outdated_after=outdated_after,
-        )
-    except Exception as e:
-        logger.error(f"Scraper failed: {str(e)}")
-        raise
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Scrape apprenticeship opportunities from apprenticeshipindia.gov.in"
-    )
-    parser.add_argument(
-        "start_date",
-        type=str,
-        nargs="?",  # Makes the argument optional
-        default=None,
-        help="Start date for scraping (YYYY-MM-DD)",
-    )
-    parser.add_argument(
-        "end_date",
-        type=str,
-        nargs="?",  # Makes the argument optional
-        default=None,
-        help="End date for scraping (YYYY-MM-DD)",
-    )
-    parser.add_argument(
-        "--stop_at_outdated",
-        action="store_true",
-        help="Stop scraping when reaching outdated opportunities",
-    )
-    parser.add_argument(
-        "--outdated_after",
-        type=int,
-        default=Settings.MAX_VALID_DAYS,
-        help="Number of days after the last updated date which an opportunity will be considered outdated",
-    )
-
-    args = parser.parse_args()
-    logger.info("Starting scraper with arguments: %s", args)
-
-    main(
-        start_date=args.start_date,
-        end_date=args.end_date,
-        stop_at_outdated=args.stop_at_outdated,
-        outdated_after=args.outdated_after,
-    )
-    # For regular scraping you should call
-    # main(start_date=None, end_date=None, stop_at_outdated=True, outdated_after=settings.MAX_VALID_DAYS)
-    # For historical data scraping you should call, for example,
-    # main(start_date="2023-01-01", end_date="2023-12-31", stop_at_outdated=False, outdated_after=settings.MAX_VALID_DAYS)
