@@ -75,10 +75,7 @@ up-pgvector: ## Set up pg-vector container
 		-p 5432:5432 \
 		-v pgvector_data:/var/lib/postgresql/data \
 		-d $(PG_VECTOR_IMAGE)
-	set -a && \
-	source "$(CURDIR)/backend/.env" && \
-	set +a && \
-	cd backend && python -m alembic upgrade head
+	@set -a && source "$(CURDIR)/backend/.env" && set +a && cd backend && python -m alembic upgrade head
 
 up-redis: ## Set up Redis container
 	$(call clean-docker-container,redis-local)

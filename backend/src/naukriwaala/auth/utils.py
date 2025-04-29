@@ -11,32 +11,32 @@ from fastapi.security.api_key import APIKeyHeader
 from naukriwaala.config import Settings
 
 # Globals.
-API_KEY = Settings.API_KEY
 API_KEY_NAME = "X-API-Key"  # pragma: allowlist secret
+FASTAPI_API_KEY = Settings.FASTAPI_API_KEY
 
 _api_key_header = APIKeyHeader(auto_error=False, name=API_KEY_NAME)
 
 
 async def get_api_key(api_key_header: Optional[str] = Security(_api_key_header)) -> str:
-    """Validate API key from header.
+    """Validate FastAPI API key from header.
 
     Parameters
     ----------
     api_key_header
-        The API key provided in the request header.
+        The FastAPI API key provided in the request header.
 
     Returns
     -------
     str
-        The API key if valid.
+        The FastAPI API key if valid.
 
     Raises
     ------
     HTTPException
-        If the API key is invalid or missing.
+        If the FastAPI API key is invalid or missing.
     """
 
-    if api_key_header and api_key_header == API_KEY:
+    if api_key_header and api_key_header == FASTAPI_API_KEY:
         return api_key_header
     raise HTTPException(
         detail="Invalid or missing API Key.", status_code=status.HTTP_401_UNAUTHORIZED

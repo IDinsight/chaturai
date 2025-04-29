@@ -19,11 +19,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class BackendSettings(BaseSettings):
     """Pydantic settings for backend."""
 
-    # API keys
-    API_KEY: str
-
     # Chat
     CHAT_ENV: str = "dev"
+
+    # FastAPI
+    FASTAPI_API_KEY: str
 
     # LiteLLM
     LITELLM_API_KEY: str = os.getenv("LITELLM_API_KEY", "dummy-key")
@@ -61,7 +61,6 @@ class BackendSettings(BaseSettings):
         10, validation_alias="POSTGRES_DB_POOL_SIZE"
     )  # Number of connections in the pool
     POSTGRES_DB_TYPE: str = Field("postgresql", validation_alias="POSTGRES_DB_TYPE")
-
     POSTGRES_HOST: str = Field("localhost", validation_alias="POSTGRES_HOST")
     POSTGRES_PASSWORD: str = Field("postgres", validation_alias="POSTGRES_PASSWORD")
     POSTGRES_PORT: str = Field("5432", validation_alias="POSTGRES_PORT")
@@ -82,6 +81,7 @@ class BackendSettings(BaseSettings):
 
     # Scraper
     SCRAPER_MAX_VALID_DAYS: int = 182
+    SCRAPER_TIMEZONE: str = "Asia/Kolkata"
 
     # Text generation parameters.
     TEXT_GENERATION_DEFAULT: dict[str, Any] = {
@@ -106,10 +106,19 @@ class BackendSettings(BaseSettings):
         "top_p": 0.9,
     }
 
-    # Timezones.
-    TIMEZONE: str = "Asia/Kolkata"
-
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @classmethod
+    def create_sync_postgres_db_url(cls) -> str:
+        """Create the synchronous PostgreSQL database URL.
+
+        Returns
+        -------
+        str
+            The PostgreSQL database URL.
+        """
+
+        return f"postgresql+{cls().POSTGRES_SYNC_API}://{cls().POSTGRES_USER}:{cls().POSTGRES_PASSWORD}@{cls().POSTGRES_HOST}:{cls().POSTGRES_PORT}/{cls().POSTGRES_DB}"
 
     @classmethod
     def get_model_info_from_litellm(cls, *, litellm_model_name: str) -> dict[str, Any]:
@@ -208,7 +217,7 @@ class BackendSettings(BaseSettings):
             )
         return value
 
-    @field_validator("TIMEZONE")
+    @field_validator("SCRAPER_TIMEZONE")
     @classmethod
     def validate_timezone(cls, v: str) -> str:
         """Make sure timezone value is a valid input for `ZoneInfo`.

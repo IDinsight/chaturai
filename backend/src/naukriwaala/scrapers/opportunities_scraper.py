@@ -1,8 +1,12 @@
+"""This module contains the scraper for apprenticeship opportunities from
+apprenticeshipindia.gov.in.
+"""
+
 # Standard Library
 import time
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Optional
 from zoneinfo import ZoneInfo
 
 # Third Party Library
@@ -15,6 +19,9 @@ from naukriwaala.config import Settings
 from naukriwaala.db.opportunity import Establishment, Opportunity
 from naukriwaala.db.utils import get_session
 
+# Globals.
+SCRAPER_MAX_VALID_DAYS = Settings.SCRAPER_MAX_VALID_DAYS
+
 
 class OpportunitiesScraper:
     """Scraper for apprenticeship opportunities from apprenticeshipindia.gov.in.
@@ -26,19 +33,44 @@ class OpportunitiesScraper:
 
     BASE_URL = "https://api.apprenticeshipindia.gov.in"
 
-    def __init__(self, page_size: int = 100, delay_between_requests: float = 1.0):
+    def __init__(self, *, delay_between_requests: float = 1.0, page_size: int = 100):
         """Initialize the scraper with configuration.
 
-        Args:
-            page_size: Number of records to fetch per page
-            delay_between_requests: Delay in seconds between API requests
+        Parameters
+        ----------
+        delay_between_requests
+            Delay in seconds between API requests
+        page_size
+            Number of records to fetch per page
         """
-        self.page_size = page_size
+
         self.delay = delay_between_requests
+        self.page_size = page_size
         self.session = get_session()
 
-    def _make_request(self, endpoint: str, params: Optional[dict] = None) -> dict:
-        """Make an API request with rate limiting."""
+    def _make_request(
+        self, *, endpoint: str, params: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
+        """Make an API request with rate limiting.
+
+        Parameters
+        ----------
+        endpoint
+            The API endpoint to request, e.g. "opportunities/search"
+        params
+            Dictionary to send in the query string for the request.
+
+        Returns
+        -------
+        dict[str, Any]
+            The JSON response from the API as a dictionary.
+
+        Raises
+        ------
+        requests.exceptions.RequestException
+            If there is an error making the request.
+        """
+
         url = f"{self.BASE_URL}/{endpoint}"
         headers = {"accept": "application/json"}
 
@@ -48,7 +80,7 @@ class OpportunitiesScraper:
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(
-                f"Error making request to {url}: {str(e)}" f"with parameters: {params}"
+                f"Error making request with parameters: {params} to {url}: {str(e)}"
             )
             raise
         finally:
@@ -56,31 +88,33 @@ class OpportunitiesScraper:
 
     def scrape_opportunities(
         self,
-        start_date: str | None = None,
+        *,
         end_date: str | None = None,
+        outdated_after: int = SCRAPER_MAX_VALID_DAYS,
+        start_date: str | None = None,
         stop_at_outdated: bool = True,
-        outdated_after: int = Settings.SCRAPER_MAX_VALID_DAYS,
     ) -> None:
-        """Main method to scrape all opportunities.
+        """Scrape all opportunities.
 
-        The scraper will scrape most recent opportunities first,
-        i.e. from end_date to start_date. If end_date is None, we start
-        from the most recent opportunity. If start_date is None, we scrape
-        until the oldest opportunity unless,
-         - start_date is more than outdated_after days ago, and
-         - stop_at_outdated is True
+        The scraper will scrape most recent opportunities first, i.e. from end_date to
+        start_date. If end_date is None, we start from the most recent opportunity. If
+        start_date is None, we scrape until the oldest opportunity unless:
+            1. start_date is more than outdated_after days ago, and
+            2. stop_at_outdated is True
 
-        Args:
-            start_date (str | None, optional): Start date for scraping.
-                Use YYYY-MM-DD format. Defaults to None.
-            end_date (str | None, optional): End date for scraping (exclusive).
-                Use YYYY-MM-DD format. Defaults to None.
-            stop_at_outdated (bool, optional): If True, stop scraping when reaching
-                opportunities older than outdated_after days. Defaults to True.
-            outdated_after (int, optional): Number of days after the last
-                updated date which an opportunity will be considered outdated.
-                Defaults to Settings.SCRAPER_MAX_VALID_DAYS.
+        Parameters
+        ----------
+        start_date (str | None, optional): Start date for scraping.
+            Use YYYY-MM-DD format. Defaults to None.
+        end_date (str | None, optional): End date for scraping (exclusive).
+            Use YYYY-MM-DD format. Defaults to None.
+        stop_at_outdated (bool, optional): If True, stop scraping when reaching
+            opportunities older than outdated_after days. Defaults to True.
+        outdated_after (int, optional): Number of days after the last
+            updated date which an opportunity will be considered outdated.
+            Defaults to Settings.SCRAPER_MAX_VALID_DAYS.
         """
+
         current_page = 1
         total_pages = None
         processed_count = 0

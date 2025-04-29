@@ -23,7 +23,7 @@ from naukriwaala.db.utils import Base
 from naukriwaala.recommendation.schemas import Gender
 
 # Globals.
-TIMEZONE = Settings.TIMEZONE
+SCRAPER_TIMEZONE = Settings.SCRAPER_TIMEZONE
 
 # Define the possible status values.
 ProcessedStatus = Literal["outdated", "filled", "open"]
@@ -82,7 +82,7 @@ class Opportunity(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_checked: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(ZoneInfo(TIMEZONE)),
+        default=lambda: datetime.now(ZoneInfo(SCRAPER_TIMEZONE)),
     )
 
     @classmethod
@@ -213,7 +213,7 @@ class Opportunity(Base):
         self.locations_data = api_data.get("locations")
         self.trainings_data = api_data.get("trainings")
 
-        self.last_checked = datetime.now(ZoneInfo(TIMEZONE))
+        self.last_checked = datetime.now(ZoneInfo(SCRAPER_TIMEZONE))
 
     @classmethod
     def update_opportunity_statuses(

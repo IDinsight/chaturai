@@ -78,7 +78,7 @@ def run_migrations_online() -> None:
     """
 
     # Override the default sqlalchemy.url with a constructed URL using psycopg2.
-    db_url = f"postgresql+{BackendSettings.POSTGRES_SYNC_API}://{BackendSettings.POSTGRES_USER}:{BackendSettings.POSTGRES_PASSWORD}@{BackendSettings.POSTGRES_HOST}:{BackendSettings.POSTGRES_PORT}/{BackendSettings.POSTGRES_DB}"
+    db_url = BackendSettings.create_sync_postgres_db_url()
 
     connectable = create_engine(db_url)
 

@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
 # Package Library
 from naukriwaala.config import Settings
-from naukriwaala.db.utils import get_session
+from naukriwaala.db.utils import get_session, test_db_connection
 from naukriwaala.scrapers.opportunities_scraper import OpportunitiesScraper
 from naukriwaala.utils.general import cleanup
 from naukriwaala.utils.logging_ import initialize_logger
@@ -112,7 +112,7 @@ def main(
         test_db_connection()
 
         try:
-            scraper = OpportunitiesScraper(page_size=100, delay_between_requests=1.0)
+            scraper = OpportunitiesScraper(delay_between_requests=1.0, page_size=100)
             scraper.scrape_opportunities(
                 start_date=start_date,
                 end_date=end_date,
@@ -122,26 +122,6 @@ def main(
         except Exception as e:
             logger.error(f"Scraper failed: {str(e)}")
             raise
-
-
-def test_db_connection() -> None:
-    """Test the database connection before scraping.
-
-    Raises
-    ------
-    Exception
-        If the database connection fails.
-    """
-
-    try:
-        session = get_session()
-        session.execute(text("SELECT 1 FROM public.opportunities"))
-        logger.info("Database connection successful.")
-    except Exception as e:
-        logger.error(f"Database connection failed: {str(e)}")
-        raise
-    finally:
-        session.close()
 
 
 if __name__ == "__main__":

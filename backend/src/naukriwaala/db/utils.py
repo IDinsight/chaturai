@@ -3,6 +3,7 @@
 # pylint: disable=global-statement
 # Standard Library
 
+# Standard Library
 from collections.abc import AsyncGenerator
 
 # Third Party Library
@@ -145,3 +146,23 @@ def get_session() -> Session:
     """
 
     return Session(get_engine(), expire_on_commit=False)
+
+
+def test_db_connection() -> None:
+    """Test the database connection before scraping.
+
+    Raises
+    ------
+    Exception
+        If the database connection fails.
+    """
+
+    try:
+        session = get_session()
+        session.execute(text("SELECT 1 FROM public.opportunities"))
+        logger.info("Database connection successful.")
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        raise
+    finally:
+        session.close()
