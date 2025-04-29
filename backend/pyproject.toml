@@ -107,6 +107,7 @@ litellm = {version = "1.67.2"}
 logfire = {extras = ["fastapi", "redis", "system-metrics"], version = "^3.14.1"}
 loguru = "^0.7.2"
 openai = "^1.61.1"
+opencv-python = "^4.11.0.86"
 opentelemetry-exporter-otlp = "1.32.1"
 opentelemetry-instrumentation-aiohttp-client = "0.53b1"
 opentelemetry-instrumentation-grpc = "0.53b1"
@@ -121,6 +122,7 @@ prometheus-client = "^0.21.1"
 psycopg2-binary = "^2.9.9"
 pydantic = {extras = ["email"], version = "^2.10.6"}
 pydantic-graph = "0.1.4"
+pytesseract = "^0.3.13"
 pytest-playwright = "^0.7.0"
 python = ">=3.11,<3.13"
 pydantic-settings = "^2.8.1"

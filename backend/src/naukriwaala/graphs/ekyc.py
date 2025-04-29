@@ -6,6 +6,7 @@ import json
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Annotated, Any
 
 # Third Party Library
@@ -18,7 +19,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Package Library
 from naukriwaala.config import Settings
 from naukriwaala.ekyc.schemas import EKYCQuery, EKYCResults
-from naukriwaala.ekyc.utils import select_login_radio, select_register_radio
+from naukriwaala.ekyc.utils import (
+    select_login_radio,
+    select_register_radio,
+    solve_captcha,
+)
 from naukriwaala.graphs.utils import (
     load_graph_run_results,
     save_graph_diagram,
@@ -98,7 +103,10 @@ class LoginExistingStudent(BaseNode[EKYCState, EKYCDeps, EKYCResults]):
 
         1. Navigate to the page shell.
         2. Switch into Login mode.
-        3. XXX
+        3. Capture the CAPTCHA canvas exactly.
+        4. Solve the CAPTCHA text.
+        5. Fill out the CAPTCHA text.
+        6. XXX
         X. Cache the last graph run results in Redis for the frontend.
 
         Parameters
@@ -124,6 +132,17 @@ class LoginExistingStudent(BaseNode[EKYCState, EKYCDeps, EKYCResults]):
             await select_login_radio(page=page)
 
             # 3.
+            canvas = page.locator("canvas.captcha-canvas")
+            await canvas.wait_for(state="visible")
+            captcha_bytes: bytes = await canvas.screenshot()
+
+            # 4.
+            captcha_text = await solve_captcha(captcha_bytes=captcha_bytes)
+
+            # 5.
+            await page.fill('input[placeholder="Enter CAPTCHA"]', captcha_text)
+
+            # 6.
 
             # Pause to verify in the browser.
             await asyncio.get_event_loop().run_in_executor(None, input)
