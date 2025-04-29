@@ -17,7 +17,7 @@ from prometheus_client import CollectorRegistry, make_asgi_app, multiprocess
 from redis import asyncio as aioredis
 
 # Package Library
-from naukriwaala import admin, recommendation
+from naukriwaala import admin, ekyc, recommendation
 from naukriwaala.config import Settings
 from naukriwaala.prometheus_middleware import PrometheusMiddleware
 from naukriwaala.utils.embeddings import load_embedding_model
@@ -37,7 +37,7 @@ SENTRY_TRACES_SAMPLE_RATE = Settings.SENTRY_TRACES_SAMPLE_RATE
 # Only need to initialize loguru once for the entire backend!
 logger = initialize_logger(logging_level=LOGGING_LEVEL)
 
-tags_metadata = [admin.TAG_METADATA, recommendation.TAG_METADATA]
+tags_metadata = [admin.TAG_METADATA, ekyc.TAG_METADATA, recommendation.TAG_METADATA]
 
 
 def create_app() -> FastAPI:
@@ -69,6 +69,7 @@ def create_app() -> FastAPI:
 
     # 2.
     app.include_router(admin.routers.router)
+    app.include_router(ekyc.routers.router)
     app.include_router(recommendation.routers.router)
 
     origins = [

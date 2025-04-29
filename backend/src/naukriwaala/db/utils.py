@@ -7,7 +7,8 @@
 from collections.abc import AsyncGenerator
 
 # Third Party Library
-from sqlalchemy import URL, Engine, MetaData, create_engine
+from loguru import logger
+from sqlalchemy import URL, Engine, MetaData, create_engine, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 

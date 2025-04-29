@@ -75,7 +75,7 @@ class OpportunitiesScraper:
         headers = {"accept": "application/json"}
 
         try:
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=600)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -104,30 +104,19 @@ class OpportunitiesScraper:
 
         Parameters
         ----------
-        start_date (str | None, optional): Start date for scraping.
-            Use YYYY-MM-DD format. Defaults to None.
-        end_date (str | None, optional): End date for scraping (exclusive).
-            Use YYYY-MM-DD format. Defaults to None.
-        stop_at_outdated (bool, optional): If True, stop scraping when reaching
-            opportunities older than outdated_after days. Defaults to True.
-        outdated_after (int, optional): Number of days after the last
-            updated date which an opportunity will be considered outdated.
-            Defaults to Settings.SCRAPER_MAX_VALID_DAYS.
+        start_date
+            Start date for scraping. Use YYYY-MM-DD format.
+        end_date
+            End date for scraping (exclusive). Use YYYY-MM-DD format.
+        stop_at_outdated
+            If True, stop scraping when reaching opportunities older than
+            outdated_after days.
+        outdated_after
+            Number of days after the last updated date which an opportunity will be
+            considered outdated.
         """
 
         current_page = 1
-        total_pages = None
-        processed_count = 0
-        outdated_from = datetime.now(ZoneInfo(Settings.TIMEZONE)) - timedelta(
-            days=outdated_after
-        )
-        start_datetime = (
-            datetime.strptime(start_date, "%Y-%m-%d").replace(
-                tzinfo=ZoneInfo(Settings.TIMEZONE)
-            )
-            if start_date
-            else None
-        )
         end_datetime = (
             datetime.strptime(end_date, "%Y-%m-%d").replace(
                 tzinfo=ZoneInfo(Settings.TIMEZONE)
@@ -135,6 +124,18 @@ class OpportunitiesScraper:
             if end_date
             else None
         )
+        outdated_from = datetime.now(ZoneInfo(Settings.TIMEZONE)) - timedelta(
+            days=outdated_after
+        )
+        processed_count = 0
+        start_datetime = (
+            datetime.strptime(start_date, "%Y-%m-%d").replace(
+                tzinfo=ZoneInfo(Settings.TIMEZONE)
+            )
+            if start_date
+            else None
+        )
+        total_pages = None
 
         updated_opportunity_ids = set()  # Track which opportunities were updated
         should_continue = True  # Flag to control when to stop scraping
@@ -143,15 +144,15 @@ class OpportunitiesScraper:
             while should_continue and (
                 total_pages is None or current_page <= total_pages
             ):
-                logger.info(f"Processing page {current_page}")
+                logger.info(f"Processing page: {current_page}")
 
-                # Fetch page of opportunities
+                # Fetch page of opportunities.
                 response = self._make_request(
-                    "opportunities/search",
+                    endpoint="opportunities/search",
                     params={"page": current_page, "page_size": self.page_size},
                 )
 
-                # Update total pages on first iteration
+                # Update total pages on first iteration.
                 if total_pages is None:
                     total_pages = response["meta"]["last_page"]
                     logger.info(f"Total pages to process: {total_pages}")
@@ -159,7 +160,7 @@ class OpportunitiesScraper:
                 # Process opportunities
                 for opp_data in response["data"]:
                     try:
-                        # Check if opportunity was last updated within the valid period
+                        # Check if opportunity was last updated within the valid period.
                         updated_at = datetime.strptime(
                             opp_data["updated_at"]["date"], "%Y-%m-%d %H:%M:%S.%f"
                         ).replace(tzinfo=ZoneInfo(Settings.TIMEZONE))
@@ -211,7 +212,7 @@ class OpportunitiesScraper:
                             self.session.commit()
                             logger.info(f"Processed {processed_count} opportunities")
 
-                    except Exception as e:
+                    except Exception as e:  # pylint: disable=W0718
                         logger.error(
                             f"Error processing opportunity {opp_data.get('id')}: {str(e)}"
                         )

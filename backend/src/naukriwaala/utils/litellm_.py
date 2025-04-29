@@ -27,7 +27,10 @@ from tenacity import (
 
 # Package Library
 from naukriwaala.config import Settings
-from naukriwaala.metrics import litellm_price_counter, validator_call_failure_counter
+from naukriwaala.metrics.logfire_metrics import (
+    litellm_price_counter,
+    validator_call_failure_counter,
+)
 from naukriwaala.prompts.base import BasePrompts
 from naukriwaala.schemas import Limits, ValidatorCall
 from naukriwaala.utils.general import convert_to_list, remove_json_markdown

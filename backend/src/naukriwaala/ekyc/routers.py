@@ -1,4 +1,4 @@
-"""This module contains FastAPI routers for recommendation endpoints."""
+"""This module contains FastAPI routers for E-KYC endpoints."""
 
 # Standard Library
 import os
@@ -8,22 +8,19 @@ import logfire
 
 from fastapi import APIRouter, Depends
 from fastapi.requests import Request
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Package Library
 from naukriwaala.config import Settings
 from naukriwaala.db.utils import get_async_session
-from naukriwaala.recommendation.schemas import (
-    RecommendationQuery,
-    RecommendationQueryResults,
-)
+from naukriwaala.ekyc.schemas import EKYCQuery, EKYCResults
+from naukriwaala.graphs.ekyc import ekyc_graph
 from naukriwaala.utils.chat import AsyncChatSessionManager, get_chat_session_manager
 
 # Globals.
 TAG_METADATA = {
-    "description": "_Requires API key._ Recommendation engine",
-    "name": "Recommendation",
+    "description": "_Requires API key._ E-KYC engine",
+    "name": "E-KYC",
 }
 router = APIRouter(tags=[TAG_METADATA["name"]])
 
@@ -31,27 +28,30 @@ GOOGLE_CREDENTIALS_FP = os.getenv("PATHS_GOOGLE_CREDENTIALS")
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
 
-@router.post("/recommend-apprenticeship", response_model=RecommendationQueryResults)
-@logfire.instrument("Running apprenticeship recommendations endpoint...")
-async def recommend_apprenticeship(
-    rec_query: RecommendationQuery,
+@router.post("/ekyc-registration", response_model=EKYCResults)
+@logfire.instrument("Running E-KYC registration endpoint...")
+async def ekyc_registration(
+    ekyc_query: EKYCQuery,
     request: Request,
     asession: AsyncSession = Depends(get_async_session),
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
+    generate_graph_diagrams: bool = False,
     reset_chat_session: bool = False,
-) -> RecommendationQueryResults:
-    """Recommend apprenticeships for students.
+) -> EKYCResults:
+    """E-KYC registration for students.
 
     Parameters
     ----------
-    \n\trec_query
-    \t\tThe recommendation query object.
+    \n\tekyc_query
+    \t\tThe E-KYC query object.
     \n\trequest
     \t\tThe FastAPI request object.
     \n\tasession
     \t\tThe SQLAlchemy async session to use for all database connections.
     \n\tcsm
     \t\tAn async chat session manager that manages the chat sessions for each user.
+    \n\tgenerate_graph_diagrams
+    \t\tSpecifies whether to generate graph diagrams for the endpoint.
     \n\treset_chat_session
     \t\tSpecifies whether to reset the chat session for the user. This can be used to
     \t\tclear the chat history and start a new session. This is useful for testing or
@@ -59,17 +59,16 @@ async def recommend_apprenticeship(
 
     Returns
     -------
-    \n\tRecommendationQueryResults
-    \t\tThe recommendation response.
+    \n\tEKYCResults
+    \t\tThe E-KYC response.
     """
 
-    logger.info(f"{request = }")
-    logger.info(f"{asession = }")
-    logger.info(f"{csm = }")
-    logger.info(f"{reset_chat_session = }")
-    return RecommendationQueryResults(
-        **rec_query.model_dump(),
-        query_text_refined=rec_query.query_text,
-        answer_response={"foo": "bar"},
-        session_id=1,
+    return await ekyc_graph(
+        asession=asession,
+        csm=csm,
+        ekyc_query=ekyc_query,
+        embedding_model=request.app.state.embedding_model_openai,
+        generate_graph_diagrams=generate_graph_diagrams,
+        redis_client=request.app.state.redis,
+        reset_chat_session=reset_chat_session,
     )

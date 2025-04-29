@@ -176,7 +176,7 @@ class Opportunity(Base):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
-    def update_from_api(self, *, api_data) -> None:
+    def update_from_api(self, *, api_data: dict[str, Any]) -> None:
         """Update opportunity details from API response
 
         Parameters

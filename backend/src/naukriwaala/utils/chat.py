@@ -185,7 +185,7 @@ class AsyncChatSessionManager:
                 break
         assert (
             chat_params
-        ), f"Model 'chat' not found in model info from {model_info_endpoint}."
+        ), f"Model '{model_name}' not found in model info from {model_info_endpoint}."
         if chat_params["max_input_tokens"] is None:
             logger.warning(
                 f"Got `None` for 'max_input_tokens' for model name: {model_name}. "

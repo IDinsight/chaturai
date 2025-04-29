@@ -19,6 +19,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class BackendSettings(BaseSettings):
     """Pydantic settings for backend."""
 
+    # Internal settings
+    _INTERNAL_GRAPH_MAPPING: Optional[dict[str, Any]] = None
+
     # Chat
     CHAT_ENV: str = "dev"
 
@@ -72,6 +75,9 @@ class BackendSettings(BaseSettings):
 
     # Redis
     REDIS_CACHE_PREFIX_CHAT: str = os.getenv("REDIS_CACHE_PREFIX_CHAT", "chat_sessions")
+    REDIS_CACHE_PREFIX_EKYC_GRAPH: str = os.getenv(
+        "REDIS_CACHE_PREFIX_EKYC", "graph_ekyc"
+    )
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis://localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
 

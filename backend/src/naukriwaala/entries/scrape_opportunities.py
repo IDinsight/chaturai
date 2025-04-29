@@ -21,8 +21,6 @@ from pathlib import Path
 # Third Party Library
 import typer
 
-from sqlalchemy import text
-
 # Append the framework path. NB: This is required if this entry point is invoked from
 # the command line. However, it is not necessary if it is imported from a pip install.
 if __name__ == "__main__":
@@ -35,7 +33,7 @@ if __name__ == "__main__":
 
 # Package Library
 from naukriwaala.config import Settings
-from naukriwaala.db.utils import get_session, test_db_connection
+from naukriwaala.db.utils import test_db_connection
 from naukriwaala.scrapers.opportunities_scraper import OpportunitiesScraper
 from naukriwaala.utils.general import cleanup
 from naukriwaala.utils.logging_ import initialize_logger
