@@ -17,7 +17,7 @@ Your guide for your apprenticeship journey (for the National Apprenticeship Prom
 
 This project includes a data scraper for apprenticeship opportunities from the National Apprenticeship Promotion Scheme (NAPS) portal. It fetches opportunities daily and stores them in a database for further processing and recommendation purposes.
 
-## Architecture
+## Architecture (Needs to be updated)
 
 - **Database**: PostgreSQL on Amazon RDS
 - **Scraper**: Python-based scraper running on AWS ECS (Fargate)
@@ -30,17 +30,17 @@ This project includes a data scraper for apprenticeship opportunities from the N
 2. Copy `cicd/deployment/litellm/.template.env` to `cicd/deployment/litellm/.env`.
 3. Copy `backend/.template.env` to `backend/.env` and update:
 
-   1. `API_KEY`: For XXX.
+   1. `FAST_API_KEY`: Your FastAPI API key (or just ask Suzing You for one).
    2. `LOGFIRE_TOKEN`: Your [Logfire write token](https://logfire.pydantic.dev/docs/how-to-guides/create-write-tokens/) (or just ask Tony Zhao for one).
    3. `LOGFIRE_READ_TOKEN`: [OPTIONAL] Your [Logfire read token](https://logfire.pydantic.dev/docs/how-to-guides/query-api/#how-to-create-a-read-token) (or just ask Tony Zhao for one).
 4. Copy the **root** `.template.env` to `.env` and update:
 
-   1. `OPENAI_API_KEY`: Your OpenAI API key.
-   2. `PATHS_LOGS_DIR`: The absolute path to the logs directory for the project.
-   3. `PATHS_PROJECT_DIR`: The absolute path to the root directory of the project.
-   4. `PATHS_SECRETS_DIR`: Set this as `PATHS_PROJECT_DIR/secrets`and create the`secrets` directory.
+   1. `AWS`: Ask Suzin You for credentials.
+   2. `OPENAI_API_KEY`: Your OpenAI API key.
+   3. `PATHS_LOGS_DIR`: The absolute path to the logs directory for the project.
+   4. `PATHS_PROJECT_DIR`: The absolute path to the root directory of the project.
+   5. `PATHS_SECRETS_DIR`: Set this as `PATHS_PROJECT_DIR/secrets`and create the`secrets` directory.
 5. Put `gcp_credentials.json` (copied as is from AAQ) and place it in `PATHS_PROJECT_DIR/secrets`
-6. Contact Tony Zhao for relevant data files for the graph database and put all data files under `PATHS_PROJECT_DIR/results`.
 
 ## Startup Instructions
 
@@ -56,16 +56,34 @@ This project includes a data scraper for apprenticeship opportunities from the N
    4. Execute `python src/naukriwaala/entries/main.py`: This will start the FastAPI server on `http://localhost:8000`.
 6. Go to [http://localhost:8000/docs](http://localhost:8000/docs) to view the backend API routes.
 
-   1. Try out the `XXX` endpoint using the following parameters:
+   1. Try out the `naukri-flow` endpoint using the following parameters to simulate a student creating a new account:
+
       ```json
       {
-          ...
+        "type": "registration",
+        "user_query": "i need help creating an account so that i can apply for apprenticeships.",
+        "user_id": "1",
+        "email": "user@example.com",
+        "is_iti_student": false,
+        "is_new_student": true,
+        "mobile_number": "+919912515639",
+        "roll_number": null
       }
 
       ```
+   2. Then, use the following parameters to simulate logging a student into the apprenticeship portal:
+
+      ```json
+      {
+        "type": "login",
+        "user_query": "thanks, let's continue",
+        "user_id": "1",
+        "email": "user@example.com"
+      }
+      ```
 7. When you are done, cd back to the root directory and execute `make down`. This will stop all backend services.
 
-## Old Instructions
+## Old Instructions (Needs to be updated/removed if no longer relevant)
 
 1. Create a `.env` file with your database configuration:
 
@@ -75,11 +93,13 @@ DATABASE_URL=postgresql://user:password@your-rds-instance:5432/naukriwaala
 ```bash
 pip install -r requirements.txt
 ```
+
 3. Initialize the database:
 
 ```bash
 alembic upgrade head
 ```
+
 ## Local Development
 
 To run the scraper locally:
@@ -87,6 +107,7 @@ To run the scraper locally:
 ```bash
 python -m src.scrapers.opportunities_scraper
 ```
+
 ## AWS Deployment
 
 1. Create an ECR repository:
@@ -94,6 +115,7 @@ python -m src.scrapers.opportunities_scraper
 ```bash
 aws ecr create-repository --repository-name naukriwaala-scraper
 ```
+
 2. Build and push the Docker image:
 
 ```bash
@@ -102,6 +124,7 @@ docker build -t naukriwaala-scraper .
 docker tag naukriwaala-scraper:latest your-account-id.dkr.ecr.region.amazonaws.com/naukriwaala-scraper:latest
 docker push your-account-id.dkr.ecr.region.amazonaws.com/naukriwaala-scraper:latest
 ```
+
 3. Create an ECS Task Definition (sample provided in `ecs-task-definition.json`)
 4. Create an ECS Cluster and Service
 5. Set up EventBridge rule for daily execution
