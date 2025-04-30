@@ -80,7 +80,7 @@ Soft criteria
 
 Rank by
 1. Stipend amount
-2. cosine similarity of interests and registration type
+2. cosine similarity of interests and naukri type
 
 Note
 - We'll exclude working_days since vast majority of opportunities are 6 days

@@ -12,6 +12,6 @@ application.
 """
 
 # Package Library
-from naukriwaala.ekyc.routers import TAG_METADATA, router
+from naukriwaala.naukri.routers import TAG_METADATA, router
 
 __all__ = ["router", "TAG_METADATA"]

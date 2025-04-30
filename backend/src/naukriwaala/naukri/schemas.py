@@ -1,9 +1,9 @@
-"""This module contains Pydantic models for E-KYC."""
+"""This module contains Pydantic models for naukri."""
 
 # Standard Library
 import re
 
-from typing import Any, Optional
+from typing import Annotated, Any, Literal, Optional
 
 # Third Party Library
 from pydantic import (
@@ -16,8 +16,26 @@ from pydantic import (
 )
 
 
-class EKYCQuery(BaseModel):
-    """Pydantic model for validating E-KYC queries."""
+# Queries.
+class BaseQuery(BaseModel):
+    """Pydantic model for base queries, serving as a discriminator."""
+
+    type: str
+    user_query: str
+    user_id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LoginStudentQuery(BaseQuery):
+    """Pydantic model for validating student login queries."""
+
+    email: EmailStr
+    type: Literal["login"]
+
+
+class RegisterStudentQuery(BaseQuery):
+    """Pydantic model for validating student registration queries."""
 
     email: EmailStr
     is_iti_student: bool = False
@@ -25,13 +43,11 @@ class EKYCQuery(BaseModel):
     mobile_number: str = Field(
         ..., description="10-digit Indian mobile number; accepts optional +91 prefix"
     )
-    roll_number: Optional[int] = Field(
+    roll_number: Optional[str] = Field(
         None,
         description="At least 13-digit roll number; required if is_iti_student=True",
     )
-    user_id: str
-
-    model_config = ConfigDict(from_attributes=True)
+    type: Literal["registration"]
 
     @field_validator("mobile_number")
     @classmethod
@@ -83,8 +99,8 @@ class EKYCQuery(BaseModel):
     @field_validator("roll_number", mode="after")
     @classmethod
     def validate_roll_and_iti(
-        cls, v: Optional[int], info: ValidationInfo
-    ) -> Optional[int]:
+        cls, v: Optional[str], info: ValidationInfo
+    ) -> Optional[str]:
         """Validate roll number and ITI student flag.
 
         Parameters
@@ -96,7 +112,7 @@ class EKYCQuery(BaseModel):
 
         Returns
         -------
-        Optional[int]
+        Optional[str]
             The validated roll number.
 
         Raises
@@ -108,7 +124,7 @@ class EKYCQuery(BaseModel):
 
         iti = info.data["is_iti_student"]
 
-        if v is not None and v < 10**12:
+        if v is not None and len(v) < 13:
             raise ValueError(f"Roll number must be at least 13 digits: {v}")
         if iti and v is None:
             raise ValueError("roll_number is required when is_iti_student=True")
@@ -118,7 +134,36 @@ class EKYCQuery(BaseModel):
         return v
 
 
-class EKYCResults(EKYCQuery):
-    """Pydantic model for validating E-KYC results."""
+NaukriQueryUnion = Annotated[
+    RegisterStudentQuery | LoginStudentQuery, Field(discriminator="type")
+]
 
-    last_graph_run_results: Optional[list[Any]] = None
+
+# Graph run results.
+class NaukriFlowResults(BaseModel):
+    """Pydantic model for validating naukri flow results."""
+
+    explanation_for_student_input: str
+    last_assistant_call: str
+    last_graph_run_results: Optional[Any] = None
+    require_student_input: bool
+    summary_for_student: str
+    user_id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PageResults(BaseModel):
+    """Pydantic model for validating page results."""
+
+    summary_of_page_results: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LoginStudentResults(PageResults):
+    """Pydantic model for validating login student results."""
+
+
+class RegisterStudentResults(PageResults):
+    """Pydantic model for validating register student results."""

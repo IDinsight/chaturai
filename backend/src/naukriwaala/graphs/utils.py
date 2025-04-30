@@ -14,6 +14,7 @@ import httpx
 
 from _griffe.docstrings.models import DocstringSectionText
 from loguru import logger
+from playwright.async_api._generated import Page
 from pydantic import BaseModel
 from pydantic_graph import Graph
 from redis import asyncio as aioredis
@@ -23,6 +24,8 @@ from naukriwaala.config import Settings
 from naukriwaala.utils.general import make_dir
 
 # Globals.
+REDIS_CACHE_PREFIX_BROWSER_STATE = Settings.REDIS_CACHE_PREFIX_BROWSER_STATE
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -36,7 +39,16 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
         graphs.
     """
 
-    adjacency_list: dict[str, list[str]] = {"foobar.foobar": []}
+    adjacency_list: dict[str, list[str]] = {
+        "registration.register_student": [
+            "registration.register_student",
+            "login.login_student",
+        ],
+        "login.login_student": [
+            "registration.register_student",
+            # "profile_completion.complete_profile",
+        ],
+    }
     reverse_adjacency_list = defaultdict(list)
     for module_path, neighbors in adjacency_list.items():
         for neighbor in neighbors:
@@ -68,6 +80,30 @@ def create_graph_mappings() -> None:
             "description": f"Assistant Name: {module_path}\nAssistant Description: {section_text.value}",
         }
     Settings._INTERNAL_GRAPH_MAPPING = graph_mapping
+
+
+async def load_browser_state(*, redis_client: aioredis.Redis) -> dict[str, Any]:
+    """Load browser state from Redis or return a default browser state.
+
+    Parameters
+    ----------
+    redis_client
+        The Redis client.
+
+    Returns
+    -------
+    dict[str, Any]
+        The browser state.
+    """
+
+    browser_state = await redis_client.get(REDIS_CACHE_PREFIX_BROWSER_STATE)
+    if browser_state:
+        return json.loads(browser_state)
+    logger.warning(
+        f"""{REDIS_CACHE_PREFIX_BROWSER_STATE} not found in Redis cache. Returning
+        empty browser state!"""
+    )
+    return {"cookies": [], "origins": []}
 
 
 def load_graph_run_results(
@@ -136,6 +172,21 @@ def save_graph_diagram(*, graph: Graph) -> None:
         )
     except (httpx.HTTPStatusError, httpx.ReadTimeout) as e:
         logger.error(f"Failed to save graph diagram for '{graph.name}' due to: {e}")
+
+
+async def save_browser_state(*, page: Page, redis_client: aioredis.Redis) -> None:
+    """Save browser state to Redis.
+
+    Parameters
+    ----------
+    page
+        The Playwright page object.
+    redis_client
+        The Redis client.
+    """
+
+    browser_state = await page.context.storage_state()
+    await redis_client.set(REDIS_CACHE_PREFIX_BROWSER_STATE, json.dumps(browser_state))
 
 
 async def save_graph_run_results(

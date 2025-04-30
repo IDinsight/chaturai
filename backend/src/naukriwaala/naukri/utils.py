@@ -1,4 +1,4 @@
-"""This module contains utilities for E-KYC."""
+"""This module contains utilities for naukri."""
 
 # Third Party Library
 from playwright.async_api import Error as PlaywrightError

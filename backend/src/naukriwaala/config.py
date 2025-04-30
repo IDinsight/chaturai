@@ -74,9 +74,18 @@ class BackendSettings(BaseSettings):
     PROMETHEUS_MULTIPROC_DIR: str = "/tmp"
 
     # Redis
+    REDIS_CACHE_PREFIX_BROWSER_STATE: str = os.getenv(
+        "REDIS_CACHE_PREFIX_BROWSER_STATE", "browser_state"
+    )
     REDIS_CACHE_PREFIX_CHAT: str = os.getenv("REDIS_CACHE_PREFIX_CHAT", "chat_sessions")
-    REDIS_CACHE_PREFIX_EKYC_GRAPH: str = os.getenv(
-        "REDIS_CACHE_PREFIX_EKYC", "graph_ekyc"
+    REDIS_CACHE_PREFIX_GRAPH_NAUKRI: str = os.getenv(
+        "REDIS_CACHE_PREFIX_GRAPH_NAUKRI", "graph_naukri"
+    )
+    REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION: str = os.getenv(
+        "REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION", "graph_student_registration"
+    )
+    REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN: str = os.getenv(
+        "REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN", "graph_student_login"
     )
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis://localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))

@@ -17,8 +17,9 @@ from prometheus_client import CollectorRegistry, make_asgi_app, multiprocess
 from redis import asyncio as aioredis
 
 # Package Library
-from naukriwaala import admin, ekyc, recommendation
+from naukriwaala import admin, naukri, recommendation
 from naukriwaala.config import Settings
+from naukriwaala.graphs.utils import create_graph_mappings
 from naukriwaala.prometheus_middleware import PrometheusMiddleware
 from naukriwaala.utils.embeddings import load_embedding_model
 from naukriwaala.utils.general import make_dir
@@ -37,7 +38,7 @@ SENTRY_TRACES_SAMPLE_RATE = Settings.SENTRY_TRACES_SAMPLE_RATE
 # Only need to initialize loguru once for the entire backend!
 logger = initialize_logger(logging_level=LOGGING_LEVEL)
 
-tags_metadata = [admin.TAG_METADATA, ekyc.TAG_METADATA, recommendation.TAG_METADATA]
+tags_metadata = [admin.TAG_METADATA, naukri.TAG_METADATA, recommendation.TAG_METADATA]
 
 
 def create_app() -> FastAPI:
@@ -69,7 +70,7 @@ def create_app() -> FastAPI:
 
     # 2.
     app.include_router(admin.routers.router)
-    app.include_router(ekyc.routers.router)
+    app.include_router(naukri.routers.router)
     app.include_router(recommendation.routers.router)
 
     origins = [
@@ -126,9 +127,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     The process is as follows:
 
-    1. Delete the existing graph database and create a new one.
-    2. Load the embedding model.
-    3. Connect to Redis.
+    1. Load the embedding model.
+    2. Connect to Redis.
+    3. Create graph descriptions for the Diagnostic Agent.
     4. Yield control to the application.
     5. Close the Redis connection when the application finishes.
 
@@ -142,6 +143,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     make_dir(Path(os.getenv("PATHS_LOGS_DIR", "/tmp")) / "chat_sessions")
 
+    # 1.
     app.state.embedding_model_openai = load_embedding_model(  # pylint: disable=all
         embedding_model_name=MODELS_EMBEDDING_OPENAI
     )
@@ -149,16 +151,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         embedding_model_name=MODELS_EMBEDDING_ST
     )
 
+    # 2.
     logger.info("Initializing Redis client...")
     app.state.redis = await aioredis.from_url(
         f"{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
     )
     logger.success("Redis connection established!")
 
+    # 3.
+    logger.info("Loading graph descriptions for the Diagnostic Agent...")
+    create_graph_mappings()
+    logger.success("Finished loading graph descriptions for the Diagnostic Agent!")
+
     logger.log("CELEBRATE", "Ready to roll! 🚀")
 
+    # 4.
     yield
 
+    # 5.
     logger.info("Closing Redis connection...")
     await app.state.redis.close()
     logger.success("Redis connection closed!")
