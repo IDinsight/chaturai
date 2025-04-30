@@ -24,6 +24,10 @@ This project includes a data scraper for apprenticeship opportunities from the N
 - **Scheduling**: AWS EventBridge for daily execution
 - **Monitoring**: CloudWatch for logs and metrics
 
+## Known Issues
+
+1. `pydantic-graph` has known issues with `mypy` at the moment. When running `make lint`, we can safely ignore type errors resulting from `pydantic-graph`/`pydantic-ai`.
+
 ## Setup Instructions
 
 1. Copy `cicd/deployment/docker-compose/.template.env` to `cicd/deployment/docker-compose/.env`.
