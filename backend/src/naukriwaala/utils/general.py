@@ -28,7 +28,6 @@ from loguru import logger
 # Package Library
 from naukriwaala.schemas import Valid
 
-# Globals.
 P = ParamSpec("P")
 T = TypeVar("T")
 

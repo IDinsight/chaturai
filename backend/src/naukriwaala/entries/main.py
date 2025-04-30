@@ -49,7 +49,6 @@ assert (
 # Instantiate typer apps for the command line interface.
 cli = typer.Typer()
 
-# Globals.
 PATHS_BACKEND_ROOT = Settings.PATHS_BACKEND_ROOT
 app = create_app()
 

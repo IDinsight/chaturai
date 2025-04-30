@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Package Library
 from naukriwaala.db.utils import get_async_session
 
-# Globals.
 TAG_METADATA = {
     "description": "Application healthcheck.",
     "name": "Admin",

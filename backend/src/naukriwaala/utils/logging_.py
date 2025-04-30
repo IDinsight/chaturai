@@ -22,7 +22,6 @@ from naukriwaala.config import Settings
 from naukriwaala.schemas import Valid
 from naukriwaala.utils.general import escape_angle_brackets
 
-# Globals.
 _LOGGER_INITIALIZED = False
 LOGGING_LOG_LEVEL = Settings.LOGGING_LOG_LEVEL
 

@@ -22,7 +22,6 @@ from naukriwaala.config import Settings
 from naukriwaala.db.utils import Base
 from naukriwaala.recommendation.schemas import Gender
 
-# Globals.
 SCRAPER_TIMEZONE = Settings.SCRAPER_TIMEZONE
 
 # Define the possible status values.

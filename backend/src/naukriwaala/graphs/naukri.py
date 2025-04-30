@@ -45,7 +45,6 @@ from naukriwaala.utils.chat import (
 from naukriwaala.utils.general import telemetry_timer
 from naukriwaala.utils.litellm_ import get_acompletion
 
-# Globals.
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 REDIS_CACHE_PREFIX_GRAPH_NAUKRI = Settings.REDIS_CACHE_PREFIX_GRAPH_NAUKRI
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI

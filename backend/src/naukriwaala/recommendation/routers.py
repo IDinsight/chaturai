@@ -20,7 +20,6 @@ from naukriwaala.recommendation.schemas import (
 )
 from naukriwaala.utils.chat import AsyncChatSessionManager, get_chat_session_manager
 
-# Globals.
 TAG_METADATA = {
     "description": "_Requires API key._ Recommendation engine",
     "name": "Recommendation",

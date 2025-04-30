@@ -35,7 +35,6 @@ from naukriwaala.prompts.base import BasePrompts
 from naukriwaala.schemas import Limits, ValidatorCall
 from naukriwaala.utils.general import convert_to_list, remove_json_markdown
 
-# Globals.
 limits = Limits(max_retry_attempts=5)
 litellm.callbacks = ["logfire"]
 

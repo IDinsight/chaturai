@@ -46,7 +46,6 @@ from naukriwaala.prompts.naukri import NaukriPrompts
 from naukriwaala.utils.chat import AsyncChatSessionManager, log_chat_history
 from naukriwaala.utils.general import telemetry_timer
 
-# Globals.
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN = Settings.REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI

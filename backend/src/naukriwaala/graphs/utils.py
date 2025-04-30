@@ -23,7 +23,6 @@ from redis import asyncio as aioredis
 from naukriwaala.config import Settings
 from naukriwaala.utils.general import make_dir
 
-# Globals.
 REDIS_CACHE_PREFIX_BROWSER_STATE = Settings.REDIS_CACHE_PREFIX_BROWSER_STATE
 
 T = TypeVar("T", bound=BaseModel)

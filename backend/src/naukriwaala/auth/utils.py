@@ -10,7 +10,6 @@ from fastapi.security.api_key import APIKeyHeader
 # Package Library
 from naukriwaala.config import Settings
 
-# Globals.
 API_KEY_NAME = "X-API-Key"  # pragma: allowlist secret
 FASTAPI_API_KEY = Settings.FASTAPI_API_KEY
 

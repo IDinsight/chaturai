@@ -15,7 +15,6 @@ from naukriwaala.graphs.naukri import naukri
 from naukriwaala.naukri.schemas import NaukriFlowResults, NaukriQueryUnion
 from naukriwaala.utils.chat import AsyncChatSessionManager, get_chat_session_manager
 
-# Globals.
 TAG_METADATA = {
     "description": "_Requires API key._ Naukri automation flow",
     "name": "Naukri",

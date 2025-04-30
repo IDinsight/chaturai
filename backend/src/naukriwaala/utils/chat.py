@@ -28,7 +28,6 @@ from naukriwaala.prompts.chat import ChatPrompts
 from naukriwaala.utils.general import convert_to_list
 from naukriwaala.utils.litellm_ import get_acompletion
 
-# Globals.
 CHAT_ENV = Settings.CHAT_ENV
 LITELLM_ENDPOINT = Settings.LITELLM_ENDPOINT
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT

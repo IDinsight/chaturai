@@ -18,7 +18,6 @@ from naukriwaala.config import Settings
 from naukriwaala.utils.general import convert_to_list
 from naukriwaala.utils.litellm_ import get_embedding
 
-# Globals.
 MODELS_EMBEDDING_OPENAI = Settings.MODELS_EMBEDDING_OPENAI
 MODELS_LLM = Settings.MODELS_LLM
 OPENAI_API_KEY = Settings.OPENAI_API_KEY

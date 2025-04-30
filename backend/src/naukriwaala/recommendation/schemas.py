@@ -7,7 +7,6 @@ from typing import Any, Literal, Optional, get_args
 # Third Party Library
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
-# Globals.
 AcademicQualification = Literal[
     "5th",
     "6th",
@@ -129,7 +128,6 @@ class QualificationType(str, Enum):
     trained_under_scheme = "trained_under_scheme"
 
 
-# Globals.
 QUAL_TO_TYPE: dict[str, QualificationType] = {
     **{
         q: QualificationType.academic

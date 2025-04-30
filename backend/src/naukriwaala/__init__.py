@@ -25,7 +25,6 @@ from naukriwaala.utils.embeddings import load_embedding_model
 from naukriwaala.utils.general import make_dir
 from naukriwaala.utils.logging_ import initialize_logger
 
-# Globals.
 DOMAIN_NAME = os.getenv("DOMAIN_NAME", "")
 LOGGING_LEVEL = Settings.LOGGING_LOG_LEVEL
 MODELS_EMBEDDING_OPENAI = Settings.MODELS_EMBEDDING_OPENAI

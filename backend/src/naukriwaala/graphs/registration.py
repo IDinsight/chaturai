@@ -39,7 +39,6 @@ from naukriwaala.prompts.naukri import NaukriPrompts
 from naukriwaala.utils.chat import AsyncChatSessionManager, log_chat_history
 from naukriwaala.utils.general import telemetry_timer
 
-# Globals.
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 REDIS_CACHE_PREFIX_BROWSER_STATE = Settings.REDIS_CACHE_PREFIX_BROWSER_STATE
 REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION = (

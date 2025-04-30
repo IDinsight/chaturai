@@ -15,7 +15,6 @@ from sqlalchemy.orm import DeclarativeBase, Session
 # Package Library
 from naukriwaala.config import Settings
 
-# Globals.
 POSTGRES_ASYNC_API = Settings.POSTGRES_ASYNC_API
 POSTGRES_DB = Settings.POSTGRES_DB
 POSTGRES_DB_POOL_SIZE = Settings.POSTGRES_DB_POOL_SIZE

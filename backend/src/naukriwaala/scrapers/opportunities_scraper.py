@@ -19,7 +19,6 @@ from naukriwaala.config import Settings
 from naukriwaala.db.opportunity import Establishment, Opportunity
 from naukriwaala.db.utils import get_session
 
-# Globals.
 SCRAPER_MAX_VALID_DAYS = Settings.SCRAPER_MAX_VALID_DAYS
 
 
