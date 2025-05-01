@@ -13,6 +13,14 @@ credential_list:
       vertex_credentials: "os.environ/GOOGLE_APPLICATION_CREDENTIALS"
       vertex_location: "os.environ/VERTEXAI_LOCATION"
 
+  - credential_name: default_aws_credential
+    credential_info:
+      description": "Default AWS credentials for all models."
+    credential_values:
+      aws_access_key_id: "os.environ/AWS_ACCESS_KEY_ID"  # pragma: allowlist secret
+      aws_secret_access_key: "os.environ/AWS_SECRET_ACCESS_KEY"  # pragma: allowlist secret
+      aws_region: "us-east-1"
+
 # General LiteLLM settings.
 litellm_settings:
   drop_params: True
@@ -38,6 +46,7 @@ model_list:
     litellm_params:
       litellm_credential_name: default_openai_credential
       model: gpt-4o
+      # model: bedrock/converse/us.meta.llama4-maverick-17b-instruct-v1:0
 
   - model_name: default
     litellm_params:
