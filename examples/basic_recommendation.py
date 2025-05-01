@@ -11,14 +11,9 @@ python ../examples/basic_recommendation.py
 """
 
 # Standard Library
-import asyncio
 import os
 import sys
-
 from pathlib import Path
-
-# Third Party Library
-from loguru import logger
 
 # Append the framework path. NB: This is required if this entry point is invoked from
 # the command line. However, it is not necessary if it is imported from a pip install.
@@ -31,12 +26,15 @@ if __name__ == "__main__":
         sys.path.append(str(PACKAGE_PATH))
 
 # Package Library
-from naukriwaala.db.utils import get_async_session
-from naukriwaala.recommendation.basic_recommendation import BasicRecommendationEngine
+from naukriwaala.recommendation.basic_recommendation import \
+    BasicRecommendationEngine
 from naukriwaala.recommendation.schemas import Gender, StudentProfile
+from naukriwaala.utils.logging_ import initialize_logger
+
+logger = initialize_logger()
 
 
-async def main() -> None:
+def main() -> None:
     """Example script demonstrating the recommendation engine functionality."""
 
     # Create a sample student profile with standard attributes.
@@ -68,10 +66,10 @@ async def main() -> None:
     # Initialize the basic recommendation engine.
     engine = BasicRecommendationEngine()
 
-    async with get_async_session() as asession:
+    try:
         # Get recommendations with score components.
-        recommendations = await engine.get_recommendations(
-            asession=asession, include_score_components=True, limit=5, student=student
+        recommendations = engine.get_recommendations(
+            include_score_components=True, limit=5, student=student
         )
 
         # Print recommendations.
@@ -101,8 +99,8 @@ async def main() -> None:
         for key, value in student2.additional_attributes.items():
             logger.info(f"  * {key}: {value}")
 
-        recommendations2 = await engine.get_recommendations(
-            asession=asession, include_score_components=True, limit=3, student=student2
+        recommendations2 = engine.get_recommendations(
+            include_score_components=True, limit=3, student=student2
         )
 
         for i, rec in enumerate(recommendations2, 1):
@@ -113,7 +111,9 @@ async def main() -> None:
                 logger.info("   Score Components:")
                 for component, score in rec.score_components.items():
                     logger.info(f"   - {component.title()}: {score:.2f}")
+    finally:
+        engine.close()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
