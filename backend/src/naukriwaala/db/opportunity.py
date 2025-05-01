@@ -7,14 +7,13 @@ from __future__ import annotations
 
 # Standard Library
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Self
 from zoneinfo import ZoneInfo
 
 # Third Party Library
 from sqlalchemy import JSON, Boolean, DateTime
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 # Package Library
@@ -65,7 +64,7 @@ class Opportunity(Base):
     updated_by: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     # Relationships.
-    establishment: Mapped["Establishment"] = relationship(
+    establishment: Mapped[Establishment] = relationship(
         "Establishment", back_populates="opportunities"
     )
     establishment_id: Mapped[str] = mapped_column(
@@ -86,7 +85,11 @@ class Opportunity(Base):
 
     @classmethod
     def create_or_update_opportunity(
-        cls, *, establishment_id: str, opportunity_data: dict, session: Session
+        cls,
+        *,
+        establishment_id: str,
+        opportunity_data: dict[str, Any],
+        session: Session,
     ) -> Opportunity:
         """Create or update an opportunity from API data.
 
@@ -107,11 +110,10 @@ class Opportunity(Base):
 
         opportunity = session.query(cls).filter_by(id=opportunity_data["id"]).first()
 
-        if opportunity:
-            # Update existing opportunity.
+        if opportunity:  # Update existing opportunity
+            assert isinstance(opportunity, Opportunity)
             opportunity.update_from_api(api_data=opportunity_data)
-        else:
-            # Create new opportunity.
+        else:  # Create new opportunity
             opportunity = cls(
                 id=opportunity_data["id"], establishment_id=establishment_id
             )
@@ -121,26 +123,22 @@ class Opportunity(Base):
         return opportunity
 
     @classmethod
-    async def get_active_opportunities(
-        cls, *, asession: AsyncSession
-    ) -> list[Opportunity]:
+    def get_active_opportunities(cls, *, session: Session) -> list[Self]:
         """Get all active opportunities with available vacancies.
 
         Parameters
         ----------
-        asession
+        session
             The SQLAlchemy async session to use for all database connections.
 
         Returns
         -------
-        list[Opportunity]
+        list[Self]
             List of active opportunities with available vacancies.
         """
 
         return (
-            await asession.query(cls)
-            .filter(cls.is_active, cls.available_vacancies > 0)
-            .all()
+            session.query(cls).filter(cls.is_active, cls.available_vacancies > 0).all()
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -277,13 +275,13 @@ class Establishment(Base):
     working_days: Mapped[Optional[str]] = mapped_column(String)
 
     # Relationships.
-    opportunities: Mapped[list["Opportunity"]] = relationship(
+    opportunities: Mapped[list[Opportunity]] = relationship(
         "Opportunity", back_populates="establishment"
     )
 
     @classmethod
     def create_establishment_if_not_exists(
-        cls, *, establishment_data: dict, session: Session
+        cls, *, establishment_data: dict[str, Any], session: Session
     ) -> Establishment:
         """Create an establishment if it doesn't exist.
 

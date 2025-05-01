@@ -2,8 +2,6 @@
 
 # pylint: disable=global-statement
 # Standard Library
-
-# Standard Library
 from collections.abc import AsyncGenerator
 
 # Third Party Library

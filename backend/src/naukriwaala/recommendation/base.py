@@ -2,17 +2,30 @@
 
 # Standard Library
 from abc import ABC, abstractmethod
+from typing import Optional
 
 # Third Party Library
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 # Package Library
 from naukriwaala.db.opportunity import Opportunity
+from naukriwaala.db.utils import get_session
 from naukriwaala.recommendation.schemas import RecommendationResult, StudentProfile
 
 
 class BaseRecommendationEngine(ABC):
     """Abstract base class for recommendation engines."""
+
+    def __init__(self, *, db_session: Optional[Session] = None):
+        """Initialize the recommendation engine.
+
+        Parameters
+        ----------
+        db_session
+            The SQLAlchemy session to use for all database connections.
+        """
+
+        self.session = db_session or get_session()
 
     @abstractmethod
     def calculate_score(
@@ -44,10 +57,14 @@ class BaseRecommendationEngine(ABC):
             f"Need to implement {self.__class__.__name__}.calculate_score() method!"
         )
 
-    async def get_recommendations(
+    def close(self) -> None:
+        """Close the database session."""
+
+        self.session.close()
+
+    def get_recommendations(
         self,
         *,
-        asession: AsyncSession,
         include_score_components: bool = False,
         limit: int = 10,
         student: StudentProfile,
@@ -56,8 +73,6 @@ class BaseRecommendationEngine(ABC):
 
         Parameters
         ----------
-        asession
-            The SQLAlchemy async session to use for all database connections.
         include_score_components
             Specifies whether to include score component breakdown.
         limit
@@ -72,7 +87,7 @@ class BaseRecommendationEngine(ABC):
         """
 
         # Get opportunities from the database.
-        opportunities = await Opportunity.get_active_opportunities(asession=asession)
+        opportunities = Opportunity.get_active_opportunities(session=self.session)
 
         # Calculate scores for all opportunities.
         results = []
@@ -82,7 +97,7 @@ class BaseRecommendationEngine(ABC):
             )
             results.append(
                 RecommendationResult(
-                    opportunity_details=opportunity.model_dump(),
+                    opportunity_details=opportunity.to_dict(),
                     opportunity_id=opportunity.id,
                     score=score,
                     score_components=components if include_score_components else None,

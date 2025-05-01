@@ -20,6 +20,7 @@ from naukriwaala.db.opportunity import Establishment, Opportunity
 from naukriwaala.db.utils import get_session
 
 SCRAPER_MAX_VALID_DAYS = Settings.SCRAPER_MAX_VALID_DAYS
+SCRAPER_TIMEZONE = Settings.SCRAPER_TIMEZONE
 
 
 class OpportunitiesScraper:
@@ -61,7 +62,7 @@ class OpportunitiesScraper:
 
         Returns
         -------
-        dict[str, Any]
+        Mapping[str, Any]
             The JSON response from the API as a dictionary.
 
         Raises
@@ -76,7 +77,9 @@ class OpportunitiesScraper:
         try:
             response = requests.get(url, headers=headers, params=params, timeout=600)
             response.raise_for_status()
-            return response.json()
+            response_json = response.json()
+            assert isinstance(response_json, dict)
+            return response_json
         except requests.exceptions.RequestException as e:
             logger.error(
                 f"Error making request with parameters: {params} to {url}: {str(e)}"
@@ -85,7 +88,7 @@ class OpportunitiesScraper:
         finally:
             time.sleep(self.delay)  # Rate limiting
 
-    def scrape_opportunities(
+    def scrape_opportunities(  # pylint:disable=R0915,R1260
         self,
         *,
         end_date: str | None = None,
@@ -115,35 +118,30 @@ class OpportunitiesScraper:
             considered outdated.
         """
 
-        current_page = 1
-        end_datetime = (
-            datetime.strptime(end_date, "%Y-%m-%d").replace(
-                tzinfo=ZoneInfo(Settings.TIMEZONE)
-            )
-            if end_date
-            else None
-        )
-        outdated_from = datetime.now(ZoneInfo(Settings.TIMEZONE)) - timedelta(
-            days=outdated_after
-        )
-        processed_count = 0
+        tz = ZoneInfo(SCRAPER_TIMEZONE)
         start_datetime = (
-            datetime.strptime(start_date, "%Y-%m-%d").replace(
-                tzinfo=ZoneInfo(Settings.TIMEZONE)
-            )
+            datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=tz)
             if start_date
             else None
         )
-        total_pages = None
+        end_datetime = (
+            datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=tz)
+            if end_date
+            else None
+        )
+        outdated_from = datetime.now(tz) - timedelta(days=outdated_after)
 
-        updated_opportunity_ids = set()  # Track which opportunities were updated
+        current_page = 1
+        processed_count = 0
         should_continue = True  # Flag to control when to stop scraping
+        total_pages = None
+        updated_opportunity_ids = set()  # Track which opportunities were updated
 
         try:
             while should_continue and (
                 total_pages is None or current_page <= total_pages
             ):
-                logger.info(f"Processing page: {current_page}")
+                logger.info(f"Processing page: {current_page}/{total_pages}")
 
                 # Fetch page of opportunities.
                 response = self._make_request(
@@ -156,71 +154,80 @@ class OpportunitiesScraper:
                     total_pages = response["meta"]["last_page"]
                     logger.info(f"Total pages to process: {total_pages}")
 
-                # Process opportunities
+                # Process opportunities.
                 for opp_data in response["data"]:
                     try:
                         # Check if opportunity was last updated within the valid period.
                         updated_at = datetime.strptime(
                             opp_data["updated_at"]["date"], "%Y-%m-%d %H:%M:%S.%f"
-                        ).replace(tzinfo=ZoneInfo(Settings.TIMEZONE))
+                        ).replace(tzinfo=tz)
 
                         logger.debug(
                             f"Opportunity {opp_data['id']} updated at {updated_at}"
                         )
 
+                        # This occurs when we've hit opportunities older than
+                        # start_date.
                         if start_datetime is not None and updated_at < start_datetime:
-                            # i.e. we've hit opportunities older than start_date
                             logger.info(
-                                f"Reached opportunities older than {start_datetime} (start_date) at {current_page}. "
-                                f"Stopping scrape."
+                                f"Reached opportunities older than {start_datetime} "
+                                f"(start_date) at {current_page}. Stopping scrape."
                             )
                             should_continue = False
                             break
 
+                        # This occurs when we've hit opportunities newer than end_date.
                         if end_datetime is not None and updated_at > end_datetime:
                             logger.debug(
-                                f"Skipping opportunities newer than {end_datetime} at {current_page}."
+                                f"Skipping opportunities newer than {end_datetime} "
+                                f"(end_date) at {current_page}."
                             )
                             continue
 
+                        # This occurs when we've hit opportunities older than
+                        # outdated_from days.
                         if stop_at_outdated and updated_at < outdated_from:
                             logger.info(
-                                f"Reached opportunities older than {outdated_from} (oudated) at {current_page}. "
-                                "Stopping scrape."
+                                f"Reached opportunities older than {outdated_from} at "
+                                f"{current_page}. Stopping scrape."
                             )
                             should_continue = False
                             break
 
-                        # Process establishment first
+                        # Process establishment first.
                         establishment = (
                             Establishment.create_establishment_if_not_exists(
-                                session=self.session,
                                 establishment_data=opp_data["establishment"],
+                                session=self.session,
                             )
                         )
 
-                        # Process opportunity
+                        # Process opportunity.
                         Opportunity.create_or_update_opportunity(
-                            self.session, opp_data, establishment.id
+                            establishment_id=establishment.id,
+                            opportunity_data=opp_data,
+                            session=self.session,
                         )
-                        updated_opportunity_ids.add(opp_data["id"])
 
+                        updated_opportunity_ids.add(opp_data["id"])
                         processed_count += 1
-                        # Commit every 100 records
+
+                        # Commit every 100 records.
                         if processed_count % 100 == 0:
                             self.session.commit()
-                            logger.info(f"Processed {processed_count} opportunities")
+                            logger.info(f"Processed {processed_count} opportunities.")
 
                     except Exception as e:  # pylint: disable=W0718
                         logger.error(
-                            f"Error processing opportunity {opp_data.get('id')}: {str(e)}"
+                            f"Error processing opportunity {opp_data.get('id')}: "
+                            f"{str(e)}"
                         )
                         self.session.rollback()
 
                 if should_continue:
                     current_page += 1
 
-            # Update statuses for all opportunities
+            # Update statuses for all opportunities.
             logger.info("Updating opportunity statuses...")
             status_counts = Opportunity.update_opportunity_statuses(
                 cutoff_date=outdated_from,
@@ -229,12 +236,12 @@ class OpportunitiesScraper:
             )
             logger.info(
                 f"Marked {status_counts['outdated']} opportunities as outdated and "
-                f"{status_counts['filled']} opportunities as filled"
+                f"{status_counts['filled']} opportunities as filled."
             )
 
-            # Final commit
+            # Final commit.
             self.session.commit()
-            logger.info(f"Completed processing {processed_count} opportunities")
+            logger.info(f"Completed processing {processed_count} opportunities.")
 
         except Exception as e:
             logger.error(f"Error during scraping: {str(e)}")

@@ -317,7 +317,7 @@ class RecommendationQuery(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class RecommendationQueryResultsRefined(RecommendationQuery):
+class RecommendationQueryRefined(RecommendationQuery):
     """Pydantic model to validate recommendation query parameters with additional
     fields.
     """
@@ -326,7 +326,7 @@ class RecommendationQueryResultsRefined(RecommendationQuery):
 
 
 # Query responses.
-class RecommendationQueryResults(RecommendationQueryResultsRefined):
+class RecommendationQueryResults(RecommendationQueryRefined):
     """Pydantic model to validate recommendation query responses."""
 
     answer_response: dict[str, Any] | list[dict[str, Any]]

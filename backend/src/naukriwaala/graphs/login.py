@@ -137,13 +137,13 @@ class LoginExistingStudent(
             # 6.
             canvas = page.locator("canvas.captcha-canvas")
             await canvas.wait_for(state="visible")
-            captcha_bytes: bytes = await canvas.screenshot()
+            # captcha_bytes: bytes = await canvas.screenshot()
 
             # 7.
-            captcha_text = await solve_captcha(captcha_bytes=captcha_bytes)
+            # captcha_text = await solve_captcha(captcha_bytes=captcha_bytes)
 
             # 8.
-            await page.fill('input[placeholder="Enter CAPTCHA"]', captcha_text)
+            # await page.fill('input[placeholder="Enter CAPTCHA"]', captcha_text)
 
             # 9.
 

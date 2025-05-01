@@ -6,7 +6,7 @@ import os
 # Third Party Library
 import logfire
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.requests import Request
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,10 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Package Library
 from naukriwaala.config import Settings
 from naukriwaala.db.utils import get_async_session
-from naukriwaala.recommendation.schemas import (
-    RecommendationQuery,
-    RecommendationQueryResults,
-)
+from naukriwaala.recommendation.basic_recommendation import BasicRecommendationEngine
+from naukriwaala.recommendation.schemas import RecommendationResult, StudentProfile
 from naukriwaala.utils.chat import AsyncChatSessionManager, get_chat_session_manager
 
 TAG_METADATA = {
@@ -30,27 +28,50 @@ GOOGLE_CREDENTIALS_FP = os.getenv("PATHS_GOOGLE_CREDENTIALS")
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
 
-@router.post("/recommend-apprenticeship", response_model=RecommendationQueryResults)
+@router.post("/recommend-apprenticeship", response_model=list[RecommendationResult])
 @logfire.instrument("Running apprenticeship recommendations endpoint...")
 async def recommend_apprenticeship(
-    rec_query: RecommendationQuery,
     request: Request,
+    student: StudentProfile,
     asession: AsyncSession = Depends(get_async_session),
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
+    include_score_components: bool = Query(
+        default=False,
+        description="Whether to include detailed scoring components in the response.",
+    ),
+    limit: int = Query(
+        default=10,
+        description="Maximum number of recommendations to return.",
+        ge=1,
+        le=100,
+    ),
     reset_chat_session: bool = False,
-) -> RecommendationQueryResults:
-    """Recommend apprenticeships for students.
+) -> list[RecommendationResult]:
+    """Get personalized apprenticeship recommendations for a student.
+
+    This endpoint returns a list of apprenticeship opportunities ranked by their match
+    score with the student's profile and preferences.
+
+    The recommendations are based on various factors including:
+        - Education level match
+        - Location preferences
+        - Sector preferences
+        - Stipend requirements
 
     Parameters
     ----------
-    \n\trec_query
-    \t\tThe recommendation query object.
     \n\trequest
     \t\tThe FastAPI request object.
+    \n\tstudent
+    \t\tStudent profile and preferences object.
     \n\tasession
     \t\tThe SQLAlchemy async session to use for all database connections.
     \n\tcsm
     \t\tAn async chat session manager that manages the chat sessions for each user.
+    \n\tinclude_score_components
+    \t\tSpecifies whether to include detailed scoring components in the response.
+    \n\tlimit
+    \t\tThe maximum number of recommendations to return.
     \n\treset_chat_session
     \t\tSpecifies whether to reset the chat session for the user. This can be used to
     \t\tclear the chat history and start a new session. This is useful for testing or
@@ -58,17 +79,21 @@ async def recommend_apprenticeship(
 
     Returns
     -------
-    \n\tRecommendationQueryResults
-    \t\tThe recommendation response.
+    \n\tlist[RecommendationResult]
+    \t\tThe list of recommended opportunities sorted by match score.
     """
 
     logger.info(f"{request = }")
     logger.info(f"{asession = }")
     logger.info(f"{csm = }")
     logger.info(f"{reset_chat_session = }")
-    return RecommendationQueryResults(
-        **rec_query.model_dump(),
-        query_text_refined=rec_query.query_text,
-        answer_response={"foo": "bar"},
-        session_id=1,
-    )
+    engine = BasicRecommendationEngine()
+    try:
+        recommendations = engine.get_recommendations(
+            include_score_components=include_score_components,
+            limit=limit,
+            student=student,
+        )
+        return recommendations
+    finally:
+        engine.close()
