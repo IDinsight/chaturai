@@ -17,6 +17,7 @@ from src.recommendation.engine import (
     QualificationType,
 )
 
+
 db_url = URL.create(
     database="naukriwaala",
     drivername="postgresql+" + "psycopg2",

@@ -19,7 +19,7 @@ class InitRegistrationRequest(BaseModel):
         return v
 
 
-class OTPRequest(BaseModel):
+class CompleteRegistrationRequest(InitRegistrationRequest):
     """
     Request model for OTP
     """

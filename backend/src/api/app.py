@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, HTTPException
 from typing import List
 from ..recommendation.engine import StudentProfile, RecommendationResult
 from ..recommendation.implementations.basic_engine import BasicRecommendationEngine
 from .auth import get_api_key
 from ..settings import settings
-import logging
+from loguru import logger
+from ..registration.schema import InitRegistrationRequest, CompleteRegistrationRequest
+from ..registration.tasks import initiate_registration, complete_registration_with_otp
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Naukriwaala API",
@@ -73,11 +72,22 @@ async def get_recommendations(
         engine.close()
 
 
-@app.post("/naps/register")
-async def register_on_naps():
-    """Register on NAPS."""
-    # Placeholder for NAPS registration logic
-    return {"message": "Registered on NAPS"}
+@app.post("/naps-registration/initiate")
+async def api_initiate_registration(request: InitRegistrationRequest):
+    """Initiate the registration process by sending an OTP to the user's phone number."""
+    result = await initiate_registration(request)
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
+
+
+@app.post("/naps-registration/complete")
+async def api_complete_registration(request: CompleteRegistrationRequest):
+    """Complete the registration process by verifying the OTP sent to the user's phone number."""
+    result = await complete_registration_with_otp(request)
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
 
 
 @app.get("/health")
