@@ -5,7 +5,7 @@ ARG NAME=chaturai
 ARG PORT=8000
 ARG HOME_DIR=/usr/src/${NAME}
 RUN apt-get update && apt-get install -y \
-    gcc libpq-dev wget git curl
+    gcc libpq-dev wget git curl && apt-get install tesseract-ocr -y
 
 RUN set -ex && apt-get autoremove -y --purge wget && rm -rf /var/lib/apt/lists/*
 

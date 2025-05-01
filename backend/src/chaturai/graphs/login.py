@@ -34,7 +34,11 @@ from chaturai.chatur.schemas import (
     LoginStudentResults,
     RegisterStudentResults,
 )
-from chaturai.chatur.utils import select_login_radio  # , solve_captcha
+from chaturai.chatur.utils import (
+    select_login_radio,
+    solve_and_fill_captcha,
+    submit_and_capture_api_response,
+)
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
     load_browser_state,
@@ -120,7 +124,7 @@ class LoginExistingStudent(
 
         async with async_playwright() as pw:
             # 1.
-            browser = await pw.chromium.launch(headless=False)
+            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
             context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
             page = await context.new_page()
 
@@ -130,32 +134,39 @@ class LoginExistingStudent(
             # 3.
             await select_login_radio(page=page)
 
-            # 4. TODO
+            # 4. Enter email
+            await page.fill(
+                "input[placeholder='Enter Your Email ID']",
+                str(ctx.deps.login_student_query.email),
+            )
 
-            # 5. TODO
+            # 5.
+            await solve_and_fill_captcha(page=page)
 
-            # 6.
-            canvas = page.locator("canvas.captcha-canvas")
-            await canvas.wait_for(state="visible")
-            # captcha_bytes: bytes = await canvas.screenshot()
+            # 6. Request OTP
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                button_name="Submit",
+                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
+            )
 
-            # 7.
-            # captcha_text = await solve_captcha(captcha_bytes=captcha_bytes)
+            # 7. Check the response
+            data = response_json["data"]
+            assert response_json["status"] == "success"
+            assert data["email"] == ctx.deps.login_student_query.email
+            # TODO: handle error cases
 
-            # 8.
-            # await page.fill('input[placeholder="Enter CAPTCHA"]', captcha_text)
-
-            # 9.
-
-            # Pause to verify in the browser.
+            # Pause to verify in the browser. Can remove this later.
             await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # X.
+            # 7.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
         return End(  # type: ignore
             LoginStudentResults(  # type: ignore
-                summary_of_page_results="Login successful. Please continue with apprenticeship process.",
+                summary_of_page_results="Initiated login. "
+                "Please request OTP from the student. It should be sent to the "
+                "mobile number or the email address."
             )
         )
 

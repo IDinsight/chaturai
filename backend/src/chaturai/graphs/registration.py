@@ -31,7 +31,11 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import RegisterStudentQuery, RegisterStudentResults
-from chaturai.chatur.utils import select_register_radio
+from chaturai.chatur.utils import (
+    select_register_radio,
+    solve_and_fill_captcha,
+    submit_and_capture_api_response
+)
 from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state, save_graph_diagram
 from chaturai.metrics.logfire_metrics import register_student_agent_hist
@@ -165,8 +169,8 @@ class RegisterNewStudent(
         2. Navigate to the page shell.
         3. Switch into Register mode.
         4. Fill out the rest of the register form.
-        5. XXX
-        X. Save the browser state in Redis and close the browser.
+        5. Solve CAPTCHA.
+        6. Save the browser state in Redis and close the browser.
 
         Parameters
         ----------
@@ -185,7 +189,7 @@ class RegisterNewStudent(
             return GetITIStudentDetails()
 
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=False)
+            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
             page = await browser.new_page()
 
             # 2.
@@ -209,16 +213,33 @@ class RegisterNewStudent(
             )
 
             # 5.
+            await solve_and_fill_captcha(page=page)
+
+            # Wait for timeout for demo
+            # TODO: remove this later
+            await page.wait_for_timeout(500)
+
+            # 6.
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
+                button_name="Register",
+            )
+
+            # TODO: check if the response is valid
+            assert response_json["status"] == "success"
 
             # Pause to verify in the browser. Can remove this later.
-            await asyncio.get_event_loop().run_in_executor(None, input)
+            # await asyncio.get_event_loop().run_in_executor(None, input)
 
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
         return End(  # type: ignore
             RegisterStudentResults(  # type: ignore
-                summary_of_page_results="Account creation completed successfully. Shall I continue with the next step in the apprenticeship process for you?",
+                summary_of_page_results="Initiated account creation successfully. "
+                "Please request OTP from the student. It should be sent to the "
+                "mobile number or the email address."
             )
         )
 
