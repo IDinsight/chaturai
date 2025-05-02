@@ -1,6 +1,5 @@
 [![Milestones](https://img.shields.io/badge/Milestones-1-informational)](#release-plan)
 [![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)](#current-phase)
-[![License](https://img.shields.io/badge/License-MIT-green)](#license)
 
 ---
 

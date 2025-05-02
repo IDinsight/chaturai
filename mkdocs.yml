@@ -28,55 +28,25 @@ nav:
       - blog/index.md
 
   - Components:
-      - components/index.md
-      - User-facing components:
-          - Admin App:
-              - components/admin-app/index.md
-              - Question Answering Contents: components/admin-app/question-answering/index.md
-              - Urgency Detection Rules: components/admin-app/urgency-rules/index.md
-              - Dashboard: components/admin-app/dashboard/index.md
-          - Question-Answering Service:
-              - components/qa-service/index.md
-              - Search: components/qa-service/search.md
-              - Voice Search: components/qa-service/voice-search.md
-              - Response Feedback: components/qa-service/response-feedback.md
-              - Content Feedback: components/qa-service/content-feedback.md
-          - Urgency Detection Service:
-              - components/urgency-detection/index.md
-          - Workspaces:
-              - components/workspaces/index.md
-      - Internal components:
-          - LLM Proxy Server:
-              - components/litellm-proxy/index.md
-          - Hugging Face Embeddings:
-              - components/huggingface-embeddings/index.md
-              - How to use: components/huggingface-embeddings/how-to-use.md
-          - Multi-turn Chat:
-              - components/multi-turn-chat/index.md
-          - Voice Service:
-              - components/voice-service/index.md
-              - In-house models: components/voice-service/in-house-models.md
-              - External APIs: components/voice-service/external-apis.md
-          - DocMuncher:
-              - components/docmuncher/index.md
+      - Overview: components/index.md
+      - Apprenticeship Recommendation:
+          - Overview: components/apprenticeship-recommendation/index.md
+      - Automated Registration:
+          - Overview: components/automated-registration/index.md
+      - Career Coaching:
+          - Overview: components/career-coaching/index.md
 
   - Integrations:
       - integrations/index.md
       - Chat Managers:
           - Turn.io: integrations/chat_managers/turn.io/turn.md
 
-  - Deploy:
-      - Quick setup with Docker Compose: deployment/quick-setup.md
-      - Architecture: deployment/architecture.md
-      - Configuring ChaturAI: deployment/config-options.md
+  - Deployment:
+      - Quick Setup with Docker Compose: deployment/quick-setup.md
 
   - Contribute:
-      - Guidelines: develop/contributing.md
-      - Setup: develop/setup.md
-      - Testing:
-          - Backend Tests: develop/testing/core-backend-testing.md
-          - In-house Speech Service Tests: develop/testing/speech-service-testing.md
-      - Validation: develop/validation.md
+      - Guidelines: development/contributing.md
+      - Setup: develop/local_setup.md
 
   - Contact us:
       - Team: contact_us.md

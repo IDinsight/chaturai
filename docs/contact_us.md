@@ -13,7 +13,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
   <!-- Card: Jahnavi Meher -->
   <div style="text-align: center; width: 200px;">
     <img
-      src="./images/author-avatars/jahnavi.png"
+      src="/images/author-avatars/jahnavi.png"
       alt="Jahnavi Meher"
       style="width: 100px; height: 140px; border-radius: 50%; border: 3px solid #4CAF50; object-fit: cover;"
     >
@@ -27,7 +27,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
   <!-- Card: Suzin You -->
   <div style="text-align: center; width: 200px;">
     <img
-      src="./images/author-avatars/suzin.png"
+      src="/images/author-avatars/suzin.png"
       alt="Suzin You"
       style="width: 100px; height: 140px; border-radius: 50%; border: 3px solid #2196F3; object-fit: cover;"
     >
@@ -41,7 +41,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
   <!-- Card: Tony Zhao -->
   <div style="text-align: center; width: 200px;">
     <img
-      src="./images/author-avatars/tony.png"
+      src="/images/author-avatars/tony.png"
       alt="Tony Zhao"
       style="width: 100px; height: 140px; border-radius: 50%; border: 3px solid #FF5722; object-fit: cover;"
     >
@@ -63,4 +63,4 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
 
 ---
 
-> 📌 *We are part of IDinsight’s* **[DSEM team](https://www.idinsight.org/methodology/data-science/)**. Learn more about our data science, engineering, and measurement expertise.
+> 📌 *We are part of IDinsight’s* **DSEM team**. [Learn more](https://www.idinsight.org/methodology/data-science/) about our data science, engineering, and measurement expertise.

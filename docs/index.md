@@ -23,21 +23,9 @@
   <strong >Scalable & Easy to Deploy</strong><br>
   Containerized app that can be deployed anywhere with minimal setup
 
-- <span class="secondary-color big-font">:material-microphone:</span><br>
-  <strong >Voice</strong> <br>
-  Ask questions and receive answers using voice memos
-
 </div>
 
-<strong >:octicons-check-16: LLM-powered search</strong>: Answers questions to database content using LLM embeddings.
-
-<strong >:octicons-check-16: LLM responses</strong> : Craft a custom reponse to users using LLM chat
-
-<strong >:octicons-check-16: Chat manager integration</strong> : Integrate with [Turn.io](https://turn.io), [Glific](https://glific.org), [Typebot](https://typebot.io/) and more
-
-<strong >:octicons-check-16: Manage content</strong> : Use the Admin App to add, edit, and delete content in the database
-
-<strong >:octicons-check-16: Flag urgent messages</strong> : Identify messages that are urgent based on your rules
+<strong >:octicons-check-16: Chat manager integration</strong> : Integrate with [Turn.io](https://turn.io) and more
 
 <br>
 [See Full Roadmap :octicons-arrow-right-24:](./roadmap.md){ .md-button}
