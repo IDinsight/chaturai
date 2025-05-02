@@ -36,8 +36,8 @@ model_list:
   # Do NOT change the model name for chat unless you really know what you are doing since it is used in the backend code!
   - model_name: chat
     litellm_params:
-      litellm_credential_name: default_vertexai_credential
-      model: vertex_ai/gemini-2.0-flash
+      litellm_credential_name: default_openai_credential
+      model: gpt-4o
 
   - model_name: default
     litellm_params:

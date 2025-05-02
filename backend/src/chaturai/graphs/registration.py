@@ -5,7 +5,7 @@ The student registration graph does the following:
 1. Navigate to the `Register as a candidate` page and auto-fill the required fields.
 2. If the student is an ITI student, then it will fill out the roll number:
     2.1 Find additional details regarding the student.
-    2.2 XXX
+    2.2 XXX # TODO: Test with ITI roll number.
 3. Solve the text-based CAPTCHA.
 4. Submit the registration form.
 5. Return the graph run results containing (among other things) the persisted **page**
@@ -289,6 +289,8 @@ async def register_student(
             going on between you and the student!**
 
     🚫 DO NOT USE THIS ASSISTANT IF
+        - You are trying to **continue the registration process** for a student who
+            already initiated the registration process.
         - You are trying to **log in a student who already has an account**.
         - You are trying to **continue the application or document submission** process
             for a student with an existing account.

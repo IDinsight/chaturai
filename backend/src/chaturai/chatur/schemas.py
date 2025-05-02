@@ -124,12 +124,82 @@ class RegisterStudentQuery(BaseQuery):
 
         iti = info.data["is_iti_student"]
 
-        if v is not None and len(v) < 13:
-            raise ValueError(f"Roll number must be at least 13 digits: {v}")
+        if v is not None and len(v) != 13:
+            raise ValueError(f"Roll number must be exactly 13 digits: {v}")
         if iti and v is None:
             raise ValueError("roll_number is required when is_iti_student=True")
         if not iti and v is not None:
             raise ValueError("roll_number must be omitted when is_iti_student=False")
+
+        return v
+
+
+class RegisterStudentOTPQuery(BaseQuery):
+    """Pydantic model for validating student registration OTP queries."""
+
+    otp: str = Field(
+        ..., description="6-digit OTP sent to the registered mobile number"
+    )
+    type: Literal["registration_otp"]
+
+    @field_validator("otp")
+    @classmethod
+    def validate_otp(cls, v: str) -> str:
+        """Validate the OTP.
+
+        Parameters
+        ----------
+        v
+            The OTP to validate.
+
+        Returns
+        -------
+        str
+            The validated OTP.
+
+        Raises
+        ------
+        ValueError
+            If the OTP is not exactly 6 digits.
+        """
+
+        if not (v.isdigit() and len(v) == 6):
+            raise ValueError(f"OTP must be exactly 6 digits: {v}")
+
+        return v
+
+
+class RegisterStudentOTPQuery(BaseQuery):
+    """Pydantic model for validating student registration OTP queries."""
+
+    otp: str = Field(
+        ..., description="6-digit OTP sent to the registered mobile number and email"
+    )
+    type: Literal["registration_otp"]
+
+    @field_validator("otp")
+    @classmethod
+    def validate_otp(cls, v: str) -> str:
+        """Validate the OTP.
+
+        Parameters
+        ----------
+        v
+            The OTP to validate.
+
+        Returns
+        -------
+        str
+            The validated OTP.
+
+        Raises
+        ------
+        ValueError
+            If the OTP is not exactly 6 digits.
+        """
+
+        if not (v.isdigit() and len(v) == 6):
+            raise ValueError(f"OTP must be exactly 6 digits: {v}")
 
         return v
 
