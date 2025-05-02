@@ -15,7 +15,7 @@ repos:
     - id: black
       additional_dependencies: ["toml"]
       files: ^backend/.*\.py$
-      language_version: python3.11
+      language_version: python3
 
 # Detect secrets
 -   repo: https://github.com/Yelp/detect-secrets
