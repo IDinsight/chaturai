@@ -28,13 +28,14 @@ nav:
       - blog/index.md
 
   - Components:
-      - Overview: components/index.md
-      - Apprenticeship Recommendation:
-          - Overview: components/apprenticeship-recommendation/index.md
-      - Automated Registration:
-          - Overview: components/automated-registration/index.md
-      - Career Coaching:
-          - Overview: components/career-coaching/index.md
+      - components/index.md
+      - User-facing components:
+        - Apprenticeship Recommendation:
+          - components/apprenticeship-recommendation/index.md
+        - Automated Registration:
+          - components/automated-registration/index.md
+        - Career Coaching:
+          - components/career-coaching/index.md
 
   - Integrations:
       - integrations/index.md
@@ -46,7 +47,7 @@ nav:
 
   - Contribute:
       - Guidelines: development/contributing.md
-      - Setup: develop/local_setup.md
+      - Setup: development/local_setup.md
 
   - Contact us:
       - Team: contact_us.md

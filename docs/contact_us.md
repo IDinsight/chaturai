@@ -19,7 +19,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
     >
     <h3 style="margin: 0.5rem 0 0.25rem;">Jahnavi Meher</h3>
     <p style="margin: 0; font-style: italic; color: #555;">Senior Product Manager</p>
-    <p style="margin: 0.5rem 0;">
+    <p style="margin: 0.5rem 0; word-break: break-word; overflow-wrap: anywhere;">
       📧 <a href="mailto:jahnavi.meher@idinsight.org">jahnavi.meher@idinsight.org</a>
     </p>
   </div>
@@ -33,7 +33,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
     >
     <h3 style="margin: 0.5rem 0 0.25rem;">Suzin You</h3>
     <p style="margin: 0; font-style: italic; color: #555;">Data Scientist</p>
-    <p style="margin: 0.5rem 0;">
+    <p style="margin: 0.5rem 0; word-break: break-word; overflow-wrap: anywhere;">
       📧 <a href="mailto:suzin.you@idinsight.org">suzin.you@idinsight.org</a>
     </p>
   </div>
@@ -47,7 +47,7 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
     >
     <h3 style="margin: 0.5rem 0 0.25rem;">Tony Zhao</h3>
     <p style="margin: 0; font-style: italic; color: #555;">Data Scientist</p>
-    <p style="margin: 0.5rem 0;">
+    <p style="margin: 0.5rem 0; word-break: break-word; overflow-wrap: anywhere;">
       📧 <a href="mailto:tony.zhao@idinsight.org">tony.zhao@idinsight.org</a>
     </p>
   </div>

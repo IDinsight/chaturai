@@ -20,7 +20,7 @@ In this section you can find the different components within ChaturAI.
 
     After you have registered, ChaturAI will recommend suitable apprenticeships based on your profile and tailored to your personal preferences and skill set.
 
-    [:octicons-arrow-right-24: More info](./apprentice-recommendation/index.md)
+    [:octicons-arrow-right-24: More info](./apprenticeship-recommendation/index.md)
 
 - :material-api:{ .lg .middle .red} __Career Coaching__
 
