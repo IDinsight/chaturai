@@ -2,7 +2,7 @@
 services:
   api:
     volumes:
-      - ${PATHS_PROJECT_DIR}/backend:/usr/src/naukriwaala
+      - ${PATHS_PROJECT_DIR}/backend:/usr/src/chaturai
     restart: always
     command: >
       /bin/sh -c "

@@ -1,7 +1,7 @@
 FROM python:3.11-slim-bookworm
 LABEL maintainer="IDinsight"
 
-ARG NAME=naukriwaala
+ARG NAME=chaturai
 ARG PORT=8000
 ARG HOME_DIR=/usr/src/${NAME}
 RUN apt-get update && apt-get install -y \

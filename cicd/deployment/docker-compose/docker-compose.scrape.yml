@@ -13,8 +13,8 @@ services:
     ports:
       - "8001:8001"
     networks:
-      - naukriwaala-dev_default
+      - chaturai-dev_default
 
 networks:
-  naukriwaala-dev_default:
+  chaturai-dev_default:
     external: true

@@ -26,10 +26,9 @@ if __name__ == "__main__":
         sys.path.append(str(PACKAGE_PATH))
 
 # Package Library
-from naukriwaala.recommendation.basic_recommendation import \
-    BasicRecommendationEngine
-from naukriwaala.recommendation.schemas import Gender, StudentProfile
-from naukriwaala.utils.logging_ import initialize_logger
+from chaturai.recommendation.basic_recommendation import BasicRecommendationEngine
+from chaturai.recommendation.schemas import Gender, StudentProfile
+from chaturai.utils.logging_ import initialize_logger
 
 logger = initialize_logger()
 

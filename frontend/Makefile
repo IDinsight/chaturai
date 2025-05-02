@@ -9,7 +9,7 @@ help: ## Display available commands
 
 ########## GLOBALS ##########
 SHELL := /bin/bash
-PROJECT_NAME = naukriwaala
+PROJECT_NAME = chaturai
 
 # Color codes for output.
 RED := $(shell tput setaf 1)

@@ -18,7 +18,7 @@ from src.recommendation.engine import (
 )
 
 db_url = URL.create(
-    database="naukriwaala",
+    database="chaturai",
     drivername="postgresql+" + "psycopg2",
     host="localhost",
     password=os.getenv("POSTGRES_PASSWORD"),
@@ -80,7 +80,7 @@ Soft criteria
 
 Rank by
 1. Stipend amount
-2. cosine similarity of interests and naukri type
+2. cosine similarity of interests and chatur type
 
 Note
 - We'll exclude working_days since vast majority of opportunities are 6 days
@@ -88,7 +88,7 @@ Note
 
 # Locations data collection with LLM ##########################################
 
-S3_PREFIX = "s3://naukriwaala-bucket/rwf_contracts/"
+S3_PREFIX = "s3://chaturai-bucket/rwf_contracts/"
 locations = pd.read_csv(S3_PREFIX + "locations.csv")
 locations.groupby("state_name").nunique()
 

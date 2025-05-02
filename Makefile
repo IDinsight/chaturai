@@ -9,7 +9,7 @@ help: ## Display available commands
 
 ########## GLOBALS ##########
 SHELL := /bin/bash
-PROJECT_NAME = naukriwaala
+PROJECT_NAME = chaturai
 
 # Docker image versions.
 LITELLM_IMAGE = ghcr.io/berriai/litellm:main-v1.67.0-stable
@@ -115,21 +115,21 @@ restart-docker-compose-dev: stop-docker-compose-dev start-docker-compose-dev ## 
 # Dev
 start-docker-compose-dev: ## Start Docker Compose dev environment
 	@echo "$(GREEN)Spinning up dev Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p naukriwaala-dev up --build -d --remove-orphans
+	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev up --build -d --remove-orphans
 	@docker system prune -f
 
 stop-docker-compose-dev: ## Stop Docker Compose dev environment
 	@echo "$(RED)Spinning down dev Docker containers...$(RESET)"
-	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p naukriwaala-dev down --volumes
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev down --volumes
 
 # Prod
 prod-run:  ## Start Docker Compose prod environment
 	@echo "$(GREEN)Spinning up prod Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p naukriwaala up --build -d --remove-orphans
+	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p chaturai up --build -d --remove-orphans
 	@docker system prune -f
 
 # Scraper
 scrape:  ## Run the scraper Docker container
 	@echo "$(GREEN)Spinning up scraper Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p naukriwaala-scrape build scraper
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p naukriwaala-scrape run --rm scraper
+	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape build scraper
+	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape run --rm scraper

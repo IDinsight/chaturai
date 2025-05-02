@@ -57,7 +57,7 @@ import_heading_localfolder = "Local Folder"
 import_heading_stdlib = "Standard Library"
 import_heading_thirdparty = "Third Party Library"
 include_trailing_comma = true
-known_first_party = "naukriwaala"
+known_first_party = "chaturai"
 known_third_party = "git, mpi4py, ntpath, numpy, pexpect, pytest, sphinx_rtd_theme, yaml"
 line_length = 88
 lines_between_types = 1
@@ -75,9 +75,9 @@ authors = [
     "Suzin You <7042047+suzinyou@users.noreply.github.com>",
 ]
 description = "Your guide for your apprenticeship journey (National Apprenticeship Promotion Scheme)"
-name = "naukriwaala"
+name = "chaturai"
 package-mode = false
-packages = [{include = "naukriwaala", from="src"}]
+packages = [{include = "chaturai", from="src"}]
 readme = "../README.md"
 version = "0.1.0"
 
@@ -153,7 +153,7 @@ isort = "5.13.2"
 jupyter = "^1.1.1"
 mkdocs = "^1.6.1"
 mkdocs-glightbox = "^0.4.0"
-mkdocs-material = "^9.5.34"
+mkdocs-material = "^9.6.12"
 mkdocs-open-in-new-tab = "1.0.3"
 mypy = "1.11.0"
 mypy-extensions = "1.0.0"
@@ -177,7 +177,7 @@ s3fs = "^2025.3.2"
 poetry-plugin-export = ">=1.8"
 
 [tool.poetry.scripts]
-naukriwaala = "naukriwaala.entries.main:cli"
+chaturai = "chaturai.entries.main:cli"
 
 # Pytest
 [tool.pytest.ini_options]
@@ -194,7 +194,7 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "pragma: no cover",
 ]
-omit = ["./src/naukriwaala/__init__.py"]
+omit = ["./src/chaturai/__init__.py"]
 
 [tool.coverage.run]
 branch = true

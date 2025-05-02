@@ -1,11 +1,11 @@
 import pandas as pd
 
-S3_PREFIX = "s3://naukriwaala-bucket/rwf_contracts/"
+S3_PREFIX = "s3://chaturai-bucket/rwf_contracts/"
 
 # load contracts data ########################################
 contracts = pd.read_excel(
     S3_PREFIX + "Candidates_10_April_2025_11_31_PM.xlsx",
-    storage_options=dict(profile="naukriwaala"),
+    storage_options=dict(profile="chaturai"),
 )
 
 contracts.naps_date.min(), contracts.naps_date.max()
@@ -58,7 +58,7 @@ contracts = pd.read_csv("./data/contracts_tmp.csv")
 
 students = pd.read_excel(
     S3_PREFIX + "Candidates_10_April_2025_11_31_PM.xlsx",
-    storage_options=dict(profile="naukriwaala"),
+    storage_options=dict(profile="chaturai"),
 )
 students.info()
 
@@ -101,7 +101,7 @@ contracts.apprenticeship_status.unique()
 # Load opportunities data ############################################
 opportunities = pd.read_excel(
     S3_PREFIX + "Opportunities List.xlsx",
-    storage_options=dict(profile="naukriwaala"),
+    storage_options=dict(profile="chaturai"),
 )
 
 opportunities.info()

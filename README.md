@@ -1,4 +1,4 @@
-# Naukriwaala
+# ChaturAI
 
 Your guide for your apprenticeship journey (for the National Apprenticeship Promotion Scheme).
 
@@ -61,10 +61,10 @@ This project includes a data scraper for apprenticeship opportunities from the N
    1. Allow `direnv` to load the environment variables by running `direnv allow`. This should allow `direnv` to load all environment variables for the backend.
    2. Execute `make fresh-env`. This will create a new virtual environment for the backend and install all dependencies.
    3. Execute `eval $(poetry env activate)`: This will activate the virtual environment created by `make fresh-env`.
-   4. Execute `python src/naukriwaala/entries/main.py`: This will start the FastAPI server on `http://localhost:8000`.
+   4. Execute `python src/chaturai/entries/main.py`: This will start the FastAPI server on `http://localhost:8000`.
 6. Go to [http://localhost:8000/docs](http://localhost:8000/docs) to view the backend API routes.
 
-   1. Try out the `naukri-flow` endpoint using the following parameters to simulate a student creating a new account:
+   1. Try out the `chatur-flow` endpoint using the following parameters to simulate a student creating a new account:
 
       ```json
       {
@@ -95,7 +95,7 @@ This project includes a data scraper for apprenticeship opportunities from the N
 
 1. Create a `.env` file with your database configuration:
 
-DATABASE_URL=postgresql://user:password@your-rds-instance:5432/naukriwaala
+DATABASE_URL=postgresql://user:password@your-rds-instance:5432/chaturai
 2. Install dependencies:
 
 ```bash
@@ -121,16 +121,16 @@ python -m src.scrapers.opportunities_scraper
 1. Create an ECR repository:
 
 ```bash
-aws ecr create-repository --repository-name naukriwaala-scraper
+aws ecr create-repository --repository-name chaturai-scraper
 ```
 
 2. Build and push the Docker image:
 
 ```bash
 aws ecr get-login-password --region region | docker login --username AWS --password-stdin your-account-id.dkr.ecr.region.amazonaws.com
-docker build -t naukriwaala-scraper .
-docker tag naukriwaala-scraper:latest your-account-id.dkr.ecr.region.amazonaws.com/naukriwaala-scraper:latest
-docker push your-account-id.dkr.ecr.region.amazonaws.com/naukriwaala-scraper:latest
+docker build -t chaturai-scraper .
+docker tag chaturai-scraper:latest your-account-id.dkr.ecr.region.amazonaws.com/chaturai-scraper:latest
+docker push your-account-id.dkr.ecr.region.amazonaws.com/chaturai-scraper:latest
 ```
 
 3. Create an ECS Task Definition (sample provided in `ecs-task-definition.json`)

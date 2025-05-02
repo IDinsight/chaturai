@@ -1,3 +1,5 @@
+"""This module contains the Alembic environment setup for database migrations."""
+
 # Standard Library
 import os
 import sys
@@ -7,7 +9,6 @@ from pathlib import Path
 
 # Third Party Library
 from alembic import context  # type: ignore
-from dotenv import load_dotenv
 from sqlalchemy import create_engine, engine_from_config, pool
 
 # Append the framework path.
@@ -19,11 +20,8 @@ if PACKAGE_PATH not in sys.path:
     sys.path.append(str(PACKAGE_PATH))
 
 # Package Library
-from naukriwaala.config import BackendSettings
-from naukriwaala.db.utils import Base
-
-# Load environment variables
-load_dotenv()
+from chaturai.config import BackendSettings
+from chaturai.db.utils import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
