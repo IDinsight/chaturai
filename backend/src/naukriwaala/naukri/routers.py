@@ -32,7 +32,7 @@ async def naukri_flow(
     request: Request,
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     generate_graph_diagrams: bool = False,
-    reset_chat_session: bool = False,
+    reset_chat_and_graph_state: bool = False,
 ) -> NaukriFlowResults:
     """Naukri flow.
 
@@ -46,10 +46,11 @@ async def naukri_flow(
     \t\tAn async chat session manager that manages the chat sessions for each user.
     \n\tgenerate_graph_diagrams
     \t\tSpecifies whether to generate graph diagrams for the endpoint.
-    \n\treset_chat_session
-    \t\tSpecifies whether to reset the chat session for the user. This can be used to
-    \t\tclear the chat history and start a new session. This is useful for testing or
-    \t\tdebugging purposes. By default, it is set to `False`.
+    \n\treset_chat_and_graph_state
+    \t\tSpecifies whether to reset the chat session and the graph state for the user.
+    \t\tThis can be used to clear the chat history and graph state, effectively
+    \t\tstarting a completely new session. This is useful for testing or debugging
+    \t\tpurposes.
 
     Returns
     -------
@@ -62,5 +63,5 @@ async def naukri_flow(
         generate_graph_diagrams=generate_graph_diagrams,
         naukri_query=naukri_query,
         redis_client=request.app.state.redis,
-        reset_chat_session=reset_chat_session,
+        reset_chat_and_graph_state=reset_chat_and_graph_state,
     )

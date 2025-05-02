@@ -144,7 +144,7 @@ class NaukriFlowResults(BaseModel):
     """Pydantic model for validating naukri flow results."""
 
     explanation_for_student_input: str
-    last_assistant_call: str
+    last_assistant_call: str | None
     last_graph_run_results: Optional[Any] = None
     require_student_input: bool
     summary_for_student: str

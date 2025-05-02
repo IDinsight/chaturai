@@ -518,7 +518,7 @@ async def naukri(
     generate_graph_diagrams: bool = False,
     naukri_query: NaukriQueryUnion,
     redis_client: aioredis.Redis,
-    reset_chat_session: bool = False,
+    reset_chat_and_graph_state: bool = False,
 ) -> NaukriFlowResults:
     """Help a student onboard and apply to apprenticeships.
 
@@ -546,8 +546,11 @@ async def naukri(
         The query object.
     redis_client
         The Redis client.
-    reset_chat_session
-        Specìfies whether to reset the chat session for the agent.
+    reset_chat_and_graph_state
+        Specifies whether to reset the chat session and the graph state for the user.
+        This can be used to clear the chat history and graph state, effectively
+        starting a completely new session. This is useful for testing or debugging
+        purposes.
 
     Returns
     -------
@@ -562,7 +565,7 @@ async def naukri(
     chat_history, chat_params, session_id = await csm.init_chat_session(
         model_name="chat",
         namespace="naukri-agent",
-        reset_chat_session=reset_chat_session,
+        reset_chat_session=reset_chat_and_graph_state,
         system_message=NaukriPrompts.system_messages["naukri_agent"],
         text_generation_params=TEXT_GENERATION_GEMINI,
         topic=None,
@@ -589,7 +592,7 @@ async def naukri(
         generate_graph_diagrams=generate_graph_diagrams,
         naukri_query=naukri_query,
         redis_client=redis_client,
-        reset_chat_session=reset_chat_session,
+        reset_chat_session=reset_chat_and_graph_state,
     )
 
     # 5.
@@ -601,7 +604,7 @@ async def naukri(
         persistence=fsp,
         naukri_query=naukri_query,
         redis_client=redis_client,
-        reset_state=reset_chat_session,
+        reset_state=reset_chat_and_graph_state,
         session_id=session_id,
     )
 
@@ -640,10 +643,16 @@ async def load_state(
 
     The process is as follows:
 
-    1. If a previous state does not exist, then we initialize a new state with the
-        query object. Otherwise,
-    2. We append the latest query object to the list.
-    3. We pull any changes to graph run results made by the frontend from Redis. Note
+    1. Check if the Redis cache key for the agent graph exists. If it does, then
+        preload the previous state.
+    2. If we are resetting state or the Redis cache key for the agent graph does not
+        exist, then we initialize a new state with the query object and delete previous
+        caches.
+
+    Otherwise,
+
+    3. We append the latest query object to the list.
+    4. We pull any changes to graph run results made by the frontend from Redis. Note
         that we only pull changes for the last graph run results since the frontend
         should never see more than one set of results at a time.
 
@@ -679,28 +688,39 @@ async def load_state(
     """
 
     redis_cache_key = f"{REDIS_CACHE_PREFIX_GRAPH_NAUKRI}_Naukri_Agent_{session_id}"
+    state = None
 
     # 1.
-    if reset_state or not await redis_client.exists(redis_cache_key):
+    agent_cache_exists = await redis_client.exists(redis_cache_key)
+    if agent_cache_exists:
+        raw_snapshot = await redis_client.get(redis_cache_key)
+        persistence.load_json(raw_snapshot)
+        snapshot = await persistence.load_all()
+        state = snapshot[-1].state
+
+    # 2.
+    if reset_state or not agent_cache_exists:
+        if state is not None:
+            await redis_client.delete(redis_cache_key)
+            await redis_client.delete(state.last_graph_run_results_cache_key)
         return redis_cache_key, NaukriState(
             session_id=session_id, naukri_queries=[naukri_query]
         )
 
-    raw_snapshot = await redis_client.get(redis_cache_key)
-    persistence.load_json(raw_snapshot)
-    snapshot = await persistence.load_all()
-    state = snapshot[-1].state
-
-    # 2.
-    state.naukri_queries.append(naukri_query)
+    assert state is not None
 
     # 3.
+    state.naukri_queries.append(naukri_query)
+
+    # 4.
     last_graph_run_results = await redis_client.get(
         state.last_graph_run_results_cache_key
     )
     last_graph_run_results = json.loads(last_graph_run_results)
     last_assistant_call = state.last_assistant_call
     match last_assistant_call:
+        case None:
+            model_class = None
         case "registration.register_student":
             model_class = RegisterStudentResults
         case "login.login_student":
@@ -708,8 +728,9 @@ async def load_state(
         case _:
             raise ValueError(f"Unknown last assistant call: {last_assistant_call}")
 
-    state.last_graph_run_results = load_graph_run_results(
-        graph_run_results=last_graph_run_results, model_class=model_class
-    )
+    if model_class is not None:
+        state.last_graph_run_results = load_graph_run_results(
+            graph_run_results=last_graph_run_results, model_class=model_class
+        )
 
     return redis_cache_key, state

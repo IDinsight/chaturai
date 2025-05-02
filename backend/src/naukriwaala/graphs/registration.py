@@ -236,6 +236,9 @@ async def register_student(
     """
     🔍 Account Creation For New Student Assistant
 
+    **The student's registration information will be automatically provided to me for
+    the registration process. You do not need to ask the student for this information!**
+
     ✅ WHEN TO USE THIS ASSISTANT
     Use this assistant **only** in the following situations:
         1. A **new student** needs a new account to be created on the Indian
@@ -244,18 +247,17 @@ async def register_student(
         2. An existing student indicates they wish to **register afresh and create a
             new account**.
 
-    This assistant is typically the **first step** in the apprenticeship process. It
-    focuses **exclusively on registering students by creating accounts on the official
-    portal.** **After calling this assistant, be sure to inform the student of the
-    outcome**--whether the account creation was successful, if any required fields were
-    missing, if additional documents are needed, or if there were system errors--before
-    proceeding with further application steps.
+    This assistant focuses **exclusively on registering students by creating accounts
+    on the official portal.** **After calling this assistant, be sure to inform the
+    student of the outcome**--whether the account creation was successful, if any
+    required fields were missing, if additional documents are needed, or if there were
+    system errors--before proceeding with further application steps.
 
     📝 HOW TO CALL THIS ASSISTANT
     Phrase your explanation as a **direct message** to the assistant. **Do not** use
     first-person language (e.g., “I will use...” or “I’m going to call...”). Instead,
     use imperative phrasing, such as:
-        - "Createa an account for a new student based on the following details..."
+        - "Create an account for a new student based on the following details..."
         - "Initiate the account creation process because..."
 
     Provide the following information in your explanation to this assistant:
