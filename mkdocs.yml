@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
-site_name: Chaturai
+site_name: ChaturAI
 site_description: "ChaturAI Documentation"
 site_url: https://idinsight.github.io/chaturai/
 repo_url: https://github.com/IDinsight/chaturai
