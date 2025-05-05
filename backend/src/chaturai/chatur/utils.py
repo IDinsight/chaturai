@@ -2,6 +2,7 @@
 
 # Third Party Library
 import cv2
+import numpy as np
 import pytesseract
 
 from playwright.async_api import Error as PlaywrightError
@@ -98,6 +99,7 @@ async def solve_and_fill_captcha(page: Page):
     """Solve the CAPTCHA and fill it in the form."""
     canvas = page.locator("canvas.captcha-canvas")
     await canvas.wait_for(state="visible")
+    await canvas.scroll_into_view_if_needed()
     captcha_bytes: bytes = await canvas.screenshot()
 
     captcha_text = await solve_captcha(captcha_bytes)
@@ -122,7 +124,9 @@ def preprocess_captcha_image(image_buffer: bytes):
         jcv2.imshow("label", img, colorspace="gray")
 
     """
-    img = cv2.imdecode(image_buffer)
+    img_array = np.asarray(bytearray(image_buffer), dtype="uint8")
+
+    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
 
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 

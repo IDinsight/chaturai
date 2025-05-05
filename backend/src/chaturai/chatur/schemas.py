@@ -205,7 +205,8 @@ class RegisterStudentOTPQuery(BaseQuery):
 
 
 ChaturQueryUnion = Annotated[
-    RegisterStudentQuery | LoginStudentQuery, Field(discriminator="type")
+    RegisterStudentQuery | RegisterStudentOTPQuery | LoginStudentQuery,
+    Field(discriminator="type"),
 ]
 
 
