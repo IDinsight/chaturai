@@ -58,9 +58,9 @@ Have questions, feedback, or want to collaborate? We’d love to hear from you!
 
 ## 🌐 General Inquiries
 
-- **Email:** [info@idinsight.org](mailto:info@idinsight.org)
+- **Email:** [dsem@idinsight.org](mailto:dsem@idinsight.org)
 - **Website:** [idinsight.org](https://www.idinsight.org)
 
 ---
 
-> 📌 *We are part of IDinsight’s* **DSEM team**. [Learn more](https://www.idinsight.org/methodology/data-science/) about our data science, engineering, and measurement expertise.
+> 📌 *We are part of IDinsight’s* **DSEM team**. [Learn more](https://dsem.idinsight.io/) about our AI, data science, and engineering expertise.
