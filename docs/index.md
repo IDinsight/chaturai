@@ -38,13 +38,20 @@
 
 ## Acknowledgements
 
-The project is funded by XXX.
+### Funded by
+<img src="./images/nudge_light.png" alt="The Nudge Institute" width=200 style="margin-bottom:15px" /><img src="./images/meta_dark.png#only-light" alt="Meta logo" width=200 style="margin-left:5px" /><img src="./images/meta_light.png#only-dark" alt="Meta logo" width=200 style="margin-left:5px" /><br>
 
-<img src="./images/idi_dark.png#only-light" alt="idi_org" width=200 style="margin-left:-25px" /><img src="./images/idi_light.png#only-dark" alt="idi_org" width=200 style="margin-left:-25px" /><br>
-Built and powered by IDinsight.
+### Built by
+<img src="./images/idi_dark.png#only-light" alt="IDinsight logo" width=200 style="margin-left:-25px" /><img src="./images/idi_light.png#only-dark" alt="IDinsight logo" width=200 style="margin-left:-25px" /><img src="./images/rightwalk_dark.svg" alt="RightWalk Foundation logo" width=200 style="margin-left:10px;margin-bottom:10px" /><br>
 
 <p class="footer" markdown>IDinsight uses data and evidence to help leaders combat poverty worldwide. Our collaborations deploy a large analytical toolkit to help clients design better policies, rigorously test what works, and use evidence to implement effectively at scale. We place special emphasis on using the right tool for the right question, and tailor our rigorous methods to the real-world constraints of decision-makers. IDinsight works with governments, foundations, NGOs, multilaterals and businesses across Africa and Asia. We work in all major sectors including health, education, agriculture, governance, digital ID, financial access, and sanitation. We have offices in Dakar, Lusaka, Manila, Nairobi, New Delhi, Rabat, and Remote.
 <br>
 <br>
 :globe_with_meridians: <a href="https://www.idinsight.org" class="link-home">www.idinsight.org</a>
+</p>
+
+<p class="footer" markdown>Every family deserves access to quality education, sustainable livelihoods, and affordable healthcare—key to breaking the cycle of generational poverty. RightWalk Foundation activates government policies into tangible, real-world outcomes. By collaborating closely with policymakers, communities, and changemakers, RightWalk Foundation strives to reduce inequality gaps and create sustainable opportunities for all.
+<br>
+<br>
+:globe_with_meridians: <a href="https://rightwalk.org/" class="link-home">rightwalk.org</a>
 </p>

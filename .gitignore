@@ -43,3 +43,6 @@ vite-project/
 
 # Sphinx documentation
 docs/_build/
+
+# VS Code
+.vscode/

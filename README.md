@@ -17,12 +17,11 @@ Your guide for your apprenticeship journey (for the National Apprenticeship Prom
 
 This project includes a data scraper for apprenticeship opportunities from the National Apprenticeship Promotion Scheme (NAPS) portal. It fetches opportunities daily and stores them in a database for further processing and recommendation purposes.
 
-## Architecture (Needs to be updated)
+## Architecture
 
-- **Database**: PostgreSQL on Amazon RDS
-- **Scraper**: Python-based scraper running on AWS ECS (Fargate)
-- **Scheduling**: AWS EventBridge for daily execution
-- **Monitoring**: CloudWatch for logs and metrics
+- **Database**: PostgreSQL
+- **Backend**: FastAPI
+- **WhatsApp Connection**: Turn.io
 
 ## Known Issues/TODOs
 
@@ -43,7 +42,7 @@ This project includes a data scraper for apprenticeship opportunities from the N
    3. `LOGFIRE_READ_TOKEN`: [OPTIONAL] Your [Logfire read token](https://logfire.pydantic.dev/docs/how-to-guides/query-api/#how-to-create-a-read-token) (or just ask Tony Zhao for one).
 4. Copy the **root** `.template.env` to `.env` and update:
 
-   1. `AWS`: Ask Suzin You for credentials.
+   1. `AWS_***`: Ask Suzin You for credentials.
    2. `OPENAI_API_KEY`: Your OpenAI API key.
    3. `PATHS_LOGS_DIR`: The absolute path to the logs directory for the project.
    4. `PATHS_PROJECT_DIR`: The absolute path to the root directory of the project.
@@ -90,52 +89,6 @@ This project includes a data scraper for apprenticeship opportunities from the N
       }
       ```
 7. When you are done, cd back to the root directory and execute `make down`. This will stop all backend services.
-
-## Old Instructions (Needs to be updated/removed if no longer relevant)
-
-1. Create a `.env` file with your database configuration:
-
-DATABASE_URL=postgresql://user:password@your-rds-instance:5432/chaturai
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Initialize the database:
-
-```bash
-alembic upgrade head
-```
-
-## Local Development
-
-To run the scraper locally:
-
-```bash
-python -m src.scrapers.opportunities_scraper
-```
-
-## AWS Deployment
-
-1. Create an ECR repository:
-
-```bash
-aws ecr create-repository --repository-name chaturai-scraper
-```
-
-2. Build and push the Docker image:
-
-```bash
-aws ecr get-login-password --region region | docker login --username AWS --password-stdin your-account-id.dkr.ecr.region.amazonaws.com
-docker build -t chaturai-scraper .
-docker tag chaturai-scraper:latest your-account-id.dkr.ecr.region.amazonaws.com/chaturai-scraper:latest
-docker push your-account-id.dkr.ecr.region.amazonaws.com/chaturai-scraper:latest
-```
-
-3. Create an ECS Task Definition (sample provided in `ecs-task-definition.json`)
-4. Create an ECS Cluster and Service
-5. Set up EventBridge rule for daily execution
 
 ## Database Schema
 
