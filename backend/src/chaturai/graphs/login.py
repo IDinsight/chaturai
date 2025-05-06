@@ -143,6 +143,10 @@ class LoginExistingStudent(
             # 5.
             await solve_and_fill_captcha(page=page)
 
+            # TODO: Remove this
+            # Pause to verify in the browser. Can remove this later.
+            await asyncio.get_event_loop().run_in_executor(None, input)
+
             # 6. Request OTP
             response_json = await submit_and_capture_api_response(
                 page=page,
@@ -173,9 +177,6 @@ class LoginExistingStudent(
                 )
 
             # TODO: handle error cases better
-
-            # Pause to verify in the browser. Can remove this later.
-            await asyncio.get_event_loop().run_in_executor(None, input)
 
             # 7.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)

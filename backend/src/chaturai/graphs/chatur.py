@@ -134,7 +134,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         graph_mapping = Settings._INTERNAL_GRAPH_MAPPING or create_graph_mappings()
         key = "adj_list" if self.student_intent == "proceed" else "adj_list_reverse"
         if ctx.state.last_assistant_call is None:
-            valid_assistants = [self._default_first_assistant]
+            valid_assistants = graph_mapping[self._default_first_assistant][key]
         else:
             valid_assistants = graph_mapping[ctx.state.last_assistant_call][key]
         assistant_names_and_descriptions = [

@@ -19,6 +19,8 @@ persisted page to the next assistant.
 # Standard Library
 
 # Standard Library
+import asyncio
+
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -231,9 +233,9 @@ class RegisterNewStudent(
             # 5.
             await solve_and_fill_captcha(page=page)
 
-            # Wait for timeout for demo
-            # TODO: remove this later
-            await page.wait_for_timeout(500)
+            # TODO: Remove this
+            # Pause to verify in the browser. Can remove this later.
+            await asyncio.get_event_loop().run_in_executor(None, input)
 
             # 6.
             response_json = await submit_and_capture_api_response(
