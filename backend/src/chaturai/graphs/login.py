@@ -151,10 +151,28 @@ class LoginExistingStudent(
             )
 
             # 7. Check the response
-            data = response_json["data"]
-            assert response_json["status"] == "success"
-            assert data["email"] == ctx.deps.login_student_query.email
-            # TODO: handle error cases
+            response = await response_json
+
+            if "status_code" in response:
+                end = End(
+                    LoginStudentResults(
+                        summary_of_page_results=f"Cannot intiate login. {response['message']}"
+                    )
+                )
+            else:
+                data = response["data"]
+                assert response["status"] == "success"
+                assert data["email"] == ctx.deps.login_student_query.email
+
+                end = End(  # type: ignore
+                    LoginStudentResults(  # type: ignore
+                        summary_of_page_results="Initiated login. "
+                        "Please request OTP from the student. It should be sent to the "
+                        "mobile number or the email address."
+                    )
+                )
+
+            # TODO: handle error cases better
 
             # Pause to verify in the browser. Can remove this later.
             await asyncio.get_event_loop().run_in_executor(None, input)
@@ -162,13 +180,7 @@ class LoginExistingStudent(
             # 7.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
-        return End(  # type: ignore
-            LoginStudentResults(  # type: ignore
-                summary_of_page_results="Initiated login. "
-                "Please request OTP from the student. It should be sent to the "
-                "mobile number or the email address."
-            )
-        )
+        return end
 
 
 @telemetry_timer(metric_fn=login_agent_hist, unit="s")

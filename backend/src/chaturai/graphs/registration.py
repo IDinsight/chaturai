@@ -17,8 +17,8 @@ persisted page to the next assistant.
 """
 
 # Standard Library
-import asyncio
 
+# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -34,7 +34,7 @@ from chaturai.chatur.schemas import RegisterStudentQuery, RegisterStudentResults
 from chaturai.chatur.utils import (
     select_register_radio,
     solve_and_fill_captcha,
-    submit_and_capture_api_response
+    submit_and_capture_api_response,
 )
 from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state, save_graph_diagram
@@ -134,18 +134,34 @@ class GetITIStudentDetails(
             )
 
             # 4.
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/get-candidate-details-from-ncvt",
+                button_name="Find Details",
+            )
+            response = await response_json
+
+            if "errors" in response:
+                end = End(
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
+                    )
+                )
+            else:
+                assert response["status"] == "success"
+                end = End(  # type: ignore
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
+                    )
+                )
 
             # Pause to verify in the browser.
-            await asyncio.get_event_loop().run_in_executor(None, input)
+            # await asyncio.get_event_loop().run_in_executor(None, input)
 
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
-        return End(  # type: ignore
-            RegisterStudentResults(  # type: ignore
-                summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
-            )
-        )
+        return end
 
 
 @dataclass
@@ -226,8 +242,24 @@ class RegisterNewStudent(
                 button_name="Register",
             )
 
-            # TODO: check if the response is valid
-            assert response_json["status"] == "success"
+            response = await response_json
+
+            if "errors" in response:
+                end = End(
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
+                    )
+                )
+                # TODO: handle error cases better
+            else:
+                assert response["status"] == "success"
+                end = End(  # type: ignore
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results="Initiated account creation successfully. "
+                        "Please request OTP from the student. It should be sent to the "
+                        "mobile number or the email address."
+                    )
+                )
 
             # Pause to verify in the browser. Can remove this later.
             # await asyncio.get_event_loop().run_in_executor(None, input)
@@ -235,13 +267,7 @@ class RegisterNewStudent(
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
-        return End(  # type: ignore
-            RegisterStudentResults(  # type: ignore
-                summary_of_page_results="Initiated account creation successfully. "
-                "Please request OTP from the student. It should be sent to the "
-                "mobile number or the email address."
-            )
-        )
+        return end
 
 
 @telemetry_timer(metric_fn=register_student_agent_hist, unit="s")

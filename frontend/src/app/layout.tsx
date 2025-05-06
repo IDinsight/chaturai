@@ -3,8 +3,8 @@ import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
-	title: "Diagnostic Agent",
-	description: "Diagnostic agent using Graph RAG.",
+	title: "ChaturAI",
+	description: "ChaturAI using Graph RAG.",
 };
 
 /**
