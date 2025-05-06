@@ -5,7 +5,7 @@ The student registration graph does the following:
 1. Navigate to the `Register as a candidate` page and auto-fill the required fields.
 2. If the student is an ITI student, then it will fill out the roll number:
     2.1 Find additional details regarding the student.
-    2.2 XXX
+    2.2 XXX # TODO: Test with ITI roll number.
 3. Solve the text-based CAPTCHA.
 4. Submit the registration form.
 5. Return the graph run results containing (among other things) the persisted **page**
@@ -15,6 +15,8 @@ NB: This graph does **not** handle the entire Chatur process (e.g., E-KYC, bank 
 setup, profile completion, etc.). It simply registers a new student and forwards the
 persisted page to the next assistant.
 """
+
+# Standard Library
 
 # Standard Library
 import asyncio
@@ -31,7 +33,11 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import RegisterStudentQuery, RegisterStudentResults
-from chaturai.chatur.utils import select_register_radio
+from chaturai.chatur.utils import (
+    select_register_radio,
+    solve_and_fill_captcha,
+    submit_and_capture_api_response,
+)
 from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state, save_graph_diagram
 from chaturai.metrics.logfire_metrics import register_student_agent_hist
@@ -130,18 +136,34 @@ class GetITIStudentDetails(
             )
 
             # 4.
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/get-candidate-details-from-ncvt",
+                button_name="Find Details",
+            )
+            response = await response_json
+
+            if "errors" in response:
+                end = End(
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
+                    )
+                )
+            else:
+                assert response["status"] == "success"
+                end = End(  # type: ignore
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
+                    )
+                )
 
             # Pause to verify in the browser.
-            await asyncio.get_event_loop().run_in_executor(None, input)
+            # await asyncio.get_event_loop().run_in_executor(None, input)
 
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
-        return End(  # type: ignore
-            RegisterStudentResults(  # type: ignore
-                summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
-            )
-        )
+        return end
 
 
 @dataclass
@@ -165,8 +187,8 @@ class RegisterNewStudent(
         2. Navigate to the page shell.
         3. Switch into Register mode.
         4. Fill out the rest of the register form.
-        5. XXX
-        X. Save the browser state in Redis and close the browser.
+        5. Solve CAPTCHA.
+        6. Save the browser state in Redis and close the browser.
 
         Parameters
         ----------
@@ -185,7 +207,7 @@ class RegisterNewStudent(
             return GetITIStudentDetails()
 
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=False)
+            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
             page = await browser.new_page()
 
             # 2.
@@ -209,18 +231,45 @@ class RegisterNewStudent(
             )
 
             # 5.
+            await solve_and_fill_captcha(page=page)
 
+            # TODO: Remove this
             # Pause to verify in the browser. Can remove this later.
             await asyncio.get_event_loop().run_in_executor(None, input)
+
+            # 6.
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
+                button_name="Register",
+            )
+
+            response = await response_json
+
+            if "errors" in response:
+                end = End(
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
+                    )
+                )
+                # TODO: handle error cases better
+            else:
+                assert response["status"] == "success"
+                end = End(  # type: ignore
+                    RegisterStudentResults(  # type: ignore
+                        summary_of_page_results="Initiated account creation successfully. "
+                        "Please request OTP from the student. It should be sent to the "
+                        "mobile number or the email address."
+                    )
+                )
+
+            # Pause to verify in the browser. Can remove this later.
+            # await asyncio.get_event_loop().run_in_executor(None, input)
 
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
-        return End(  # type: ignore
-            RegisterStudentResults(  # type: ignore
-                summary_of_page_results="Account creation completed successfully. Shall I continue with the next step in the apprenticeship process for you?",
-            )
-        )
+        return end
 
 
 @telemetry_timer(metric_fn=register_student_agent_hist, unit="s")
@@ -268,6 +317,8 @@ async def register_student(
             going on between you and the student!**
 
     🚫 DO NOT USE THIS ASSISTANT IF
+        - You are trying to **continue the registration process** for a student who
+            already initiated the registration process.
         - You are trying to **log in a student who already has an account**.
         - You are trying to **continue the application or document submission** process
             for a student with an existing account.

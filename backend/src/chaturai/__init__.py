@@ -128,7 +128,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     1. Load the embedding model.
     2. Connect to Redis.
-    3. Create graph descriptions for the Diagnostic Agent.
+    3. Create graph descriptions for ChaturAI.
     4. Yield control to the application.
     5. Close the Redis connection when the application finishes.
 
@@ -158,9 +158,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.success("Redis connection established!")
 
     # 3.
-    logger.info("Loading graph descriptions for the Diagnostic Agent...")
+    logger.info("Loading graph descriptions for ChaturAI...")
     create_graph_mappings()
-    logger.success("Finished loading graph descriptions for the Diagnostic Agent!")
+    logger.success("Finished loading graph descriptions for the ChaturAI!")
 
     logger.log("CELEBRATE", "Ready to roll! 🚀")
 

@@ -22,7 +22,7 @@ export default function Footer() {
 					MIT License © {new Date().getFullYear()} - IDinsight |
 					<strong>
 						{" "}
-						Diagnostic Assistant can make mistakes. Check important info!
+						Chatur can make mistakes. Check important info!
 					</strong>
 				</p>
 			</aside>

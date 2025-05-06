@@ -7,7 +7,7 @@ services:
     command: >
       /bin/sh -c "
       python -m alembic upgrade head &&
-      python main.py"
+      python src/chaturai/entries/main.py"
 
   litellm-proxy:
     command: ["--config", "/app/config.yaml", "--detailed_debug", "--telemetry", "False"]

@@ -26,7 +26,7 @@ export default function NavBar({toggleDrawer}: {toggleDrawer: () => void}) {
 						</svg>
 					</button>
 					<a className="btn text-xl whitespace-nowrap btn-ghost">
-						Diagnostic Assistant v0.1
+						ChaturAI v0.1
 					</a>
 				</div>
 

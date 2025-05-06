@@ -124,8 +124,8 @@ class RegisterStudentQuery(BaseQuery):
 
         iti = info.data["is_iti_student"]
 
-        if v is not None and len(v) < 13:
-            raise ValueError(f"Roll number must be at least 13 digits: {v}")
+        if v is not None and len(v) != 13:
+            raise ValueError(f"Roll number must be exactly 13 digits: {v}")
         if iti and v is None:
             raise ValueError("roll_number is required when is_iti_student=True")
         if not iti and v is not None:
@@ -135,7 +135,8 @@ class RegisterStudentQuery(BaseQuery):
 
 
 ChaturQueryUnion = Annotated[
-    RegisterStudentQuery | LoginStudentQuery, Field(discriminator="type")
+    RegisterStudentQuery | LoginStudentQuery,
+    Field(discriminator="type"),
 ]
 
 
