@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* Defining regular CSS variables with :root can still be useful in Tailwind projects
+when you want to define a variable that isn't meant to be connected to a utility class.
+Use @theme when you want a design token to map directly to a utility class, and use
+:root for defining regular CSS variables that shouldn't have corresponding utility
+classes.
+*/
+:root {
+    --background: #fff;
+    --foreground: #171717;
+}
+
+/* For inline, see: https://tailwindcss.com/docs/theme#referencing-other-variables */
+@theme inline {
+    --aspect-retro: 4 / 3;
+    --breakpoint-sm: 40rem;
+    --breakpoint-md: 48rem;
+    --breakpoint-lg: 64rem;
+    --breakpoint-xl: 80rem;
+    --breakpoint-2xl: 96rem;
+    --breakpoint-3xl: 120rem;
+    --spacing: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+@plugin "daisyui" {
+    logs: true;
+    root: ":root";
+    themes: all;
+}
+
+body {
+    font-family: Satoshi, Helvetica, sans-serif;
+}

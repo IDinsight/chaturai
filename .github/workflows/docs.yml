@@ -1,0 +1,43 @@
+name: Deploy Docs
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install dependencies
+        run: pip install mkdocs-material==9.6.12 \
+          pymdown-extensions==10.9 \
+          mkdocs-glightbox==0.4.0 \
+          mkdocs-material-extensions==1.3.1 \
+          mkdocs-open-in-new-tab==1.0.3 \
+
+      - name: Build and push docs version
+        run: |
+          mkdocs gh-deploy --force
+
+      # - name: Add CNAME
+      #   run: |
+      #     git switch gh-pages
+      #     echo "docs.chaturai.com" >> CNAME
+      #     git add CNAME
+      #     git commit -m "Add CNAME"
+      #     git push -f origin gh-pages

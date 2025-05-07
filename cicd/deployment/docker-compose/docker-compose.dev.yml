@@ -1,0 +1,35 @@
+# PATH variables must be set in .env files.
+services:
+  api:
+    volumes:
+      - ${PATHS_PROJECT_DIR}/backend:/usr/src/chaturai
+    restart: always
+    command: >
+      /bin/sh -c "
+      python -m alembic upgrade head &&
+      python src/chaturai/entries/main.py"
+
+  litellm-proxy:
+    command: ["--config", "/app/config.yaml", "--detailed_debug", "--telemetry", "False"]
+    container_name: litellm-proxy
+    env_file:
+      - ${PATHS_PROJECT_DIR}/cicd/litellm/.env
+    image: ghcr.io/berriai/litellm:main-v1.67.0-stable
+    ports:
+      - "4000:4000"
+      - "4001:4001"  # Debugging port for LiteLLM
+    restart: always
+    volumes:
+      - ${PATHS_SECRETS_DIR}/gcp_credentials.json:/app/gcp_credentials.json
+      - ${PATHS_PROJECT_DIR}/cicd/litellm/litellm_config.yaml:/app/config.yaml
+
+  redis:
+    container_name: redis-local
+    image: redis:6.0-alpine
+    ports:
+      - "6379:6379"
+      - "6380:6380"  # Debugging port for Redis
+    restart: always
+
+volumes:
+  redis_data:

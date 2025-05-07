@@ -1,0 +1,28 @@
+# PATH variables must be set in .env files.
+services:
+  caddy:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "chaturai-testing"
+        awslogs-stream: caddy-container
+        awslogs-create-group: "true"
+
+  api:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "chaturai-testing"
+        awslogs-stream: api-container
+        awslogs-create-group: "true"
+
+  db:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "chaturai-testing"
+        awslogs-stream: db-container
+        awslogs-create-group: "true"

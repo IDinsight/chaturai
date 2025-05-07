@@ -1,0 +1,84 @@
+{
+	"author": "IDinsight",
+	"description": "Your guide for your apprenticeship journey (for the National Apprenticeship Promotion Scheme)",
+	"dependencies": {
+		"daisyui": "^5.0.12",
+		"next": "15.2.3",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"theme-change": "^2.5.0",
+		"use-immer": "^0.11.0"
+	},
+	"devDependencies": {
+		"@eslint/eslintrc": "^3",
+		"@eslint/js": "9.22.0",
+		"@jest/globals": "29.7.0",
+		"@tailwindcss/postcss": "^4",
+		"@tsconfig/next": "2.0.3",
+		"@types/jest": "29.5.14",
+		"@types/node": "22.13.10",
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"@typescript-eslint/eslint-plugin": "8.26.1",
+		"@typescript-eslint/parser": "8.26.1",
+		"create-stylelint": "0.5.0",
+		"eslint": "9.22.0",
+		"eslint-config-next": "15.2.3",
+		"eslint-config-prettier": "10.1.1",
+		"eslint-plugin-import": "2.31.0",
+		"eslint-plugin-jest": "28.11.0",
+		"eslint-plugin-jsdoc": "50.6.8",
+		"eslint-plugin-react": "7.37.4",
+		"eslint-plugin-unicorn": "57.0.0",
+		"globals": "16.0.0",
+		"husky": "9.1.7",
+		"jest": "29.7.0",
+		"jest-environment-jsdom": "29.7.0",
+		"jest-fetch-mock": "3.0.3",
+		"lint-staged": "15.5.0",
+		"node-notifier": "10.0.1",
+		"postcss": "^8.5.3",
+		"prettier": "3.5.3",
+		"prettier-plugin-tailwindcss": "^0.6.11",
+		"stylelint": "16.16.0",
+		"stylelint-config-standard": "37.0.0",
+		"stylelint-config-tailwindcss": "1.0.0",
+		"tailwindcss": "^4.0.14",
+		"ts-jest": "29.2.6",
+		"ts-node": "10.9.2",
+		"typescript": "5.8.2"
+	},
+	"directories": {
+		"test": "tests"
+	},
+	"license": "MIT",
+	"lint-staged": {
+		"**/*.css": "stylelint --config .stylelintrc.js --ignore-path .gitignore --fix",
+		"src/**/*.{js,ts,jsx,tsx,mjs,cjs}": [
+			"eslint --config eslint.config.js --fix",
+			"prettier --write"
+		],
+		"tests/**/*.{js,ts,jsx,tsx,mjs,cjs}": [
+			"eslint --config eslint.config.js --fix",
+			"prettier --write"
+		]
+	},
+	"name": "frontend",
+	"packageManager": "pnpm@10.6.5+sha512.cdf928fca20832cd59ec53826492b7dc25dc524d4370b6b4adbf65803d32efaa6c1c88147c0ae4e8d579a6c9eec715757b50d4fa35eea179d868eada4ed043af",
+	"private": true,
+	"scripts": {
+		"build": "next build",
+		"dev": "next dev --turbopack",
+		"lint-fix": "stylelint --config .stylelintrc.js --ignore-path .gitignore --fix \"**/*.css\" && eslint --config eslint.config.mjs --fix \"src/**/*.{js,ts,jsx,tsx,mjs,cjs}\" --format stylish && eslint --config eslint.config.mjs --fix \"tests/**/*.{js,ts,jsx,tsx,mjs,cjs}\" --format stylish && prettier --write \"src/**/*.{js,ts,jsx,tsx,mjs,cjs}\" && prettier --write \"tests/**/*.{js,ts,jsx,tsx,mjs,cjs}\"",
+		"prepare": "cd .. && husky",
+		"start": "next start",
+		"test": "pnpm node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.ts --passWithNoTests --testMatch \"tests/**/!(*.jsdom).test.ts\" && pnpm node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.ts --passWithNoTests --testMatch \"tests/**/*.jsdom.test.ts\" --testEnvironment jsdom"
+	},
+	"type": "module",
+	"version": "0.1.0",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"sharp"
+		]
+	}
+}
