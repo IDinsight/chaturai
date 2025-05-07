@@ -2,12 +2,23 @@
 
 Your guide for your apprenticeship journey (for the National Apprenticeship Promotion Scheme).
 
+<!-- Badges -->
+<p style="text-align: center;">
+  <a href="https://github.com/econchick/interrogate">
+    <img src="./interrogate_badge.svg" alt="Docstring coverage: interrogate">
+  </a>
+  &nbsp;
+  <a href="https://github.com/pylint-dev/pylint">
+    <img src="https://img.shields.io/badge/linting-pylint-yellowgreen" alt="Linting: pylint">
+  </a>
+</p>
 
-|                                           Docstring Coverage                                           |                                                       Linting                                                       |
-| :-----------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------: |
-| [![Docstring coverage: interrogate](./interrogate_badge.svg)](https://github.com/econchick/interrogate) | [![Linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint) |
+<!-- Docs Link -->
+<p style="text-align: center; font-size: 1.2em;">
+  <a href="https://idinsight.github.io/chaturai/"><strong>📘 Check out the official docs!</strong></a>
+</p>
 
-## Maintainers
+## 👥 Maintainers
 
 [Suzin You](mailto:suzin.you@idinsight.org)
 

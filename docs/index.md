@@ -1,7 +1,21 @@
-<pre align="center" style="text-align:center; font-size: 1vw; background:none;">
-</pre>
+<h1 style="
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #5480cb;
+  margin: 1rem 0 0.25rem 0;
+">
+  Solving Inequality & Poverty Through Policy Action
+</h1>
 
-<h3 align="center" >ChaturAI</h3>
+<hr style="
+  width: 60%;
+  margin: 0.5rem auto 1.25rem auto;
+  border: none;
+  height: 3px;
+  background: linear-gradient(to right, #5480cb, #c99300);
+  border-radius: 6px;
+">
 
 <strong>ChaturAI</strong> is a free and open-source tool created to help students apply for apprenticeship programs and accelerate their careers.
 

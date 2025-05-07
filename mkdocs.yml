@@ -3,6 +3,7 @@ site_name: ChaturAI
 site_description: "ChaturAI Documentation"
 site_url: https://idinsight.github.io/chaturai/
 repo_url: https://github.com/IDinsight/chaturai
+use_directory_urls: false
 copyright: "© 2025 IDinsight"
 extra:
   analytics:
@@ -24,7 +25,9 @@ nav:
       - Usage: usage.md
       - Roadmap: roadmap.md
 
-  - Latest Updates:
+  - Our Mission: blog/our-mission.md
+
+  - Blog:
       - blog/index.md
 
   - Components:
@@ -45,9 +48,12 @@ nav:
   - Deployment:
       - Quick Setup with Docker Compose: deployment/quick-setup.md
 
+  - Development:
+      - development/index.md
+      - Local setup: development/local-setup.md
+
   - Contribute:
-      - Guidelines: development/contributing.md
-      - Setup: development/local_setup.md
+      - ./contributing.md
 
   - Contact us:
       - Team: contact_us.md
@@ -55,7 +61,7 @@ nav:
 # Themes and extensions
 theme:
   name: material
-  logo: images/logo-light.png
+#  logo: images/logo-light.png
   favicon: images/favicon.png
   font:
     text: "Inter"
@@ -78,6 +84,7 @@ theme:
     - content.code.copy
     - navigation.sections
     - navigation.indexes
+    - navigation.instant
     - navigation.top
 
   icon:
@@ -114,10 +121,17 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - toc:
+      title: On this page
 
 plugins:
   - glightbox
   - search
   - blog:
+      archive_date_format: MMMM yyyy
+      authors_file: .authors.yml
+      blog_dir: blog
+      blog_toc: true
+      post_date_format: full
       post_excerpt: required
   - open-in-new-tab
