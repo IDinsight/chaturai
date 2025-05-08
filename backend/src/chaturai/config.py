@@ -57,6 +57,10 @@ class BackendSettings(BaseSettings):
     # Paths
     PATHS_BACKEND_ROOT: str = ""
 
+    # Playwright
+    PLAYWRIGHT_HEADLESS: bool = False
+    PLAYWRIGHT_PAGE_TTL: int = 600
+
     # Postgres
     POSTGRES_ASYNC_API: str = Field("asyncpg", validation_alias="POSTGRES_ASYNC_API")
     POSTGRES_DB: str = Field("chaturai", validation_alias="POSTGRES_DB")
