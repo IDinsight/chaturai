@@ -23,16 +23,20 @@ jobs:
           restore-keys: |
             mkdocs-material-
 
-      - name: Install dependencies
-        run: pip install mkdocs-material==9.6.12 \
-          pymdown-extensions==10.9 \
-          mkdocs-glightbox==0.4.0 \
-          mkdocs-material-extensions==1.3.1 \
-          mkdocs-open-in-new-tab==1.0.3 \
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies (docs group only)
+        run: |
+          cd backend
+          poetry install --only docs
 
       - name: Build and push docs version
         run: |
-          mkdocs gh-deploy --force
+          cd backend
+          poetry run mkdocs gh-deploy --config-file ../mkdocs.yml --force
 
       # - name: Add CNAME
       #   run: |

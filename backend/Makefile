@@ -40,7 +40,7 @@ clean: ## Remove compiled Python files and caches
 fresh-env: clean poetry-export ## Create a fresh backend environment
 	@echo "$(YELLOW)Creating fresh backend environment: $(PROJECT_NAME)$(RESET)"
 	poetry env remove python || true
-	poetry install --with dev
+	poetry install --with dev --with docs
 	@echo "$(GREEN)Backend environment setup complete.$(RESET)"
 
 ########## LINTING ##########
