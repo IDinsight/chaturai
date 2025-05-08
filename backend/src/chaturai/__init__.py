@@ -1,6 +1,7 @@
 """This module contains the FastAPI application for the backend."""
 
 # Standard Library
+import asyncio
 import os
 
 from contextlib import asynccontextmanager
@@ -13,6 +14,7 @@ import sentry_sdk
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from playwright.async_api import async_playwright
 from prometheus_client import CollectorRegistry, make_asgi_app, multiprocess
 from redis import asyncio as aioredis
 
@@ -21,6 +23,7 @@ from chaturai import admin, chatur, recommendation
 from chaturai.config import Settings
 from chaturai.graphs.utils import create_graph_mappings
 from chaturai.prometheus_middleware import PrometheusMiddleware
+from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.embeddings import load_embedding_model
 from chaturai.utils.general import make_dir
 from chaturai.utils.logging_ import initialize_logger
@@ -29,6 +32,7 @@ DOMAIN_NAME = os.getenv("DOMAIN_NAME", "")
 LOGGING_LEVEL = Settings.LOGGING_LOG_LEVEL
 MODELS_EMBEDDING_OPENAI = Settings.MODELS_EMBEDDING_OPENAI
 MODELS_EMBEDDING_ST = Settings.MODELS_EMBEDDING_ST
+PLAYWRIGHT_PAGE_TTL = Settings.PLAYWRIGHT_PAGE_TTL
 REDIS_HOST = Settings.REDIS_HOST
 REDIS_PORT = Settings.REDIS_PORT
 SENTRY_DSN = Settings.SENTRY_DSN
@@ -38,6 +42,20 @@ SENTRY_TRACES_SAMPLE_RATE = Settings.SENTRY_TRACES_SAMPLE_RATE
 logger = initialize_logger(logging_level=LOGGING_LEVEL)
 
 tags_metadata = [admin.TAG_METADATA, chatur.TAG_METADATA, recommendation.TAG_METADATA]
+
+
+async def _browser_sweeper(app: FastAPI) -> None:
+    """Background sweeper task to periodically clean up expired browser sessions.
+
+    Parameters
+    ----------
+    app
+        The application instance.
+    """
+
+    while True:
+        await app.state.browser_session_store.sweep()
+        await asyncio.sleep(PLAYWRIGHT_PAGE_TTL)
 
 
 def create_app() -> FastAPI:
@@ -128,9 +146,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     1. Load the embedding model.
     2. Connect to Redis.
-    3. Create graph descriptions for ChaturAI.
-    4. Yield control to the application.
-    5. Close the Redis connection when the application finishes.
+    3. Set up Playwright automation procedures.
+    4. Create graph descriptions for ChaturAI.
+    5. Yield control to the application.
+    6. Close the Redis connection when the application finishes.
+    7. Stop Playwright when the application finishes.
 
     Parameters
     ----------
@@ -158,18 +178,31 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.success("Redis connection established!")
 
     # 3.
+    logger.info("Setting up Playwright automation procedures...")
+    pw = await async_playwright().start()
+    app.state.browser = pw.chromium
+    app.state.browser_session_store = BrowserSessionStore(ttl=PLAYWRIGHT_PAGE_TTL)
+    asyncio.create_task(_browser_sweeper(app=app))
+    logger.success("Finished setting up Playwright automation procedures!")
+
+    # 4.
     logger.info("Loading graph descriptions for ChaturAI...")
     create_graph_mappings()
     logger.success("Finished loading graph descriptions for the ChaturAI!")
 
     logger.log("CELEBRATE", "Ready to roll! 🚀")
 
-    # 4.
+    # 5.
     yield
 
-    # 5.
+    # 6.
     logger.info("Closing Redis connection...")
     await app.state.redis.close()
     logger.success("Redis connection closed!")
+
+    # 7.
+    logger.info("Stopping Playwright...")
+    await pw.stop()
+    logger.success("Playwright stopped!")
 
     logger.success("Application finished!")
