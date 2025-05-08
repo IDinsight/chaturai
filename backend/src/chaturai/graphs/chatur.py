@@ -180,6 +180,8 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         match assistant_name:
             case "registration.register_student":
                 graph_run_results = await register_student(
+                    browser=ctx.deps.browser,
+                    browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
                     explanation_for_call=explanation_for_assistant_call,
@@ -195,7 +197,6 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                     csm=ctx.deps.csm,
                     explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
-                    last_graph_run_results=ctx.state.last_graph_run_results,
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
