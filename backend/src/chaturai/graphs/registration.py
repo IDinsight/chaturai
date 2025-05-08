@@ -211,6 +211,7 @@ class RegisterSubmitOTP(
             The results of the graph run.
         """
 
+        # TODO: update this logic to use browser session management
         browser_state = await load_browser_state(
             redis_client=ctx.deps.redis_client,
         )
@@ -238,13 +239,6 @@ class RegisterSubmitOTP(
             )
             response = await response_json
 
-            response_json = await submit_and_capture_api_response(
-                page=page,
-                api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
-                button_name="Submit",
-            )
-
-            response = await response_json
             if "status" in response and response["status"] == "success":
                 data = response.get("data")
                 candidate_info = data.get("candidate")
