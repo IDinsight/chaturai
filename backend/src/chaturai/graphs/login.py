@@ -106,7 +106,9 @@ class LoginExistingStudent(
         6. Request the OTP for the student.
         7. Construct the appropriate end response for the graph.
         8. Save the browser state in Redis and close the browser.
-        9. Create the browser session (if it does not exist) and save the page in RAM.
+        9. Create the browser session (if it does not exist) and save/update the page
+            in RAM. Optionally, choose to reset the TTL to keep the browser session
+            alive.
 
         Parameters
         ----------
@@ -132,6 +134,12 @@ class LoginExistingStudent(
             else:
                 print("THIS SHOULD NOT HAVE HAPPENED!")
             await asyncio.get_event_loop().run_in_executor(None, input)
+
+            # TODO: Inject OTP fill in logic here and navigating to the next page?
+            # NB: If page is updated at all during this logic, then we need to update
+            # the browser session in RAM!
+
+            # 7.
             end = End(
                 LoginStudentResults(
                     summary_of_page_results="OTP successfully entered. "
@@ -140,59 +148,6 @@ class LoginExistingStudent(
                     "unclear, ask the student what they wish to do next."
                 )
             )
-        else:
-            browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
-            context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
-            page = await context.new_page()
-
-            # 2.
-            await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-
-            # 3.
-            await select_login_radio(page=page)
-
-            # 4.
-            await page.fill(
-                "input[placeholder='Enter Your Email ID']",
-                str(ctx.deps.login_student_query.email),
-            )
-
-            # 5.
-            await solve_and_fill_captcha(page=page)
-
-            # TODO: Remove this
-            # Pause to verify in the browser. Can remove this later.
-            await asyncio.get_event_loop().run_in_executor(None, input)
-
-            # 6.
-            response_json = await submit_and_capture_api_response(
-                page=page,
-                button_name="Submit",
-                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
-            )
-
-            # 7. Check the response
-            response = await response_json
-            if "status_code" in response:
-                end = End(
-                    LoginStudentResults(
-                        summary_of_page_results=f"Cannot initiate login. {response['message']}"
-                    )
-                )
-                # TODO: handle error cases better
-            else:
-                data = response["data"]
-                assert response["status"] == "success"
-                assert data["email"] == ctx.deps.login_student_query.email
-
-                end = End(
-                    LoginStudentResults(
-                        summary_of_page_results="Initiated login. "
-                        "Please request OTP from the student. It should be sent to the "
-                        "mobile number or the email address. Remind the student that "
-                        "this is time-sensitive information!"
-                    )
-                )
 
             # 8.
             await save_browser_state(
@@ -203,10 +158,10 @@ class LoginExistingStudent(
 
             # 9.
             await ctx.deps.browser_session_store.create(
-                browser=browser,
-                overwrite=False,
+                browser=browser_session.browser,  # Reuse the same browser here!
                 page=page,
                 session_id=ctx.state.session_id,
+                overwrite=True,  # Update if the page changed at all!
             )
             browser_session_saved = await ctx.deps.browser_session_store.get(
                 session_id=ctx.state.session_id
@@ -215,7 +170,85 @@ class LoginExistingStudent(
                 f"Browser session not saved in RAM for session ID: "
                 f"{ctx.state.session_id}"
             )
+            await ctx.deps.browser_session_store.reset_ttl(
+                session_id=ctx.state.session_id
+            )
+            return end
 
+        browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+        context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
+        page = await context.new_page()
+
+        # 2.
+        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
+
+        # 3.
+        await select_login_radio(page=page)
+
+        # 4.
+        await page.fill(
+            "input[placeholder='Enter Your Email ID']",
+            str(ctx.deps.login_student_query.email),
+        )
+
+        # 5.
+        await solve_and_fill_captcha(page=page)
+
+        # TODO: Remove this
+        # Pause to verify in the browser. Can remove this later.
+        await asyncio.get_event_loop().run_in_executor(None, input)
+
+        # 6.
+        response_json = await submit_and_capture_api_response(
+            page=page,
+            button_name="Submit",
+            api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
+        )
+
+        # 7. Check the response
+        response = await response_json
+        if "status_code" in response:
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results=f"Cannot initiate login. {response['message']}"
+                )
+            )
+            # TODO: handle error cases better
+        else:
+            data = response["data"]
+            assert response["status"] == "success"
+            assert data["email"] == ctx.deps.login_student_query.email
+
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results="Initiated login. "
+                    "Please request OTP from the student. It should be sent to the "
+                    "mobile number or the email address. Remind the student that "
+                    "this is time-sensitive information!"
+                )
+            )
+
+        # 8.
+        await save_browser_state(
+            page=page,
+            redis_client=ctx.deps.redis_client,
+            session_id=ctx.state.session_id,
+        )
+
+        # 9.
+        await ctx.deps.browser_session_store.create(
+            browser=browser,
+            overwrite=False,
+            page=page,
+            session_id=ctx.state.session_id,
+        )
+        browser_session_saved = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        assert browser_session_saved, (
+            f"Browser session not saved in RAM for session ID: "
+            f"{ctx.state.session_id}"
+        )
         return end
 
 
