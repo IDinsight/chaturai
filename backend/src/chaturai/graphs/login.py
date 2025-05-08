@@ -17,6 +17,8 @@ and forwards the persisted page to the next assistant.
 # Standard Library
 
 # Standard Library
+import time
+
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -37,6 +39,7 @@ from chaturai.chatur.schemas import (
 from chaturai.chatur.utils import (
     select_login_radio,
     solve_and_submit_captcha_with_retries,
+    submit_and_capture_api_response,
 )
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
@@ -141,30 +144,65 @@ class LoginExistingStudent(
 
             # 5. Solve captcha and request OTP
             try:
-                response = await solve_and_submit_captcha_with_retries(
+                login_get_otp_response = await solve_and_submit_captcha_with_retries(
                     page=page,
                     api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
                     button_name="Submit",
                 )
-                end = End(  # type: ignore
-                    LoginStudentResults(  # type: ignore
-                        summary_of_page_results="Initiated login. "
-                        "Please ask the student for OTP. The student should have "
-                        "received the OTP both on the registered mobile number and "
-                        "the email."
-                    )
+
+                # Wait for OTP or timeout
+                start_time = time.time()
+                wait_time = (
+                    130  # 2 min 10 sec (slightly longer than OTP resubmition window)
                 )
+                while time.time() - start_time < wait_time:
+                    otp = ctx.deps.redis_client.hget(
+                        ctx.deps.login_student_query.user_id, "otp"
+                    )
+
+                    if otp:
+                        # Delte the OTP from Redis
+                        ctx.deps.redis_client.hdel(
+                            ctx.deps.login_student_query.user_id, "otp"
+                        )
+
+                        # Fill the OTP field
+                        await page.locator(
+                            "input[placeholder='Enter 6 Digit OTP']"
+                        ).fill(otp)
+
+                        submit_otp_response = await submit_and_capture_api_response(
+                            page=page,
+                            api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
+                            button_name="Submit",
+                        )
+
+                        if submit_otp_response.is_error:
+                            end = End(
+                                LoginStudentResults(
+                                    summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}"
+                                )
+                            )
+                        else:
+                            # TODO: do not return an End object but pass on to other assistants.
+                            end = End(
+                                LoginStudentResults(
+                                    summary_of_page_results="Login successful. You can now proceed to completing other parts of the registration process (eKYV, Bank Details update, and candidate profile completion)."
+                                )
+                            )
+                        break
 
             except RuntimeError:
                 end = End(
                     LoginStudentResults(
-                        summary_of_page_results=f"Cannot intiate login. {response.message}"
+                        summary_of_page_results=f"Could not intiate login. {login_get_otp_response.message}"
                     )
                 )
 
                 # TODO: handle error cases better
 
             # 7.
+            # TODO: do we need this any more?
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
         return end

@@ -17,10 +17,8 @@ persisted page to the next assistant.
 """
 
 # Standard Library
+import time
 
-# Standard Library
-
-# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -44,7 +42,6 @@ from chaturai.chatur.utils import (
 )
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
-    load_browser_state,
     save_browser_state,
     save_graph_diagram,
 )
@@ -177,95 +174,6 @@ class GetITIStudentDetails(
 
 
 @dataclass
-class RegisterSubmitOTP(
-    BaseNode[
-        RegisterStudentState,
-        RegisterStudentDeps,
-        RegisterStudentResults | RegisterationCompleteResults,
-    ]
-):
-    """This node submits the OTP for registration."""
-
-    docstring_notes = True
-
-    async def run(
-        self, ctx: GraphRunContext[RegisterStudentState, RegisterStudentDeps]
-    ) -> End[RegisterStudentResults]:
-        """The run proceeds as follows:
-
-        1. Instantiate the page with the saved browser state.
-        2. Fill out the OTP.
-        3. Submit the OTP.
-        4. Wait for the confirmation along with NAPS registration ID.
-        4. Save the browser state in Redis and close the browser.
-
-        Parameters
-        ----------
-        ctx
-            The context for the graph run, which contains the state and dependencies
-            for the graph run.
-
-        Returns
-        -------
-        End[RegisterStudentResults]
-            The results of the graph run.
-        """
-
-        # TODO: update this logic to use browser session management
-        browser_state = await load_browser_state(
-            redis_client=ctx.deps.redis_client,
-        )
-
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=False)
-            context = await browser.new_context(storage_state=browser_state)
-            page = await context.new_page()
-
-            # 1.
-            await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-
-            # 2.
-            otp_field_selector = "input[placeholder='Enter 6 Digit OTP']"
-            page.wait_for_selector(otp_field_selector, state="visible")
-            await page.fill(
-                otp_field_selector, str(ctx.deps.register_student_query.otp)
-            )
-
-            # 3.
-            response_json = await submit_and_capture_api_response(
-                page=page,
-                api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
-                button_name="Submit",
-            )
-            response = await response_json
-
-            if "status" in response and response["status"] == "success":
-                data = response.get("data")
-                candidate_info = data.get("candidate")
-                naps_id = candidate_info["code"]
-                activation_link_expiry = candidate_info["activation_link_expiry_date"]
-
-                return End(
-                    RegisterationCompleteResults(  # type: ignore
-                        summary_of_page_results="Registration completed successfully. "
-                        f"Your NAPS ID is {naps_id}. "
-                        f"Please check your email for the activation link, which will expire on {activation_link_expiry}.",
-                        naps_id=naps_id,
-                        activation_link_expiry=activation_link_expiry,
-                    )
-                )
-                # TODO: maybe we should just go to login?
-            else:
-                if "errors" in response:
-                    error_messages = " ".join(response["errors"].values())
-                    return End(
-                        RegisterStudentResults(  # type: ignore
-                            summary_of_page_results=f"Error in registration: {error_messages}"
-                        )
-                    )
-
-
-@dataclass
 class RegisterNewStudent(
     BaseNode[
         RegisterStudentState,
@@ -279,7 +187,10 @@ class RegisterNewStudent(
 
     async def run(
         self, ctx: GraphRunContext[RegisterStudentState, RegisterStudentDeps]
-    ) -> End[RegisterStudentResults] | GetITIStudentDetails:
+    ) -> (
+        End[RegisterStudentResults | RegisterationCompleteResults]
+        | GetITIStudentDetails
+    ):
         """The run proceeds as follows:
 
         1. If we are registering an ITI student, then we proceed to the next node.
@@ -331,28 +242,68 @@ class RegisterNewStudent(
 
             # 5.
             try:
-                response = await solve_and_submit_captcha_with_retries(
+                register_get_otp_response = await solve_and_submit_captcha_with_retries(
                     page=page,
                     api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
                     button_name="Register",
                 )
-                end = End(  # type: ignore
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results="Initiated account creation successfully. "
-                        "Please request OTP from the student. It should be sent to the "
-                        "mobile number or the email address."
+
+                # Wait for OTP or timeout
+                start_time = time.time()
+                # Check timeout for registration OTP
+                wait_time = 130
+                while time.time() - start_time < wait_time:
+                    otp = ctx.deps.redis_client.hget(
+                        ctx.deps.register_student_query.user_id, "otp"
                     )
-                )
+
+                    if otp:
+                        # Delte the OTP from Redis
+                        ctx.deps.redis_client.hdel(
+                            ctx.deps.register_student_query.user_id, "otp"
+                        )
+
+                        # Fill the OTP field
+                        await page.locator(
+                            "input[placeholder='Enter 6 Digit OTP']"
+                        ).fill(otp)
+
+                        submit_otp_response = await submit_and_capture_api_response(
+                            page=page,
+                            api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
+                            button_name="Submit",
+                        )
+
+                        if submit_otp_response.is_error:
+                            end = End(
+                                RegisterStudentResults(
+                                    summary_of_page_results=f"Could not complete registration. "
+                                    f"{submit_otp_response.message}"
+                                )
+                            )
+                        else:
+                            data = submit_otp_response.api_response["data"]
+                            registration_code = data["candidate"]["code"]
+                            activation_link_expiry_str = data["candidate"][
+                                "activation_link_expiry_date"
+                            ]
+
+                            end = End(
+                                RegisterationCompleteResults(
+                                    summary_of_page_results="Registered successfully!",
+                                    naps_id=registration_code,
+                                    activation_link_expiry=activation_link_expiry_str,
+                                )
+                            )
+                        break
+
             except RuntimeError:
                 end = End(
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results=f"Could not initiate registration. {response.message}"
+                    RegisterStudentResults(
+                        summary_of_page_results="Could not initiate registration. "
+                        f"{register_get_otp_response.message}"
                     )
                 )
-
-            # TODO: Remove this
-            # Pause to verify in the browser. Can remove this later.
-            # await asyncio.get_event_loop().run_in_executor(None, input)
 
             # X.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
