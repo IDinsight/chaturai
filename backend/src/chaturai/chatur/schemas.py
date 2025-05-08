@@ -47,6 +47,9 @@ class RegisterStudentQuery(BaseQuery):
         None,
         description="At least 13-digit roll number; required if is_iti_student=True",
     )
+    otp: Optional[str] = Field(
+        ..., description="6-digit OTP sent to the registered mobile number if available"
+    )
     type: Literal["registration"]
 
     @field_validator("mobile_number")
@@ -133,15 +136,6 @@ class RegisterStudentQuery(BaseQuery):
 
         return v
 
-
-class RegisterStudentOTPQuery(BaseQuery):
-    """Pydantic model for validating student registration OTP queries."""
-
-    otp: str = Field(
-        ..., description="6-digit OTP sent to the registered mobile number"
-    )
-    type: Literal["registration_otp"]
-
     @field_validator("otp")
     @classmethod
     def validate_otp(cls, v: str) -> str:
@@ -170,9 +164,8 @@ class RegisterStudentOTPQuery(BaseQuery):
 
 
 ChaturQueryUnion = Annotated[
-    RegisterStudentQuery | LoginStudentQuery | RegisterStudentOTPQuery,
-   
-    Field(discriminator="type"),,
+    RegisterStudentQuery | LoginStudentQuery,
+    Field(discriminator="type"),
 ]
 
 
@@ -204,3 +197,22 @@ class LoginStudentResults(PageResults):
 
 class RegisterStudentResults(PageResults):
     """Pydantic model for validating register student results."""
+
+
+# Adding these for now. Might remove later.
+class RegisterationCompleteResults(PageResults):
+    """Pydantic model for validating register activation link send results."""
+
+    naps_id: str
+    activation_link_expiry: str
+
+
+class SubmitButtonResponse(BaseModel):
+    """Pydantic model for validating submit button response."""
+
+    is_error: bool
+    is_success: bool
+    message: str
+    source: Literal["toast", "api", "timeout"]
+
+    model_config = ConfigDict(from_attributes=True)

@@ -17,10 +17,6 @@ persisted page to the next assistant.
 """
 
 # Standard Library
-
-# Standard Library
-import asyncio
-
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -32,14 +28,20 @@ from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import RegisterStudentQuery, RegisterStudentResults
+from chaturai.chatur.schemas import (
+    RegisterStudentQuery,
+    RegisterStudentResults,
+)
 from chaturai.chatur.utils import (
     select_register_radio,
-    solve_and_fill_captcha,
+    solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
 )
 from chaturai.config import Settings
-from chaturai.graphs.utils import save_browser_state, save_graph_diagram
+from chaturai.graphs.utils import (
+    save_browser_state,
+    save_graph_diagram,
+)
 from chaturai.metrics.logfire_metrics import register_student_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
 from chaturai.utils.browser import BrowserSessionStore
@@ -60,6 +62,7 @@ class RegisterStudentState:
     """The state tracks the progress of the student registration graph."""
 
     session_id: int | str
+    requested_otp: bool = False
 
 
 @dataclass
@@ -145,21 +148,18 @@ class GetITIStudentDetails(
         )
         response = await response_json
 
-        # 5.
         if "errors" in response:
             end = End(
-                RegisterStudentResults(
+                RegisterStudentResults(  # type: ignore
                     summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
                 )
             )
-            # TODO: handle error cases better
         else:
             assert response["status"] == "success"
-            end = End(
-                RegisterStudentResults(
-                    summary_of_page_results="ITI student details obtained successfully. "
-                    "Shall I continue with the next step in the apprenticeship process "
-                    "for you?",
+            # TODO: treat success case once we have a valid ITI roll number to test with
+            end = End(  # type: ignore
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
                 )
             )
 
@@ -171,7 +171,6 @@ class GetITIStudentDetails(
         )
 
         return end
-
 
 @dataclass
 class RegisterNewStudent(
@@ -239,42 +238,34 @@ class RegisterNewStudent(
         )
 
         # 5.
-        await solve_and_fill_captcha(page=page)
-
-        # TODO: Remove this
-        # Pause to verify in the browser. Can remove this later.
-        await asyncio.get_event_loop().run_in_executor(None, input)
-
-        # 6.
-        response_json = await submit_and_capture_api_response(
-            page=page,
-            api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
-            button_name="Register",
-        )
-        response = await response_json
-
-        # 7.
-        if "errors" in response:
-            end = End(
-                RegisterStudentResults(
-                    summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
-                )
+        try:
+            response = await solve_and_submit_captcha_with_retries(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
+                button_name="Register",
             )
-            # TODO: handle error cases better
-        else:
-            assert response["status"] == "success"
-            end = End(
-                RegisterStudentResults(
+            end = End(  # type: ignore
+                RegisterStudentResults(  # type: ignore
                     summary_of_page_results="Initiated account creation successfully. "
                     "Please request OTP from the student. It should be sent to the "
                     "mobile number or the email address."
                 )
             )
+        except RuntimeError:
+            end = End(
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results=f"Could not initiate registration. {response.message}"
+                )
+            )
 
-        # 8.
+        # TODO: Remove this
+        # Pause to verify in the browser. Can remove this later.
+        # await asyncio.get_event_loop().run_in_executor(None, input)
+
+        # X.
         await save_browser_state(
-            page=page,
-            redis_client=ctx.deps.redis_client,
+            page=page, 
+            redis_client=ctx.deps.redis_client, 
             session_id=ctx.state.session_id,
         )
 

@@ -15,11 +15,12 @@ and forwards the persisted page to the next assistant.
 """
 
 # Standard Library
-import asyncio
 
+# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
+from loguru import logger
 
 # Third Party Library
 from playwright.async_api import BrowserType
@@ -31,8 +32,7 @@ from redis import asyncio as aioredis
 from chaturai.chatur.schemas import LoginStudentQuery, LoginStudentResults
 from chaturai.chatur.utils import (
     select_login_radio,
-    solve_and_fill_captcha,
-    submit_and_capture_api_response,
+    solve_and_submit_captcha_with_retries,
 )
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
@@ -191,46 +191,34 @@ class LoginExistingStudent(
             str(ctx.deps.login_student_query.email),
         )
 
-        # 5.
-        await solve_and_fill_captcha(page=page)
-
-        # TODO: Remove this
-        # Pause to verify in the browser. Can remove this later.
-        await asyncio.get_event_loop().run_in_executor(None, input)
-
-        # 6.
-        response_json = await submit_and_capture_api_response(
-            page=page,
-            button_name="Submit",
-            api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
-        )
-
-        # 7. Check the response
-        response = await response_json
-        if "status_code" in response:
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results=f"Cannot initiate login. {response['message']}"
-                )
+        # 5. Solve captcha and request OTP
+        try:
+            response = await solve_and_submit_captcha_with_retries(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
+                button_name="Submit",
             )
-            # TODO: handle error cases better
-        else:
-            data = response["data"]
-            assert response["status"] == "success"
-            assert data["email"] == ctx.deps.login_student_query.email
-
-            end = End(
-                LoginStudentResults(
+            end = End(  # type: ignore
+                LoginStudentResults(  # type: ignore
                     summary_of_page_results="Initiated login. "
-                    "Please request OTP from the student. It should be sent to the "
-                    "mobile number or the email address. Remind the student that "
-                    "this is time-sensitive information!"
+                    "Please ask the student for a 6-digit OTP which should be "
+                    "sent to the registered mobile number and "
+                    "the email. Remind the student that the OTP is valid for 10 minutes."
                 )
             )
 
-        # 8.
+        except RuntimeError:
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results=f"Cannot intiate login. {response.message}"
+                )
+            )
+
+            # TODO: handle error cases better
+
+        # 7.
         await save_browser_state(
-            page=page,
+            page=page, 
             redis_client=ctx.deps.redis_client,
             session_id=ctx.state.session_id,
         )
@@ -335,6 +323,10 @@ async def login_student(
         The graph run result.
     """
 
+    logger.info(f"{explanation_for_call} for {chatur_query = }")
+    logger.info(f"{last_graph_run_results = }")
+    logger.info("Press Enter to continue!")
+    input()
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 
