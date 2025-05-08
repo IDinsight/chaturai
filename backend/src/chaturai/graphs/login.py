@@ -22,18 +22,13 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 # Third Party Library
-from loguru import logger
 from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import (
-    LoginStudentQuery,
-    LoginStudentResults,
-    RegisterStudentResults,
-)
+from chaturai.chatur.schemas import LoginStudentQuery, LoginStudentResults
 from chaturai.chatur.utils import (
     select_login_radio,
     solve_and_fill_captcha,
@@ -103,16 +98,15 @@ class LoginExistingStudent(
     ]:
         """The run proceeds as follows:
 
-        1. Load the correct browser state.
+        1. Load the correct browser page AND state.
         2. Navigate to the page shell.
         3. Switch into Login mode.
-        4. Possibly resend an activation link.
-        5. Fill in the email field.
-        6. Capture the CAPTCHA canvas exactly.
-        7. Solve the CAPTCHA text.
-        8. Fill out the CAPTCHA text.
-        9. XXX
-        X. Save the browser state in Redis and close the browser.
+        4. Enter email.
+        5. Solve and fill in the CAPTCHA.
+        6. Request the OTP for the student.
+        7. Construct the appropriate end response for the graph.
+        8. Save the browser state in Redis and close the browser.
+        9. Create the browser session (if it does not exist) and save the page in RAM.
 
         Parameters
         ----------
@@ -136,8 +130,16 @@ class LoginExistingStudent(
             if await otp_field.is_visible():
                 print("Hey guess what? We've loaded the right page view!")
             else:
-                print("FUCK NO!")
+                print("THIS SHOULD NOT HAVE HAPPENED!")
             await asyncio.get_event_loop().run_in_executor(None, input)
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results="OTP successfully entered. "
+                    "Determine the next best assistant to call based on the student's "
+                    "latest message and your conversation with the student so far. If "
+                    "unclear, ask the student what they wish to do next."
+                )
+            )
         else:
             browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
             context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
@@ -149,12 +151,11 @@ class LoginExistingStudent(
             # 3.
             await select_login_radio(page=page)
 
-            # 4. Enter email
+            # 4.
             await page.fill(
                 "input[placeholder='Enter Your Email ID']",
                 str(ctx.deps.login_student_query.email),
             )
-            await asyncio.get_event_loop().run_in_executor(None, input)
 
             # 5.
             await solve_and_fill_captcha(page=page)
@@ -163,7 +164,7 @@ class LoginExistingStudent(
             # Pause to verify in the browser. Can remove this later.
             await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # 6. Request OTP
+            # 6.
             response_json = await submit_and_capture_api_response(
                 page=page,
                 button_name="Submit",
@@ -172,34 +173,35 @@ class LoginExistingStudent(
 
             # 7. Check the response
             response = await response_json
-            logger.info(f"{response = }")
-            await asyncio.get_event_loop().run_in_executor(None, input)
-
             if "status_code" in response:
                 end = End(
-                    LoginStudentResults(  # type: ignore
+                    LoginStudentResults(
                         summary_of_page_results=f"Cannot initiate login. {response['message']}"
                     )
                 )
+                # TODO: handle error cases better
             else:
                 data = response["data"]
                 assert response["status"] == "success"
                 assert data["email"] == ctx.deps.login_student_query.email
 
-                end = End(  # type: ignore
-                    LoginStudentResults(  # type: ignore
+                end = End(
+                    LoginStudentResults(
                         summary_of_page_results="Initiated login. "
                         "Please request OTP from the student. It should be sent to the "
-                        "mobile number or the email address."
+                        "mobile number or the email address. Remind the student that "
+                        "this is time-sensitive information!"
                     )
                 )
 
-            # TODO: handle error cases better
-
-            # 7.
-            await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
-
             # 8.
+            await save_browser_state(
+                page=page,
+                redis_client=ctx.deps.redis_client,
+                session_id=ctx.state.session_id,
+            )
+
+            # 9.
             await ctx.deps.browser_session_store.create(
                 browser=browser,
                 overwrite=False,
@@ -209,7 +211,10 @@ class LoginExistingStudent(
             browser_session_saved = await ctx.deps.browser_session_store.get(
                 session_id=ctx.state.session_id
             )
-            assert browser_session_saved
+            assert browser_session_saved, (
+                f"Browser session not saved in RAM for session ID: "
+                f"{ctx.state.session_id}"
+            )
 
         return end
 
@@ -223,7 +228,6 @@ async def login_student(
     csm: AsyncChatSessionManager,
     explanation_for_call: str = "No explanation provided.",
     generate_graph_diagram: bool = False,
-    last_graph_run_results: RegisterStudentResults,
     redis_client: aioredis.Redis,
     reset_chat_session: bool = False,
 ) -> LoginStudentResults:
@@ -287,9 +291,6 @@ async def login_student(
         An explanation as to why the assistant is being called.
     generate_graph_diagram
         Specifies whether to generate ALL graph diagrams using the Mermaid API (free).
-    last_graph_run_results
-        The last graph run results from either the Register Student graph. This is
-        typically passed in by the Chatur agent.
     redis_client
         The Redis client.
     reset_chat_session
