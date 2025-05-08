@@ -23,7 +23,7 @@ from typing import Annotated, Any
 
 # Third Party Library
 from loguru import logger
-from playwright.async_api import async_playwright
+from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
@@ -47,10 +47,12 @@ from chaturai.graphs.utils import (
 )
 from chaturai.metrics.logfire_metrics import login_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
+from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import AsyncChatSessionManager, log_chat_history
 from chaturai.utils.general import telemetry_timer
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
+PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
 REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN = Settings.REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
@@ -67,6 +69,8 @@ class LoginStudentState:
 class LoginStudentDeps:
     """This class contains dependencies used by nodes in the student login graph."""
 
+    browser: BrowserType
+    browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
     explanation_for_call: str
@@ -76,7 +80,7 @@ class LoginStudentDeps:
     login_url: str = "https://www.apprenticeshipindia.gov.in/candidate-login"
     role_labels: dict[str, str] = field(
         default_factory=lambda: {
-            "assistant": "Login Stduent Agent",
+            "assistant": "Login Student Agent",
             "system": "System",
             "user": "Student",
         }
@@ -122,9 +126,20 @@ class LoginExistingStudent(
             The results of the graph run.
         """
 
-        async with async_playwright() as pw:
-            # 1.
-            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
+        # 1.
+        browser_session = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        if browser_session:
+            page = browser_session.page
+            otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
+            if await otp_field.is_visible():
+                print("Hey guess what? We've loaded the right page view!")
+            else:
+                print("FUCK NO!")
+            await asyncio.get_event_loop().run_in_executor(None, input)
+        else:
+            browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
             context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
             page = await context.new_page()
 
@@ -139,6 +154,7 @@ class LoginExistingStudent(
                 "input[placeholder='Enter Your Email ID']",
                 str(ctx.deps.login_student_query.email),
             )
+            await asyncio.get_event_loop().run_in_executor(None, input)
 
             # 5.
             await solve_and_fill_captcha(page=page)
@@ -156,11 +172,13 @@ class LoginExistingStudent(
 
             # 7. Check the response
             response = await response_json
+            logger.info(f"{response = }")
+            await asyncio.get_event_loop().run_in_executor(None, input)
 
             if "status_code" in response:
                 end = End(
-                    LoginStudentResults(
-                        summary_of_page_results=f"Cannot intiate login. {response['message']}"
+                    LoginStudentResults(  # type: ignore
+                        summary_of_page_results=f"Cannot initiate login. {response['message']}"
                     )
                 )
             else:
@@ -181,12 +199,26 @@ class LoginExistingStudent(
             # 7.
             await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
 
+            # 8.
+            await ctx.deps.browser_session_store.create(
+                browser=browser,
+                overwrite=False,
+                page=page,
+                session_id=ctx.state.session_id,
+            )
+            browser_session_saved = await ctx.deps.browser_session_store.get(
+                session_id=ctx.state.session_id
+            )
+            assert browser_session_saved
+
         return end
 
 
 @telemetry_timer(metric_fn=login_agent_hist, unit="s")
 async def login_student(
     *,
+    browser: BrowserType,
+    browser_session_store: BrowserSessionStore,
     chatur_query: LoginStudentQuery,
     csm: AsyncChatSessionManager,
     explanation_for_call: str = "No explanation provided.",
@@ -243,6 +275,10 @@ async def login_student(
 
     Parameters
     ----------
+    browser
+        The Playwright browser object.
+    browser_session_store
+        The browser session store object.
     chatur_query
         The query object.
     csm
@@ -265,13 +301,6 @@ async def login_student(
         The graph run result.
     """
 
-    logger.info(f"{explanation_for_call} for {chatur_query = }")
-    logger.info(f"{last_graph_run_results = }")
-    logger.info(
-        "Press Enter to continue but note that it will fail if solve_captcha is not "
-        "implemented!"
-    )
-    input()
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 
@@ -300,6 +329,8 @@ async def login_student(
 
     # 4. Set graph dependencies.
     deps = LoginStudentDeps(
+        browser=browser,
+        browser_session_store=browser_session_store,
         chat_history=chat_history,
         chat_params=chat_params,
         explanation_for_call=explanation_for_call,
@@ -320,10 +351,12 @@ async def login_student(
         state=LoginStudentState(browser_state=browser_state, session_id=session_id),
     )
 
-    # 7. Update the chat history.
+    # 7. Update the chat history for the agent.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
+    # 8. Log the agent chat history at the end of each step (just for debugging
+    # purposes).
     log_chat_history(
         chat_history=chat_history,
         context="Login Student Agent: END",
