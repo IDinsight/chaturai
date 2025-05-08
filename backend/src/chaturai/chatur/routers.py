@@ -6,11 +6,15 @@ import os
 # Third Party Library
 import logfire
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.requests import Request
 
 # Package Library
-from chaturai.chatur.schemas import ChaturFlowResults, ChaturQueryUnion
+from chaturai.chatur.schemas import (
+    ChaturFlowResults,
+    ChaturQueryUnion,
+    OTPSubmissionRequest,
+)
 from chaturai.config import Settings
 from chaturai.graphs.chatur import chatur
 from chaturai.utils.chat import AsyncChatSessionManager, get_chat_session_manager
@@ -65,3 +69,40 @@ async def chatur_flow(
         redis_client=request.app.state.redis,
         reset_chat_and_graph_state=reset_chat_and_graph_state,
     )
+
+
+@router.post("/submit-otp", response_model=dict)
+@logfire.instrument("Submitting OTP...")
+async def submit_otp(
+    otp_submission: OTPSubmissionRequest,
+    request: Request,
+) -> dict:
+    """Submit OTP for student registration.
+
+    This endpoint accepts an OTP and user_id, storing them in Redis for use by the
+    registration flow. The student registration process waits for this OTP to continue.
+
+    Parameters
+    ----------
+    \n\totp_submission
+    \t\tThe OTP submission request containing the OTP and user ID.
+    \n\trequest
+    \t\tThe FastAPI request object.
+
+    Returns
+    -------
+    \n\tdict
+    \t\tA dictionary containing the success status and message.
+    """
+    try:
+        # Store the OTP in Redis keyed by user_id
+        await request.app.state.redis.hset(
+            otp_submission.user_id, "otp", otp_submission.otp
+        )
+
+        # TODO: how can the graph run send the final result?
+        return {"success": True, "message": "OTP submitted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process OTP submission: {str(e)}"
+        )

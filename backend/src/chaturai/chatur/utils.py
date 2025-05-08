@@ -252,6 +252,7 @@ async def submit_and_capture_api_response(
                 message=message_text,
                 is_error=is_error,
                 is_success=is_success,
+                api_response=json_response,
             )
         except PlaywrightTimeoutError:
             return None
@@ -341,3 +342,22 @@ async def submit_register_otp(page: Page, otp: str) -> Any:
         error_messages = response["errors"].values()
         message = " ".join(error_messages)
         raise RuntimeError(f"Error: {message}")
+
+
+async def wait_and_get_modal_content(page: Page) -> str:
+    """Wait for a modal to appear and get its content.
+
+    Parameters
+    ----------
+    page
+        The Playwright page object.
+
+    Returns
+    -------
+    str
+        The content of the modal.
+    """
+    modal = page.locator(".swal2-popup.swal2-modal.swal2-show")
+    await modal.wait_for(state="visible")
+    all_text = modal.text_content()
+    return all_text.strip()

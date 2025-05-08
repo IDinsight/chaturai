@@ -136,6 +136,20 @@ class RegisterStudentQuery(BaseQuery):
 
         return v
 
+
+ChaturQueryUnion = Annotated[
+    RegisterStudentQuery | LoginStudentQuery,
+    Field(discriminator="type"),
+]
+
+
+# OTP Submission
+class OTPSubmissionRequest(BaseModel):
+    """Pydantic model for validating OTP submission requests."""
+
+    otp: str = Field(..., description="6-digit OTP received by the user")
+    user_id: str = Field(..., description="User ID to associate with this OTP")
+
     @field_validator("otp")
     @classmethod
     def validate_otp(cls, v: str) -> str:
@@ -156,17 +170,11 @@ class RegisterStudentQuery(BaseQuery):
         ValueError
             If the OTP is not exactly 6 digits.
         """
-
         if not (v.isdigit() and len(v) == 6):
             raise ValueError(f"OTP must be exactly 6 digits: {v}")
-
         return v
 
-
-ChaturQueryUnion = Annotated[
-    RegisterStudentQuery | LoginStudentQuery,
-    Field(discriminator="type"),
-]
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Graph run results.
@@ -214,5 +222,6 @@ class SubmitButtonResponse(BaseModel):
     is_success: bool
     message: str
     source: Literal["toast", "api", "timeout"]
+    api_response: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
