@@ -215,6 +215,21 @@ class BrowserSessionStore:
                 await self._remove_browser_session(session_id=session_id_str)
             return None
 
+    async def reset_ttl(self, *, session_id: int | str) -> None:
+        """Reset the TTL to keep the session alive.
+
+        Parameters
+        ----------
+        session_id
+            The session ID associated with the `BrowserSession` object to reset.
+        """
+
+        session_id_str = str(session_id)
+
+        async with self._lock:
+            if session_id_str in self._data:
+                self._data[session_id_str].created_at = time.time()
+
     async def sweep(self) -> None:
         """Purge **all** sessions whose age exceeds the TTL."""
 
