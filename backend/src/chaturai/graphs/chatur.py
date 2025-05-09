@@ -49,6 +49,7 @@ from chaturai.utils.litellm_ import get_acompletion
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 REDIS_CACHE_PREFIX_GRAPH_CHATUR = Settings.REDIS_CACHE_PREFIX_GRAPH_CHATUR
+TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
 
@@ -262,6 +263,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 f"Here is the summary of the results from the last assistant call that "
                 f"I made for you:\n\n{self.summary_of_last_assistant_call}"
             )
+
         content = await get_chat_response(
             chat_history=ctx.deps.chat_history,
             chat_params=ctx.deps.chat_params,
@@ -579,7 +581,7 @@ async def chatur(
         namespace="chatur-agent",
         reset_chat_session=reset_chat_and_graph_state,
         system_message=ChaturPrompts.system_messages["chatur_agent"],
-        text_generation_params=TEXT_GENERATION_GEMINI,
+        text_generation_params=TEXT_GENERATION_BEDROCK,
         topic=None,
         user_id=chatur_query.user_id,
     )
