@@ -1,10 +1,14 @@
 """This module contains utilities for chatur."""
 
+# Standard Library
+from typing import Any, Coroutine
+
 # Third Party Library
 import cv2
 import numpy as np
 import pytesseract
 
+from cv2.typing import MatLike
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -95,7 +99,7 @@ async def select_register_radio(*, page: Page, timeout: int = 10_000) -> None:
         raise RuntimeError("Radio ‘Register as a candidate’ was not checked.")
 
 
-async def solve_and_fill_captcha(page: Page):
+async def solve_and_fill_captcha(page: Page) -> None:
     """Solve the CAPTCHA and fill it in the form."""
     canvas = page.locator("canvas.captcha-canvas")
     await canvas.wait_for(state="visible")
@@ -114,7 +118,7 @@ async def solve_captcha(image_buffer: bytes) -> str:
     return captcha_text.strip()
 
 
-def preprocess_captcha_image(image_buffer: bytes):
+def preprocess_captcha_image(image_buffer: bytes) -> MatLike:
     """
     Preprocess the captcha image to improve OCR accuracy.
 
@@ -141,7 +145,7 @@ def preprocess_captcha_image(image_buffer: bytes):
 
 async def submit_and_capture_api_response(
     page: Page, button_name: str, api_url: str
-) -> dict:
+) -> Coroutine[Any, Any, dict]:
     """Click a button and wait for the page to navigate."""
     async with page.expect_response(
         lambda response: api_url in response.url

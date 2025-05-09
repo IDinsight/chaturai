@@ -22,18 +22,13 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 # Third Party Library
-from loguru import logger
-from playwright.async_api import async_playwright
+from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import (
-    LoginStudentQuery,
-    LoginStudentResults,
-    RegisterStudentResults,
-)
+from chaturai.chatur.schemas import LoginStudentQuery, LoginStudentResults
 from chaturai.chatur.utils import (
     select_login_radio,
     solve_and_fill_captcha,
@@ -47,10 +42,12 @@ from chaturai.graphs.utils import (
 )
 from chaturai.metrics.logfire_metrics import login_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
+from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import AsyncChatSessionManager, log_chat_history
 from chaturai.utils.general import telemetry_timer
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
+PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
 REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN = Settings.REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
@@ -67,6 +64,8 @@ class LoginStudentState:
 class LoginStudentDeps:
     """This class contains dependencies used by nodes in the student login graph."""
 
+    browser: BrowserType
+    browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
     explanation_for_call: str
@@ -76,7 +75,7 @@ class LoginStudentDeps:
     login_url: str = "https://www.apprenticeshipindia.gov.in/candidate-login"
     role_labels: dict[str, str] = field(
         default_factory=lambda: {
-            "assistant": "Login Stduent Agent",
+            "assistant": "Login Student Agent",
             "system": "System",
             "user": "Student",
         }
@@ -99,16 +98,17 @@ class LoginExistingStudent(
     ]:
         """The run proceeds as follows:
 
-        1. Load the correct browser state.
+        1. Load the correct browser page AND state.
         2. Navigate to the page shell.
         3. Switch into Login mode.
-        4. Possibly resend an activation link.
-        5. Fill in the email field.
-        6. Capture the CAPTCHA canvas exactly.
-        7. Solve the CAPTCHA text.
-        8. Fill out the CAPTCHA text.
-        9. XXX
-        X. Save the browser state in Redis and close the browser.
+        4. Enter email.
+        5. Solve and fill in the CAPTCHA.
+        6. Request the OTP for the student.
+        7. Construct the appropriate end response for the graph.
+        8. Save the browser state in Redis and close the browser.
+        9. Create the browser session (if it does not exist) and save/update the page
+            in RAM. Optionally, choose to reset the TTL to keep the browser session
+            alive.
 
         Parameters
         ----------
@@ -122,76 +122,145 @@ class LoginExistingStudent(
             The results of the graph run.
         """
 
-        async with async_playwright() as pw:
-            # 1.
-            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
-            context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
-            page = await context.new_page()
-
-            # 2.
-            await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-
-            # 3.
-            await select_login_radio(page=page)
-
-            # 4. Enter email
-            await page.fill(
-                "input[placeholder='Enter Your Email ID']",
-                str(ctx.deps.login_student_query.email),
-            )
-
-            # 5.
-            await solve_and_fill_captcha(page=page)
-
-            # TODO: Remove this
-            # Pause to verify in the browser. Can remove this later.
+        # 1.
+        browser_session = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        if browser_session:
+            page = browser_session.page
+            otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
+            if await otp_field.is_visible():
+                print("Hey guess what? We've loaded the right page view!")
+            else:
+                print("THIS SHOULD NOT HAVE HAPPENED!")
             await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # 6. Request OTP
-            response_json = await submit_and_capture_api_response(
-                page=page,
-                button_name="Submit",
-                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
-            )
-
-            # 7. Check the response
-            response = await response_json
-
-            if "status_code" in response:
-                end = End(
-                    LoginStudentResults(
-                        summary_of_page_results=f"Cannot intiate login. {response['message']}"
-                    )
-                )
-            else:
-                data = response["data"]
-                assert response["status"] == "success"
-                assert data["email"] == ctx.deps.login_student_query.email
-
-                end = End(  # type: ignore
-                    LoginStudentResults(  # type: ignore
-                        summary_of_page_results="Initiated login. "
-                        "Please request OTP from the student. It should be sent to the "
-                        "mobile number or the email address."
-                    )
-                )
-
-            # TODO: handle error cases better
+            # TODO: Inject OTP fill in logic here and navigating to the next page?
+            # NB: If page is updated at all during this logic, then we need to update
+            # the browser session in RAM!
 
             # 7.
-            await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results="OTP successfully entered. "
+                    "Determine the next best assistant to call based on the student's "
+                    "latest message and your conversation with the student so far. If "
+                    "unclear, ask the student what they wish to do next."
+                )
+            )
 
+            # 8.
+            await save_browser_state(
+                page=page,
+                redis_client=ctx.deps.redis_client,
+                session_id=ctx.state.session_id,
+            )
+
+            # 9.
+            await ctx.deps.browser_session_store.create(
+                browser=browser_session.browser,  # Reuse the same browser here!
+                page=page,
+                session_id=ctx.state.session_id,
+                overwrite=True,  # Update if the page changed at all!
+            )
+            browser_session_saved = await ctx.deps.browser_session_store.get(
+                session_id=ctx.state.session_id
+            )
+            assert browser_session_saved, (
+                f"Browser session not saved in RAM for session ID: "
+                f"{ctx.state.session_id}"
+            )
+            await ctx.deps.browser_session_store.reset_ttl(
+                session_id=ctx.state.session_id
+            )
+            return end
+
+        browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+        context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
+        page = await context.new_page()
+
+        # 2.
+        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
+
+        # 3.
+        await select_login_radio(page=page)
+
+        # 4.
+        await page.fill(
+            "input[placeholder='Enter Your Email ID']",
+            str(ctx.deps.login_student_query.email),
+        )
+
+        # 5.
+        await solve_and_fill_captcha(page=page)
+
+        # TODO: Remove this
+        # Pause to verify in the browser. Can remove this later.
+        await asyncio.get_event_loop().run_in_executor(None, input)
+
+        # 6.
+        response_json = await submit_and_capture_api_response(
+            page=page,
+            button_name="Submit",
+            api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
+        )
+
+        # 7. Check the response
+        response = await response_json
+        if "status_code" in response:
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results=f"Cannot initiate login. {response['message']}"
+                )
+            )
+            # TODO: handle error cases better
+        else:
+            data = response["data"]
+            assert response["status"] == "success"
+            assert data["email"] == ctx.deps.login_student_query.email
+
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results="Initiated login. "
+                    "Please request OTP from the student. It should be sent to the "
+                    "mobile number or the email address. Remind the student that "
+                    "this is time-sensitive information!"
+                )
+            )
+
+        # 8.
+        await save_browser_state(
+            page=page,
+            redis_client=ctx.deps.redis_client,
+            session_id=ctx.state.session_id,
+        )
+
+        # 9.
+        await ctx.deps.browser_session_store.create(
+            browser=browser,
+            overwrite=False,
+            page=page,
+            session_id=ctx.state.session_id,
+        )
+        browser_session_saved = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        assert browser_session_saved, (
+            f"Browser session not saved in RAM for session ID: "
+            f"{ctx.state.session_id}"
+        )
         return end
 
 
 @telemetry_timer(metric_fn=login_agent_hist, unit="s")
 async def login_student(
     *,
+    browser: BrowserType,
+    browser_session_store: BrowserSessionStore,
     chatur_query: LoginStudentQuery,
     csm: AsyncChatSessionManager,
     explanation_for_call: str = "No explanation provided.",
     generate_graph_diagram: bool = False,
-    last_graph_run_results: RegisterStudentResults,
     redis_client: aioredis.Redis,
     reset_chat_session: bool = False,
 ) -> LoginStudentResults:
@@ -243,6 +312,10 @@ async def login_student(
 
     Parameters
     ----------
+    browser
+        The Playwright browser object.
+    browser_session_store
+        The browser session store object.
     chatur_query
         The query object.
     csm
@@ -251,9 +324,6 @@ async def login_student(
         An explanation as to why the assistant is being called.
     generate_graph_diagram
         Specifies whether to generate ALL graph diagrams using the Mermaid API (free).
-    last_graph_run_results
-        The last graph run results from either the Register Student graph. This is
-        typically passed in by the Chatur agent.
     redis_client
         The Redis client.
     reset_chat_session
@@ -265,13 +335,6 @@ async def login_student(
         The graph run result.
     """
 
-    logger.info(f"{explanation_for_call} for {chatur_query = }")
-    logger.info(f"{last_graph_run_results = }")
-    logger.info(
-        "Press Enter to continue but note that it will fail if solve_captcha is not "
-        "implemented!"
-    )
-    input()
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 
@@ -300,6 +363,8 @@ async def login_student(
 
     # 4. Set graph dependencies.
     deps = LoginStudentDeps(
+        browser=browser,
+        browser_session_store=browser_session_store,
         chat_history=chat_history,
         chat_params=chat_params,
         explanation_for_call=explanation_for_call,
@@ -320,10 +385,12 @@ async def login_student(
         state=LoginStudentState(browser_state=browser_state, session_id=session_id),
     )
 
-    # 7. Update the chat history.
+    # 7. Update the chat history for the agent.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
+    # 8. Log the agent chat history at the end of each step (just for debugging
+    # purposes).
     log_chat_history(
         chat_history=chat_history,
         context="Login Student Agent: END",

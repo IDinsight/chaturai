@@ -59,6 +59,8 @@ async def chatur_flow(
     """
 
     return await chatur(
+        browser=request.app.state.browser,
+        browser_session_store=request.app.state.browser_session_store,
         chatur_query=chatur_query,
         csm=csm,
         generate_graph_diagrams=generate_graph_diagrams,

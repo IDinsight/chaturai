@@ -57,6 +57,10 @@ class BackendSettings(BaseSettings):
     # Paths
     PATHS_BACKEND_ROOT: str = ""
 
+    # Playwright
+    PLAYWRIGHT_HEADLESS: bool = False
+    PLAYWRIGHT_PAGE_TTL: int = 600
+
     # Postgres
     POSTGRES_ASYNC_API: str = Field("asyncpg", validation_alias="POSTGRES_ASYNC_API")
     POSTGRES_DB: str = Field("chaturai", validation_alias="POSTGRES_DB")
@@ -99,6 +103,13 @@ class BackendSettings(BaseSettings):
     SCRAPER_TIMEZONE: str = "Asia/Kolkata"
 
     # Text generation parameters.
+    TEXT_GENERATION_BEDROCK: dict[str, Any] = {
+        "frequency_penalty": 0.0,
+        "n": 1,
+        "presence_penalty": 0.0,
+        "temperature": 0.7,
+        "top_p": 0.9,
+    }
     TEXT_GENERATION_DEFAULT: dict[str, Any] = {
         "frequency_penalty": 0.0,
         "n": 1,
