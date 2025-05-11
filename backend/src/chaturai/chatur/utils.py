@@ -1,11 +1,10 @@
 """This module contains utilities for chatur."""
 
 # Standard Library
-from typing import Any, Coroutine
-
-# Standard Library
 import asyncio
 import random
+
+from typing import Any
 
 # Third Party Library
 import cv2
@@ -140,8 +139,7 @@ async def solve_and_submit_captcha_with_retries(
             continue
         elif response.is_error:
             raise RuntimeError(f"Error: {response.message}")
-        else:
-            return response
+        return response
 
 
 async def solve_and_fill_captcha(page: Page) -> None:
@@ -216,6 +214,7 @@ async def submit_and_capture_api_response(
                 message=message_text,
                 is_error=is_error,
                 is_success=is_success,
+                api_response=None,
             )
         except PlaywrightTimeoutError:
             # No toast appeared within the timeout
@@ -254,6 +253,7 @@ async def submit_and_capture_api_response(
                 message=message_text,
                 is_error=is_error,
                 is_success=is_success,
+                api_response=json_response,
             )
         except PlaywrightTimeoutError:
             return None
@@ -305,6 +305,7 @@ async def submit_and_capture_api_response(
         message="No toast or API response detected",
         is_error=True,
         is_success=False,
+        api_response=None,
     )
 
 
@@ -338,8 +339,8 @@ async def submit_register_otp(page: Page, otp: str) -> Any:
         activation_link_expiry = candidate_info["activation_link_expiry_date"]
 
         return naps_id, activation_link_expiry
-    else:
-        assert "errors" in response
-        error_messages = response["errors"].values()
-        message = " ".join(error_messages)
-        raise RuntimeError(f"Error: {message}")
+
+    assert "errors" in response
+    error_messages = response["errors"].values()
+    message = " ".join(error_messages)
+    raise RuntimeError(f"Error: {message}")

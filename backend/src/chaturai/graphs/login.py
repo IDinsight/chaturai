@@ -15,24 +15,29 @@ and forwards the persisted page to the next assistant.
 """
 
 # Standard Library
+import asyncio
 
-# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
-from loguru import logger
 
 # Third Party Library
+from loguru import logger
 from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import LoginStudentQuery, LoginStudentResults
+from chaturai.chatur.schemas import (
+    LoginStudentQuery,
+    LoginStudentResults,
+    NextChatAction,
+)
 from chaturai.chatur.utils import (
     select_login_radio,
     solve_and_submit_captcha_with_retries,
+    submit_and_capture_api_response,
 )
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
@@ -129,7 +134,11 @@ class LoginExistingStudent(
         if browser_session:
             page = browser_session.page
             otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
-            if await otp_field.is_visible():
+
+            otp_field_visible = await otp_field.is_visible()
+
+            # TODO: remove this block after testing
+            if otp_field_visible:
                 print("Hey guess what? We've loaded the right page view!")
             else:
                 print("THIS SHOULD NOT HAVE HAPPENED!")
@@ -138,16 +147,30 @@ class LoginExistingStudent(
             # TODO: Inject OTP fill in logic here and navigating to the next page?
             # NB: If page is updated at all during this logic, then we need to update
             # the browser session in RAM!
+            await otp_field.fill(ctx.deps.login_student_query.otp)
 
-            # 7.
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results="OTP successfully entered. "
-                    "Determine the next best assistant to call based on the student's "
-                    "latest message and your conversation with the student so far. If "
-                    "unclear, ask the student what they wish to do next."
-                )
+            submit_otp_response = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/login-otp",
+                button_name="Login",
             )
+
+            if submit_otp_response.is_error:
+                end = End(
+                    LoginStudentResults(
+                        summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}"
+                    )
+                )
+            else:
+                # TODO: do not return an End object but pass on to other assistants.
+                end = End(
+                    LoginStudentResults(
+                        summary_of_page_results="OTP successfully entered. "
+                        "Determine the next best assistant to call based on the student's "
+                        "latest message and your conversation with the student so far. If "
+                        "unclear, ask the student what they wish to do next."
+                    )
+                )
 
             # 8.
             await save_browser_state(
@@ -198,12 +221,13 @@ class LoginExistingStudent(
                 api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
                 button_name="Submit",
             )
-            end = End(  # type: ignore
-                LoginStudentResults(  # type: ignore
+            end = End(
+                LoginStudentResults(
                     summary_of_page_results="Initiated login. "
                     "Please ask the student for a 6-digit OTP which should be "
                     "sent to the registered mobile number and "
-                    "the email. Remind the student that the OTP is valid for 10 minutes."
+                    "the email. Remind the student that the OTP is valid for 10 minutes.",
+                    next_chat_action=NextChatAction.REQUEST_OTP,
                 )
             )
 
@@ -218,7 +242,7 @@ class LoginExistingStudent(
 
         # 7.
         await save_browser_state(
-            page=page, 
+            page=page,
             redis_client=ctx.deps.redis_client,
             session_id=ctx.state.session_id,
         )
@@ -324,7 +348,6 @@ async def login_student(
     """
 
     logger.info(f"{explanation_for_call} for {chatur_query = }")
-    logger.info(f"{last_graph_run_results = }")
     logger.info("Press Enter to continue!")
     input()
     chatur_query = deepcopy(chatur_query)

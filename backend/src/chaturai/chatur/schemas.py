@@ -3,6 +3,7 @@
 # Standard Library
 import re
 
+from enum import Enum
 from typing import Annotated, Any, Literal, Optional
 
 # Third Party Library
@@ -32,6 +33,33 @@ class LoginStudentQuery(BaseQuery):
 
     email: EmailStr
     type: Literal["login"]
+    otp: Optional[str] = Field(
+        None,
+        description="6-digit OTP sent to the registered mobile number if available",
+    )
+
+    @field_validator("otp")
+    @classmethod
+    def validate_otp(cls, v: str | None) -> str | None:
+        """Validate the OTP"""
+        if v is None:
+            return v
+
+        if not (v.isdigit() and len(v) == 6):
+            raise ValueError(f"OTP must be exactly 6 digits: {v}")
+
+        return v
+
+
+class NextChatAction(str, Enum):
+    """Enum for the next action to take in the chat flow.
+    For now, this will be used to determine the branches in Trun.io"""
+
+    REQUEST_USER_QUERY = "REQUEST_USER_QUERY"  # Request user query
+    REQUEST_OTP = "REQUEST_OTP"  # Request OTP from the user
+    GO_TO_AAQ = "GO_TO_AAQ"  # Pass query to AAQ
+    GO_TO_HELPDESK = "GO_TO_HELPDESK"  # Pass query to Helpdesk
+    GO_TO_MENU = "GO_TO_MENU"  # Go to menu
 
 
 class RegisterStudentQuery(BaseQuery):
@@ -48,7 +76,8 @@ class RegisterStudentQuery(BaseQuery):
         description="At least 13-digit roll number; required if is_iti_student=True",
     )
     otp: Optional[str] = Field(
-        ..., description="6-digit OTP sent to the registered mobile number if available"
+        None,
+        description="6-digit OTP sent to the registered mobile number if available",
     )
     type: Literal["registration"]
 
@@ -138,24 +167,10 @@ class RegisterStudentQuery(BaseQuery):
 
     @field_validator("otp")
     @classmethod
-    def validate_otp(cls, v: str) -> str:
-        """Validate the OTP.
-
-        Parameters
-        ----------
-        v
-            The OTP to validate.
-
-        Returns
-        -------
-        str
-            The validated OTP.
-
-        Raises
-        ------
-        ValueError
-            If the OTP is not exactly 6 digits.
-        """
+    def validate_otp(cls, v: str | None) -> str | None:
+        """Validate the OTP"""
+        if v is None:
+            return v
 
         if not (v.isdigit() and len(v) == 6):
             raise ValueError(f"OTP must be exactly 6 digits: {v}")
@@ -179,6 +194,7 @@ class ChaturFlowResults(BaseModel):
     require_student_input: bool
     summary_for_student: str
     user_id: str
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -187,6 +203,7 @@ class PageResults(BaseModel):
     """Pydantic model for validating page results."""
 
     summary_of_page_results: str
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -214,5 +231,6 @@ class SubmitButtonResponse(BaseModel):
     is_success: bool
     message: str
     source: Literal["toast", "api", "timeout"]
+    api_response: Optional[dict]
 
     model_config = ConfigDict(from_attributes=True)

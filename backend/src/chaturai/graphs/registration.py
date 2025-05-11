@@ -17,6 +17,8 @@ persisted page to the next assistant.
 """
 
 # Standard Library
+import asyncio
+
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -29,6 +31,8 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import (
+    NextChatAction,
+    RegisterationCompleteResults,
     RegisterStudentQuery,
     RegisterStudentResults,
 )
@@ -62,7 +66,6 @@ class RegisterStudentState:
     """The state tracks the progress of the student registration graph."""
 
     session_id: int | str
-    requested_otp: bool = False
 
 
 @dataclass
@@ -100,7 +103,8 @@ class GetITIStudentDetails(
     async def run(
         self, ctx: GraphRunContext[RegisterStudentState, RegisterStudentDeps]
     ) -> Annotated[
-        End[RegisterStudentResults], Edge(label="Obtain details on ITI students")
+        End[RegisterStudentResults | RegisterationCompleteResults],
+        Edge(label="Obtain details on ITI students"),
     ]:
         """The run proceeds as follows:
 
@@ -172,6 +176,7 @@ class GetITIStudentDetails(
 
         return end
 
+
 @dataclass
 class RegisterNewStudent(
     BaseNode[
@@ -214,6 +219,92 @@ class RegisterNewStudent(
         if ctx.deps.register_student_query.is_iti_student:
             return GetITIStudentDetails()
 
+        # 2.
+        browser_session = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+
+        # TODO: check for OTP field in redis as well
+        if browser_session:
+            page = browser_session.page
+            otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
+
+            # TODO: remove this block after testing
+            if not await otp_field.is_visible():
+                print("THIS SHOULD NOT HAVE HAPPENED!")
+                raise RuntimeError(
+                    "OTP field not visible. Cannot proceed with registration."
+                )
+            await asyncio.get_event_loop().run_in_executor(None, input)
+
+            # 2.
+            otp_field_selector = "input[placeholder='Enter 6 Digit OTP']"
+            page.wait_for_selector(otp_field_selector, state="visible")
+            await page.fill(
+                otp_field_selector, str(ctx.deps.register_student_query.otp)
+            )
+
+            # 3.
+            response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
+                button_name="Submit",
+            )
+            response = await response_json
+
+            if "status" in response and response["status"] == "success":
+                data = response.get("data")
+                candidate_info = data.get("candidate")
+                naps_id = candidate_info["code"]
+                activation_link_expiry = candidate_info["activation_link_expiry_date"]
+
+                end = End(
+                    RegisterationCompleteResults(
+                        summary_of_page_results="Registration completed successfully. "
+                        f"Your NAPS ID is {naps_id}. "
+                        f"Please prompt the student to check their email for the "
+                        f"activation link. Remind them that they must click on the "
+                        f"link before {activation_link_expiry} to be able to log in, "
+                        f"and complete their candidate profile in order to start "
+                        f"applying for apprenticeships.",
+                        naps_id=naps_id,
+                        activation_link_expiry=activation_link_expiry,
+                    )
+                )
+                # TODO: maybe we should just go to login?
+            else:
+                if "errors" in response:
+                    error_messages = " ".join(response["errors"].values())
+                    return End(
+                        RegisterStudentResults(  # type: ignore
+                            summary_of_page_results=f"Error in registration: {error_messages}"
+                        )
+                    )
+
+            await save_browser_state(
+                page=page,
+                redis_client=ctx.deps.redis_client,
+                session_id=ctx.state.session_id,
+            )
+
+            await ctx.deps.browser_session_store.create(
+                browser=browser_session.browser,  # Reuse the same browser here!
+                page=page,
+                session_id=ctx.state.session_id,
+                overwrite=True,  # Update if the page changed at all!
+            )
+            browser_session_saved = await ctx.deps.browser_session_store.get(
+                session_id=ctx.state.session_id
+            )
+            assert browser_session_saved, (
+                f"Browser session not saved in RAM for session ID: "
+                f"{ctx.state.session_id}"
+            )
+            await ctx.deps.browser_session_store.reset_ttl(
+                session_id=ctx.state.session_id
+            )
+            return end
+
         browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
         page = await browser.new_page()
 
@@ -248,7 +339,8 @@ class RegisterNewStudent(
                 RegisterStudentResults(  # type: ignore
                     summary_of_page_results="Initiated account creation successfully. "
                     "Please request OTP from the student. It should be sent to the "
-                    "mobile number or the email address."
+                    "mobile number or the email address.",
+                    next_chat_action=NextChatAction.REQUEST_OTP,
                 )
             )
         except RuntimeError:
@@ -264,9 +356,24 @@ class RegisterNewStudent(
 
         # X.
         await save_browser_state(
-            page=page, 
-            redis_client=ctx.deps.redis_client, 
+            page=page,
+            redis_client=ctx.deps.redis_client,
             session_id=ctx.state.session_id,
+        )
+
+        # 9.
+        await ctx.deps.browser_session_store.create(
+            browser=browser,
+            overwrite=False,
+            page=page,
+            session_id=ctx.state.session_id,
+        )
+        browser_session_saved = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        assert browser_session_saved, (
+            f"Browser session not saved in RAM for session ID: "
+            f"{ctx.state.session_id}"
         )
 
         return end
