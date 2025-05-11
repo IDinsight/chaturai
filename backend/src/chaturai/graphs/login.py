@@ -279,35 +279,36 @@ async def login_student(
     """
     🔍 Login Existing Student Assistant
 
-    **The student's email and password will be automatically provided to me for logging
+    **The student's email will be automatically provided to me for logging
     in. You do not need to ask the student for this information!**
 
     ✅ WHEN TO USE THIS ASSISTANT
     Use this assistant **only** in the following situations:
         1. An **existing student** needs to log into the Indian government
-            apprenticeship portal to continue with their application process. This is
-            typically the case when the student has already completed the initial
-            account registration and now wants to:
+            Apprenticeship Portal to perform one of the following actions:
             - Fill out or update their apprenticeship profile,
-            - Submit necessary documents, or
-            - Apply for available apprenticeship opportunities.
-        2. A student has previously started an application process but did **not
-            complete** it, and now they want to resume their session by logging in.
+            - Complete their eKYC, or
+            - Update bank account details.
+        2. A student has provided an OTP to complete the login.
 
      This assistant is used **only to facilitate a login for an already registered
-     student**. It ensures that the student is authenticated on the portal so they can
-     proceed to the next step in their apprenticeship journey. **After calling this
-     assistant, you should use another assistant appropriate for the next step**, such
-     as completing profile details, uploading documents, or searching and applying for
-     apprenticeships.
+     student**. It
+        1. initiates the login process on the portal with the provided email,
+            and, if successful, requests student for the OTP they should receive
+            in their registered email and mobile,
+        2. accepts the OTP from the student and submits it to the portal, and, if
+            successful, determine the next step based on the chat history.
+     **After calling this assistant, you should use another assistant appropriate
+     for the next step**, such as completing the profile, eKYC, or bank details,
+     searching and applying for apprenticeships, or reviewing and signing contracts.
 
     📝 HOW TO CALL THIS ASSISTANT
     Phrase your explanation as a **direct message** to the assistant. **Do not** use
     first-person language (e.g., “I will use...” or “I’m going to call...”). Instead,
     use imperative phrasing, such as:
-        - "Log in the student so they can continue the application process."
-        - "Authenticate the existing student to resume their application workflow."
-        - "Initiate login for a registered student returning to complete their apprenticeship application."
+        - "Initiate the log in process for the student so they can complete the eKYC."
+        - "Submit the OTP provided by the student to complete the log in to review "
+            "their bank details."
 
     Provide the following information in your explanation to this assistant:
         - A clear explanation of **why** you are calling this assistant, with reference
