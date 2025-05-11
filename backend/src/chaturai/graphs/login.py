@@ -147,7 +147,7 @@ class LoginExistingStudent(
             # TODO: Inject OTP fill in logic here and navigating to the next page?
             # NB: If page is updated at all during this logic, then we need to update
             # the browser session in RAM!
-            await otp_field.fill(ctx.deps.login_student_query.otp)
+            await otp_field.fill(ctx.deps.login_student_query.user_query)
 
             submit_otp_response = await submit_and_capture_api_response(
                 page=page,
@@ -289,7 +289,8 @@ async def login_student(
             - Fill out or update their apprenticeship profile,
             - Complete their eKYC, or
             - Update bank account details.
-        2. A student has provided an OTP to complete the login.
+        2. A student has provided an OTP upon your request. You should use this
+            assistant to submit the OTP to complete the login.
 
      This assistant is used **only to facilitate a login for an already registered
      student**. It

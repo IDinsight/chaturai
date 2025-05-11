@@ -28,14 +28,12 @@ class BaseQuery(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class LoginStudentQuery(BaseQuery):
-    """Pydantic model for validating student login queries."""
+class OTPQuery(BaseModel):
+    """Pydantic model for OTP field. Might remove later."""
 
-    email: EmailStr
-    type: Literal["login"]
     otp: Optional[str] = Field(
         None,
-        description="6-digit OTP sent to the registered mobile number if available",
+        description="6-digit OTP sent to the student",
     )
 
     @field_validator("otp")
@@ -51,6 +49,13 @@ class LoginStudentQuery(BaseQuery):
         return v
 
 
+class LoginStudentQuery(BaseQuery, OTPQuery):
+    """Pydantic model for validating student login queries."""
+
+    email: EmailStr
+    type: Literal["login"]
+
+
 class NextChatAction(str, Enum):
     """Enum for the next action to take in the chat flow.
     For now, this will be used to determine the branches in Trun.io"""
@@ -62,7 +67,7 @@ class NextChatAction(str, Enum):
     GO_TO_MENU = "GO_TO_MENU"  # Go to menu
 
 
-class RegisterStudentQuery(BaseQuery):
+class RegisterStudentQuery(BaseQuery, OTPQuery):
     """Pydantic model for validating student registration queries."""
 
     email: EmailStr
@@ -74,10 +79,6 @@ class RegisterStudentQuery(BaseQuery):
     roll_number: Optional[str] = Field(
         None,
         description="At least 13-digit roll number; required if is_iti_student=True",
-    )
-    otp: Optional[str] = Field(
-        None,
-        description="6-digit OTP sent to the registered mobile number if available",
     )
     type: Literal["registration"]
 
@@ -162,18 +163,6 @@ class RegisterStudentQuery(BaseQuery):
             raise ValueError("roll_number is required when is_iti_student=True")
         if not iti and v is not None:
             raise ValueError("roll_number must be omitted when is_iti_student=False")
-
-        return v
-
-    @field_validator("otp")
-    @classmethod
-    def validate_otp(cls, v: str | None) -> str | None:
-        """Validate the OTP"""
-        if v is None:
-            return v
-
-        if not (v.isdigit() and len(v) == 6):
-            raise ValueError(f"OTP must be exactly 6 digits: {v}")
 
         return v
 

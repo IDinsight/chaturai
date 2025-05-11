@@ -281,7 +281,7 @@ async def submit_and_capture_api_response(
         toast_result = await toast_task
         if toast_result:
             # If it's a captcha error, the API call won't happen
-            if "Captcha" in toast_result["message"]:
+            if "Captcha" in toast_result.message:
                 return toast_result
 
     # If we got an API response
