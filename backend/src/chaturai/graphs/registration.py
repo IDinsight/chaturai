@@ -17,8 +17,6 @@ persisted page to the next assistant.
 """
 
 # Standard Library
-
-# Standard Library
 import asyncio
 
 from copy import deepcopy
@@ -26,26 +24,36 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 # Third Party Library
-from playwright.async_api import async_playwright
+from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import RegisterStudentQuery, RegisterStudentResults
+from chaturai.chatur.schemas import (
+    NextChatAction,
+    RegisterationCompleteResults,
+    RegisterStudentQuery,
+    RegisterStudentResults,
+)
 from chaturai.chatur.utils import (
     select_register_radio,
-    solve_and_fill_captcha,
+    solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
 )
 from chaturai.config import Settings
-from chaturai.graphs.utils import save_browser_state, save_graph_diagram
+from chaturai.graphs.utils import (
+    save_browser_state,
+    save_graph_diagram,
+)
 from chaturai.metrics.logfire_metrics import register_student_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
+from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import AsyncChatSessionManager, log_chat_history
 from chaturai.utils.general import telemetry_timer
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
+PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
 REDIS_CACHE_PREFIX_BROWSER_STATE = Settings.REDIS_CACHE_PREFIX_BROWSER_STATE
 REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION = (
     Settings.REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION
@@ -66,6 +74,8 @@ class RegisterStudentDeps:
     graph.
     """
 
+    browser: BrowserType
+    browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
     explanation_for_call: str
@@ -93,15 +103,17 @@ class GetITIStudentDetails(
     async def run(
         self, ctx: GraphRunContext[RegisterStudentState, RegisterStudentDeps]
     ) -> Annotated[
-        End[RegisterStudentResults], Edge(label="Obtain details on ITI students")
+        End[RegisterStudentResults | RegisterationCompleteResults],
+        Edge(label="Obtain details on ITI students"),
     ]:
         """The run proceeds as follows:
 
         1. Navigate to the page shell.
         2. Switch into Register mode.
         3. Fill out the roll number for the ITI student.
-        4. XXX
-        X. Save the browser state in Redis and close the browser.
+        4. Submit and capture the API response.
+        5. Construct the appropriate end response for the graph.
+        6. Save the browser state in Redis and close the browser.
 
         Parameters
         ----------
@@ -117,51 +129,50 @@ class GetITIStudentDetails(
 
         assert ctx.deps.register_student_query.is_iti_student
 
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=False)
-            page = await browser.new_page()
+        browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+        page = await browser.new_page()
 
-            # 1.
-            await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
+        # 1.
+        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
 
-            # 2.
-            await select_register_radio(page=page)
+        # 2.
+        await select_register_radio(page=page)
 
-            # 3.
-            await page.locator("label:has-text('ITI Student')").click(force=True)
-            roll_selector = "input[placeholder*='Roll']"
-            await page.wait_for_selector(roll_selector, state="visible")
-            await page.fill(
-                roll_selector, str(ctx.deps.register_student_query.roll_number)
+        # 3.
+        await page.locator("label:has-text('ITI Student')").click(force=True)
+        roll_selector = "input[placeholder*='Roll']"
+        await page.wait_for_selector(roll_selector, state="visible")
+        await page.fill(roll_selector, str(ctx.deps.register_student_query.roll_number))
+
+        # 4.
+        response_json = await submit_and_capture_api_response(
+            page=page,
+            api_url="https://api.apprenticeshipindia.gov.in/auth/get-candidate-details-from-ncvt",
+            button_name="Find Details",
+        )
+        response = await response_json
+
+        if "errors" in response:
+            end = End(
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
+                )
+            )
+        else:
+            assert response["status"] == "success"
+            # TODO: treat success case once we have a valid ITI roll number to test with
+            end = End(  # type: ignore
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
+                )
             )
 
-            # 4.
-            response_json = await submit_and_capture_api_response(
-                page=page,
-                api_url="https://api.apprenticeshipindia.gov.in/auth/get-candidate-details-from-ncvt",
-                button_name="Find Details",
-            )
-            response = await response_json
-
-            if "errors" in response:
-                end = End(
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
-                    )
-                )
-            else:
-                assert response["status"] == "success"
-                end = End(  # type: ignore
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results="ITI student details obtained successfully. Shall I continue with the next step in the apprenticeship process for you?",
-                    )
-                )
-
-            # Pause to verify in the browser.
-            # await asyncio.get_event_loop().run_in_executor(None, input)
-
-            # X.
-            await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
+        # 6.
+        await save_browser_state(
+            page=page,
+            redis_client=ctx.deps.redis_client,
+            session_id=ctx.state.session_id,
+        )
 
         return end
 
@@ -188,7 +199,9 @@ class RegisterNewStudent(
         3. Switch into Register mode.
         4. Fill out the rest of the register form.
         5. Solve CAPTCHA.
-        6. Save the browser state in Redis and close the browser.
+        6. Submit and capture the API response.
+        7. Construct the appropriate end response for the graph.
+        8. Save the browser state in Redis and close the browser.
 
         Parameters
         ----------
@@ -206,68 +219,162 @@ class RegisterNewStudent(
         if ctx.deps.register_student_query.is_iti_student:
             return GetITIStudentDetails()
 
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=False)  # TODO: set to True
-            page = await browser.new_page()
+        # 2.
+        browser_session = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
 
-            # 2.
-            await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
+        # TODO: check for OTP field in redis as well
+        if browser_session:
+            page = browser_session.page
+            otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
 
-            # 3.
-            await select_register_radio(page=page)
-
-            # 4.
-            await page.fill(
-                "input[placeholder='Enter your mobile number']",
-                ctx.deps.register_student_query.mobile_number,
-            )
-            await page.fill(
-                "input[placeholder='Enter Your Email ID']",
-                str(ctx.deps.register_student_query.email),
-            )
-            await page.fill(
-                "input[placeholder='Confirm Your Email ID']",
-                str(ctx.deps.register_student_query.email),
-            )
-
-            # 5.
-            await solve_and_fill_captcha(page=page)
-
-            # TODO: Remove this
-            # Pause to verify in the browser. Can remove this later.
+            # TODO: remove this block after testing
+            if not await otp_field.is_visible():
+                print("THIS SHOULD NOT HAVE HAPPENED!")
+                raise RuntimeError(
+                    "OTP field not visible. Cannot proceed with registration."
+                )
             await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # 6.
+            # 2.
+            otp_field_selector = "input[placeholder='Enter 6 Digit OTP']"
+            page.wait_for_selector(otp_field_selector, state="visible")
+            await page.fill(
+                otp_field_selector, str(ctx.deps.register_student_query.otp)
+            )
+
+            # 3.
             response_json = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/register-otp",
+                button_name="Submit",
+            )
+            response = await response_json
+
+            if "status" in response and response["status"] == "success":
+                data = response.get("data")
+                candidate_info = data.get("candidate")
+                naps_id = candidate_info["code"]
+                activation_link_expiry = candidate_info["activation_link_expiry_date"]
+
+                end = End(
+                    RegisterationCompleteResults(
+                        summary_of_page_results="Registration completed successfully. "
+                        f"Your NAPS ID is {naps_id}. "
+                        f"Please prompt the student to check their email for the "
+                        f"activation link. Remind them that they must click on the "
+                        f"link before {activation_link_expiry} to be able to log in, "
+                        f"and complete their candidate profile in order to start "
+                        f"applying for apprenticeships.",
+                        naps_id=naps_id,
+                        activation_link_expiry=activation_link_expiry,
+                    )
+                )
+                # TODO: maybe we should just go to login?
+            else:
+                if "errors" in response:
+                    error_messages = " ".join(response["errors"].values())
+                    return End(
+                        RegisterStudentResults(  # type: ignore
+                            summary_of_page_results=f"Error in registration: {error_messages}"
+                        )
+                    )
+
+            await save_browser_state(
+                page=page,
+                redis_client=ctx.deps.redis_client,
+                session_id=ctx.state.session_id,
+            )
+
+            await ctx.deps.browser_session_store.create(
+                browser=browser_session.browser,  # Reuse the same browser here!
+                page=page,
+                session_id=ctx.state.session_id,
+                overwrite=True,  # Update if the page changed at all!
+            )
+            browser_session_saved = await ctx.deps.browser_session_store.get(
+                session_id=ctx.state.session_id
+            )
+            assert browser_session_saved, (
+                f"Browser session not saved in RAM for session ID: "
+                f"{ctx.state.session_id}"
+            )
+            await ctx.deps.browser_session_store.reset_ttl(
+                session_id=ctx.state.session_id
+            )
+            return end
+
+        browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+        page = await browser.new_page()
+
+        # 2.
+        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
+
+        # 3.
+        await select_register_radio(page=page)
+
+        # 4.
+        await page.fill(
+            "input[placeholder='Enter your mobile number']",
+            ctx.deps.register_student_query.mobile_number,
+        )
+        await page.fill(
+            "input[placeholder='Enter Your Email ID']",
+            str(ctx.deps.register_student_query.email),
+        )
+        await page.fill(
+            "input[placeholder='Confirm Your Email ID']",
+            str(ctx.deps.register_student_query.email),
+        )
+
+        # 5.
+        try:
+            response = await solve_and_submit_captcha_with_retries(
                 page=page,
                 api_url="https://api.apprenticeshipindia.gov.in/auth/register-get-otp",
                 button_name="Register",
             )
-
-            response = await response_json
-
-            if "errors" in response:
-                end = End(
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results=f"Error in registration: {' '.join(response['errors'].values())}"
-                    )
+            end = End(  # type: ignore
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results="Initiated account creation successfully. "
+                    "Please request OTP from the student. It should be sent to the "
+                    "mobile number or the email address.",
+                    next_chat_action=NextChatAction.REQUEST_OTP,
                 )
-                # TODO: handle error cases better
-            else:
-                assert response["status"] == "success"
-                end = End(  # type: ignore
-                    RegisterStudentResults(  # type: ignore
-                        summary_of_page_results="Initiated account creation successfully. "
-                        "Please request OTP from the student. It should be sent to the "
-                        "mobile number or the email address."
-                    )
+            )
+        except RuntimeError:
+            end = End(
+                RegisterStudentResults(  # type: ignore
+                    summary_of_page_results=f"Could not initiate registration. {response.message}"
                 )
+            )
 
-            # Pause to verify in the browser. Can remove this later.
-            # await asyncio.get_event_loop().run_in_executor(None, input)
+        # TODO: Remove this
+        # Pause to verify in the browser. Can remove this later.
+        # await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # X.
-            await save_browser_state(page=page, redis_client=ctx.deps.redis_client)
+        # X.
+        await save_browser_state(
+            page=page,
+            redis_client=ctx.deps.redis_client,
+            session_id=ctx.state.session_id,
+        )
+
+        # 9.
+        await ctx.deps.browser_session_store.create(
+            browser=browser,
+            overwrite=False,
+            page=page,
+            session_id=ctx.state.session_id,
+        )
+        browser_session_saved = await ctx.deps.browser_session_store.get(
+            session_id=ctx.state.session_id
+        )
+        assert browser_session_saved, (
+            f"Browser session not saved in RAM for session ID: "
+            f"{ctx.state.session_id}"
+        )
 
         return end
 
@@ -275,6 +382,8 @@ class RegisterNewStudent(
 @telemetry_timer(metric_fn=register_student_agent_hist, unit="s")
 async def register_student(
     *,
+    browser: BrowserType,
+    browser_session_store: BrowserSessionStore,
     chatur_query: RegisterStudentQuery,
     csm: AsyncChatSessionManager,
     explanation_for_call: str = "No explanation provided.",
@@ -325,6 +434,10 @@ async def register_student(
 
     Parameters
     ----------
+    browser
+        The Playwright browser object.
+    browser_session_store
+        The browser session store object.
     chatur_query
         The query object.
     csm
@@ -372,6 +485,8 @@ async def register_student(
 
     # 4. Set graph dependencies.
     deps = RegisterStudentDeps(
+        browser=browser,
+        browser_session_store=browser_session_store,
         chat_history=chat_history,
         chat_params=chat_params,
         explanation_for_call=explanation_for_call,
@@ -395,6 +510,8 @@ async def register_student(
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
+    # 8. Log the agent chat history at the end of each step (just for debugging
+    # purposes).
     log_chat_history(
         chat_history=chat_history,
         context="Register Student Agent: END",

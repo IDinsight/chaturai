@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, Optional
 
 # Third Party Library
+from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
@@ -17,6 +18,7 @@ from chaturai.chatur.schemas import (
     ChaturFlowResults,
     ChaturQueryUnion,
     LoginStudentResults,
+    NextChatAction,
     RegisterStudentResults,
 )
 from chaturai.config import Settings
@@ -35,6 +37,7 @@ from chaturai.metrics.logfire_metrics import (
 )
 from chaturai.prompts.chatur import ChaturPrompts
 from chaturai.schemas import ValidatorCall
+from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import (
     AsyncChatSessionManager,
     append_message_content_to_chat_history,
@@ -47,6 +50,7 @@ from chaturai.utils.litellm_ import get_acompletion
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 REDIS_CACHE_PREFIX_GRAPH_CHATUR = Settings.REDIS_CACHE_PREFIX_GRAPH_CHATUR
+TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
 
@@ -60,11 +64,11 @@ class ChaturState:
     last_assistant_call: str | None = None
     last_graph_run_results: Any = None
     last_graph_run_results_cache_key: str | None = None
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     def __post_init__(self) -> None:
         """Post-initialization processes."""
 
-        # 1.
         self.last_graph_run_results_cache_key = f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_last_graph_run_results_{self.session_id}"
 
 
@@ -72,6 +76,8 @@ class ChaturState:
 class ChaturDeps:
     """This class contains dependencies used by nodes in the Chatur graph."""
 
+    browser: BrowserType
+    browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
     chatur_query: ChaturQueryUnion
@@ -177,6 +183,8 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         match assistant_name:
             case "registration.register_student":
                 graph_run_results = await register_student(
+                    browser=ctx.deps.browser,
+                    browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
                     explanation_for_call=explanation_for_assistant_call,
@@ -186,11 +194,12 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 )
             case "login.login_student":
                 graph_run_results = await login_student(
+                    browser=ctx.deps.browser,
+                    browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
                     explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
-                    last_graph_run_results=ctx.state.last_graph_run_results,
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
@@ -256,6 +265,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 f"Here is the summary of the results from the last assistant call that "
                 f"I made for you:\n\n{self.summary_of_last_assistant_call}"
             )
+
         content = await get_chat_response(
             chat_history=ctx.deps.chat_history,
             chat_params=ctx.deps.chat_params,
@@ -428,6 +438,11 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         explanation_for_student_input = (
             explanation_for_student or self._default_explanation
         )
+        if ctx.state.last_graph_run_results is not None:
+            next_chat_action = ctx.state.last_graph_run_results.next_chat_action
+        else:
+            next_chat_action = NextChatAction.REQUEST_USER_QUERY
+
         return End(  # type: ignore
             ChaturFlowResults(  # type: ignore
                 explanation_for_student_input=explanation_for_student_input,
@@ -437,6 +452,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 summary_for_student=self.summary_of_last_assistant_call
                 or explanation_for_student_input,
                 user_id=ctx.deps.chatur_query.user_id,
+                next_chat_action=next_chat_action,
             )
         )
 
@@ -514,6 +530,8 @@ class DetermineStudentIntent(BaseNode[ChaturState, ChaturDeps, dict[str, Any]]):
 @telemetry_timer(metric_fn=chatur_agent_hist, unit="s")
 async def chatur(
     *,
+    browser: BrowserType,
+    browser_session_store: BrowserSessionStore,
     chatur_query: ChaturQueryUnion,
     csm: AsyncChatSessionManager,
     generate_graph_diagrams: bool = False,
@@ -538,6 +556,10 @@ async def chatur(
 
     Parameters
     ----------
+    browser
+        The Playwright browser object.
+    browser_session_store
+        The browser session store object.
     chatur_query
         The query object.
     csm
@@ -567,7 +589,7 @@ async def chatur(
         namespace="chatur-agent",
         reset_chat_session=reset_chat_and_graph_state,
         system_message=ChaturPrompts.system_messages["chatur_agent"],
-        text_generation_params=TEXT_GENERATION_GEMINI,
+        text_generation_params=TEXT_GENERATION_BEDROCK,
         topic=None,
         user_id=chatur_query.user_id,
     )
@@ -586,6 +608,8 @@ async def chatur(
 
     # 4.
     deps = ChaturDeps(
+        browser=browser,
+        browser_session_store=browser_session_store,
         chat_history=chat_history,
         chat_params=chat_params,
         chatur_query=chatur_query,
@@ -692,7 +716,7 @@ async def load_state(
 
     # 1.
     agent_cache_exists = await redis_client.exists(redis_cache_key)
-    if agent_cache_exists:
+    if not reset_state and agent_cache_exists:
         raw_snapshot = await redis_client.get(redis_cache_key)
         persistence.load_json(raw_snapshot)
         snapshot = await persistence.load_all()
@@ -704,7 +728,7 @@ async def load_state(
             await redis_client.delete(redis_cache_key)
             await redis_client.delete(state.last_graph_run_results_cache_key)
         return redis_cache_key, ChaturState(
-            session_id=session_id, chatur_queries=[chatur_query]
+            chatur_queries=[chatur_query], session_id=session_id
         )
 
     assert state is not None

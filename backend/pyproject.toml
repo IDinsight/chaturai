@@ -72,7 +72,7 @@ plugins = ["pydantic.mypy"]
 # Poetry
 [tool.poetry]
 authors = [
-    "Suzin You <7042047+suzinyou@users.noreply.github.com>",
+    "IDinsight DSEM <dsem@idinsight.org>",
 ]
 description = "Your guide for your apprenticeship journey (National Apprenticeship Promotion Scheme)"
 name = "chaturai"

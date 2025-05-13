@@ -45,6 +45,7 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
         ],
         "login.login_student": [
             "registration.register_student",
+            "login.login_student",  # TODO: remove this and move OTP verificaiton to profile completion
             # "profile_completion.complete_profile",
         ],
     }
@@ -173,7 +174,9 @@ def save_graph_diagram(*, graph: Graph) -> None:
         logger.error(f"Failed to save graph diagram for '{graph.name}' due to: {e}")
 
 
-async def save_browser_state(*, page: Page, redis_client: aioredis.Redis) -> None:
+async def save_browser_state(
+    *, page: Page, redis_client: aioredis.Redis, session_id: int | str
+) -> None:
     """Save browser state to Redis.
 
     Parameters
@@ -182,10 +185,13 @@ async def save_browser_state(*, page: Page, redis_client: aioredis.Redis) -> Non
         The Playwright page object.
     redis_client
         The Redis client.
+    session_id
+        The session ID to use for the Redis cache key.
     """
 
     browser_state = await page.context.storage_state()
-    await redis_client.set(REDIS_CACHE_PREFIX_BROWSER_STATE, json.dumps(browser_state))
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
+    await redis_client.set(redis_cache_key, json.dumps(browser_state))
 
 
 async def save_graph_run_results(
