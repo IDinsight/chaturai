@@ -47,7 +47,7 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
             "registration.register_student",
             "profile.complete_profile",
         ],
-        "profile.complete_profile": ["profile.complete_profile"],
+        "profile.complete_profile": ["login.login_student", "profile.complete_profile"],
     }
     reverse_adjacency_list = defaultdict(list)
     for module_path, neighbors in adjacency_list.items():
