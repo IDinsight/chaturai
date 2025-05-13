@@ -15,8 +15,8 @@ and forwards the persisted page to the next assistant.
 """
 
 # Standard Library
-import asyncio
 
+# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
@@ -135,18 +135,7 @@ class LoginExistingStudent(
             page = browser_session.page
             otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
 
-            otp_field_visible = await otp_field.is_visible()
-
-            # TODO: remove this block after testing
-            if otp_field_visible:
-                print("Hey guess what? We've loaded the right page view!")
-            else:
-                print("THIS SHOULD NOT HAVE HAPPENED!")
-            await asyncio.get_event_loop().run_in_executor(None, input)
-
-            # TODO: Inject OTP fill in logic here and navigating to the next page?
-            # NB: If page is updated at all during this logic, then we need to update
-            # the browser session in RAM!
+            await otp_field.is_visible()
             await otp_field.fill(ctx.deps.login_student_query.user_query)
 
             submit_otp_response = await submit_and_capture_api_response(
