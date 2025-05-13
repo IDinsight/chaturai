@@ -107,7 +107,6 @@ litellm = {extras = ["proxy"], version = "^1.67.2"}
 logfire = {extras = ["fastapi", "redis", "system-metrics"], version = "^3.14.1"}
 loguru = "^0.7.2"
 openai = "^1.61.1"
-opencv-python = "^4.11.0.86"
 opentelemetry-exporter-otlp = "1.32.1"
 opentelemetry-instrumentation-aiohttp-client = "0.53b1"
 opentelemetry-instrumentation-grpc = "0.53b1"
@@ -139,6 +138,7 @@ typer = "^0.15.1"
 typing-extensions = "^4.12.2"
 uvicorn-worker = "0.3.0"
 vertexai = "^1.71.1"
+opencv-python-headless = "^4.11.0.86"
 
 [tool.poetry.group.dev]
 optional = true

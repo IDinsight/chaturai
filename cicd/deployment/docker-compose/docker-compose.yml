@@ -11,20 +11,28 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     env_file:
-      - .env
+      - ${PATHS_PROJECT_DIR}/.env
     depends_on:
       - api
 
   api:
     build:
       context: ${PATHS_PROJECT_DIR}/backend
-      dockerfile: Dockerfile.api
+      dockerfile: ./Dockerfile.api
+    command: >
+      /bin/sh -c "
+      python -m alembic upgrade head &&
+      python src/chaturai/entries/main.py"
     expose:
       - "8000"
     environment:
       - POSTGRES_HOST=db
+      - PATHS_PROJECT_DIR=/usr/src/chaturai
+      - PATHS_LOGS_DIR=/usr/src/chaturai/logs
+      - PATHS_SECRETS_DIR=/usr/src/chaturai/secrets
     env_file:
-      - .env
+      - ${PATHS_PROJECT_DIR}/.env
+      - ${PATHS_PROJECT_DIR}/backend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -32,7 +40,7 @@ services:
   db:
     image: postgres:15
     env_file:
-      - .env
+      - ${PATHS_PROJECT_DIR}/backend/.env
     ports:
       - "5432:5432"
     volumes:
@@ -43,7 +51,30 @@ services:
       timeout: 5s
       retries: 5
 
+  litellm-proxy:
+    command: ["--config", "/app/config.yaml", "--detailed_debug", "--telemetry", "False"]
+    container_name: litellm-proxy
+    env_file:
+      - ${PATHS_PROJECT_DIR}/cicd/litellm/.env
+    image: ghcr.io/berriai/litellm:main-v1.67.0-stable
+    ports:
+      - "4000:4000"
+      - "4001:4001"  # Debugging port for LiteLLM
+    restart: always
+    volumes:
+      - ${PATHS_SECRETS_DIR}/gcp_credentials.json:/app/gcp_credentials.json
+      - ${PATHS_PROJECT_DIR}/cicd/litellm/litellm_config.yaml:/app/config.yaml
+
+  redis:
+    container_name: redis
+    image: redis:6.0-alpine
+    ports:
+      - "6379:6379"
+      - "6380:6380"  # Debugging port for Redis
+    restart: always
+
 volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  redis_data:

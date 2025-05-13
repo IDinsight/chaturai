@@ -115,7 +115,7 @@ restart-docker-compose-dev: stop-docker-compose-dev start-docker-compose-dev ## 
 # Dev
 start-docker-compose-dev: ## Start Docker Compose dev environment
 	@echo "$(GREEN)Spinning up dev Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev up --build -d --remove-orphans
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev up --build -d --remove-orphans
 	@docker system prune -f
 
 stop-docker-compose-dev: ## Stop Docker Compose dev environment
@@ -125,11 +125,11 @@ stop-docker-compose-dev: ## Stop Docker Compose dev environment
 # Prod
 prod-run:  ## Start Docker Compose prod environment
 	@echo "$(GREEN)Spinning up prod Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p chaturai up --build -d --remove-orphans
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p chaturai up --build -d --remove-orphans
 	@docker system prune -f
 
 # Scraper
 scrape:  ## Run the scraper Docker container
 	@echo "$(GREEN)Spinning up scraper Docker containers...$(RESET)"
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape build scraper
-	@poetry run docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape run --rm scraper
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape build scraper
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.scrape.yml -p chaturai-scrape run --rm scraper

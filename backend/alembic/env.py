@@ -1,27 +1,28 @@
 """This module contains the Alembic environment setup for database migrations."""
 
 # Standard Library
-import os
 import sys
 
 from logging.config import fileConfig
 from pathlib import Path
 
 # Third Party Library
-from alembic import context  # type: ignore
 from sqlalchemy import create_engine, engine_from_config, pool
 
+# Package Library
+from alembic import context  # type: ignore
+
 # Append the framework path.
-PACKAGE_PATH_ROOT = str(Path(__file__).resolve())
-PACKAGE_PATH_SPLIT = PACKAGE_PATH_ROOT.split(os.path.join("backend"))
-PACKAGE_PATH = Path(PACKAGE_PATH_SPLIT[0]) / "backend" / "src"
-if PACKAGE_PATH not in sys.path:
-    print(f"Appending '{PACKAGE_PATH}' to system path...")
-    sys.path.append(str(PACKAGE_PATH))
+env_script_directory = Path(__file__).resolve().parents[1]
+package_path = env_script_directory / "src"
+
+if package_path not in sys.path:
+    print(f"Appending '{package_path}' to system path...")
+    sys.path.append(str(package_path))
 
 # Package Library
-from chaturai.config import BackendSettings
-from chaturai.db.utils import Base
+from chaturai.config import BackendSettings  # noqa: E402
+from chaturai.db.utils import Base  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
