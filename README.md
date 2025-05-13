@@ -45,7 +45,9 @@ This project includes a data scraper for apprenticeship opportunities from the N
 ## Setup Instructions
 
 1. Copy `cicd/deployment/docker-compose/.template.env` to `cicd/deployment/docker-compose/.env`.
-2. Copy `cicd/deployment/litellm/.template.env` to `cicd/deployment/litellm/.env`.
+2. Copy `cicd/deployment/litellm/.template.env` to `cicd/deployment/litellm/.env` and update:
+
+   1. `OPENAI_API_KEY`: Your OpenAI API key.
 3. Copy `backend/.template.env` to `backend/.env` and update:
 
    1. `FAST_API_KEY`: Your FastAPI API key (or just ask Suzing You for one).

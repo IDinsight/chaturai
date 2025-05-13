@@ -3,10 +3,12 @@
 # Standard Library
 import os
 
+from typing import Annotated
+
 # Third Party Library
 import logfire
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from fastapi.requests import Request
 
 # Package Library
@@ -28,7 +30,7 @@ TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 @router.post("/chatur-flow", response_model=ChaturFlowResults)
 @logfire.instrument("Running Chatur flow endpoint...")
 async def chatur_flow(
-    chatur_query: ChaturQueryUnion,
+    chatur_query: Annotated[ChaturQueryUnion, Body(embed=False)],
     request: Request,
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     generate_graph_diagrams: bool = False,

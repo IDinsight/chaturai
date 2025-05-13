@@ -19,10 +19,12 @@ from chaturai.chatur.schemas import (
     ChaturQueryUnion,
     LoginStudentResults,
     NextChatAction,
+    ProfileCompletionResults,
     RegisterStudentResults,
 )
 from chaturai.config import Settings
 from chaturai.graphs.login import login_student
+from chaturai.graphs.profile import complete_profile
 from chaturai.graphs.registration import register_student
 from chaturai.graphs.utils import (
     create_graph_mappings,
@@ -200,6 +202,18 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                     csm=ctx.deps.csm,
                     explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
+                    redis_client=ctx.deps.redis_client,
+                    reset_chat_session=ctx.deps.reset_chat_session,
+                )
+            case "profile.complete_profile":
+                graph_run_results = await complete_profile(
+                    browser=ctx.deps.browser,
+                    browser_session_store=ctx.deps.browser_session_store,
+                    chatur_query=ctx.deps.chatur_query,
+                    csm=ctx.deps.csm,
+                    explanation_for_call=explanation_for_assistant_call,
+                    generate_graph_diagram=ctx.deps.generate_graph_diagrams,
+                    last_graph_run_results=ctx.state.last_graph_run_results,
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
@@ -749,6 +763,8 @@ async def load_state(
             model_class = RegisterStudentResults
         case "login.login_student":
             model_class = LoginStudentResults
+        case "profile_completion.complete_profile":
+            model_class = ProfileCompletionResults
         case _:
             raise ValueError(f"Unknown last assistant call: {last_assistant_call}")
 

@@ -45,8 +45,9 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
         ],
         "login.login_student": [
             "registration.register_student",
-            "profile_completion.complete_profile",
+            "profile.complete_profile",
         ],
+        "profile.complete_profile": [],
     }
     reverse_adjacency_list = defaultdict(list)
     for module_path, neighbors in adjacency_list.items():
@@ -81,13 +82,17 @@ def create_graph_mappings() -> None:
     Settings._INTERNAL_GRAPH_MAPPING = graph_mapping
 
 
-async def load_browser_state(*, redis_client: aioredis.Redis) -> dict[str, Any]:
+async def load_browser_state(
+    *, redis_client: aioredis.Redis, session_id: int | str
+) -> dict[str, Any]:
     """Load browser state from Redis or return a default browser state.
 
     Parameters
     ----------
     redis_client
         The Redis client.
+    session_id
+        The session ID to use for the Redis cache key.
 
     Returns
     -------
@@ -95,7 +100,8 @@ async def load_browser_state(*, redis_client: aioredis.Redis) -> dict[str, Any]:
         The browser state.
     """
 
-    browser_state = await redis_client.get(REDIS_CACHE_PREFIX_BROWSER_STATE)
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
+    browser_state = await redis_client.get(redis_cache_key)
     if browser_state:
         return json.loads(browser_state)
     logger.warning(
