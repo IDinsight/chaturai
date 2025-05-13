@@ -45,6 +45,7 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
         ],
         "login.login_student": [
             "registration.register_student",
+            "login.login_student",  # TODO: remove this and move OTP verificaiton to profile completion
             # "profile_completion.complete_profile",
         ],
     }
