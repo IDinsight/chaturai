@@ -1,4 +1,4 @@
-{$DOMAIN:localhost} {
+{$DOMAIN_NAME:localhost} {
     handle_path {$PATHS_BACKEND_ROOT:}/* {
         reverse_proxy api:8000 {
             transport http {
