@@ -279,16 +279,13 @@ async def login_student(
     """
     🔍 Login Existing Student Assistant
 
-    **The student's email will be automatically provided to me for logging
+    **The student's email and password will be automatically provided to me for logging
     in. You do not need to ask the student for this information!**
 
     ✅ WHEN TO USE THIS ASSISTANT
     Use this assistant **only** in the following situations:
         1. An **existing student** needs to log into the Indian government
-            Apprenticeship Portal to perform one of the following actions:
-            - Fill out or update their apprenticeship profile,
-            - Complete their eKYC, or
-            - Update bank account details.
+            Apprenticeship Portal to complete their profile.
         2. A student has provided an OTP upon your request. You should use this
             assistant to submit the OTP to complete the login.
 
@@ -300,16 +297,16 @@ async def login_student(
         2. accepts the OTP from the student and submits it to the portal, and, if
             successful, determine the next step based on the chat history.
      **After calling this assistant, you should use another assistant appropriate
-     for the next step**, such as completing the profile, eKYC, or bank details,
-     searching and applying for apprenticeships, or reviewing and signing contracts.
+     for the next step**, such as completing the profile, searching and applying
+     for apprenticeships, or reviewing and signing contracts.
 
     📝 HOW TO CALL THIS ASSISTANT
     Phrase your explanation as a **direct message** to the assistant. **Do not** use
     first-person language (e.g., “I will use...” or “I’m going to call...”). Instead,
     use imperative phrasing, such as:
-        - "Initiate the log in process for the student so they can complete the eKYC."
-        - "Submit the OTP provided by the student to complete the log in to review "
-            "their bank details."
+        - "Initiate the log in process for the student so they can complete their profile."
+        - "Submit the OTP provided by the student to complete the log in in order to
+            proceed with the profile completion."
 
     Provide the following information in your explanation to this assistant:
         - A clear explanation of **why** you are calling this assistant, with reference
