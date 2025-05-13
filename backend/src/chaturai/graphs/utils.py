@@ -146,6 +146,26 @@ def load_graph_run_results(
     return [model_class.model_validate(result) for result in graph_run_results]
 
 
+async def save_browser_state(
+    *, page: Page, redis_client: aioredis.Redis, session_id: int | str
+) -> None:
+    """Save browser state to Redis.
+
+    Parameters
+    ----------
+    page
+        The Playwright page object.
+    redis_client
+        The Redis client.
+    session_id
+        The session ID to use for the Redis cache key.
+    """
+
+    browser_state = await page.context.storage_state()
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
+    await redis_client.set(redis_cache_key, json.dumps(browser_state))
+
+
 def save_graph_diagram(*, graph: Graph) -> None:
     """Save the graph as a Mermaid diagram.
 
@@ -171,26 +191,6 @@ def save_graph_diagram(*, graph: Graph) -> None:
         )
     except (httpx.HTTPStatusError, httpx.ReadTimeout) as e:
         logger.error(f"Failed to save graph diagram for '{graph.name}' due to: {e}")
-
-
-async def save_browser_state(
-    *, page: Page, redis_client: aioredis.Redis, session_id: int | str
-) -> None:
-    """Save browser state to Redis.
-
-    Parameters
-    ----------
-    page
-        The Playwright page object.
-    redis_client
-        The Redis client.
-    session_id
-        The session ID to use for the Redis cache key.
-    """
-
-    browser_state = await page.context.storage_state()
-    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
-    await redis_client.set(redis_cache_key, json.dumps(browser_state))
 
 
 async def save_graph_run_results(
