@@ -27,6 +27,7 @@ services:
       - "8000"
     environment:
       - POSTGRES_HOST=db
+      - LITELLM_ENDPOINT=http://litellm-proxy:4000
       - PATHS_PROJECT_DIR=/usr/src/chaturai
       - PATHS_LOGS_DIR=/usr/src/chaturai/logs
       - PATHS_SECRETS_DIR=/usr/src/chaturai/secrets
@@ -66,7 +67,7 @@ services:
       - ${PATHS_PROJECT_DIR}/cicd/litellm/litellm_config.yaml:/app/config.yaml
 
   redis:
-    container_name: redis
+    container_name: redis-local
     image: redis:6.0-alpine
     ports:
       - "6379:6379"
