@@ -3,6 +3,7 @@
 # Standard Library
 import re
 
+from enum import Enum
 from typing import Annotated, Any, Literal, Optional
 
 # Third Party Library
@@ -27,14 +28,46 @@ class BaseQuery(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class LoginStudentQuery(BaseQuery):
+class OTPQuery(BaseModel):
+    """Pydantic model for OTP field. Might remove later."""
+
+    otp: Optional[str] = Field(
+        None,
+        description="6-digit OTP sent to the student",
+    )
+
+    @field_validator("otp")
+    @classmethod
+    def validate_otp(cls, v: str | None) -> str | None:
+        """Validate the OTP"""
+        if v is None:
+            return v
+
+        if not (v.isdigit() and len(v) == 6):
+            raise ValueError(f"OTP must be exactly 6 digits: {v}")
+
+        return v
+
+
+class LoginStudentQuery(BaseQuery, OTPQuery):
     """Pydantic model for validating student login queries."""
 
     email: EmailStr
     type: Literal["login"]
 
 
-class RegisterStudentQuery(BaseQuery):
+class NextChatAction(str, Enum):
+    """Enum for the next action to take in the chat flow.
+    For now, this will be used to determine the branches in Trun.io"""
+
+    REQUEST_USER_QUERY = "REQUEST_USER_QUERY"  # Request user query
+    REQUEST_OTP = "REQUEST_OTP"  # Request OTP from the user
+    GO_TO_AAQ = "GO_TO_AAQ"  # Pass query to AAQ
+    GO_TO_HELPDESK = "GO_TO_HELPDESK"  # Pass query to Helpdesk
+    GO_TO_MENU = "GO_TO_MENU"  # Go to menu
+
+
+class RegisterStudentQuery(BaseQuery, OTPQuery):
     """Pydantic model for validating student registration queries."""
 
     email: EmailStr
@@ -150,6 +183,7 @@ class ChaturFlowResults(BaseModel):
     require_student_input: bool
     summary_for_student: str
     user_id: str
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -158,6 +192,7 @@ class PageResults(BaseModel):
     """Pydantic model for validating page results."""
 
     summary_of_page_results: str
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -168,3 +203,23 @@ class LoginStudentResults(PageResults):
 
 class RegisterStudentResults(PageResults):
     """Pydantic model for validating register student results."""
+
+
+# Adding these for now. Might remove later.
+class RegisterationCompleteResults(PageResults):
+    """Pydantic model for validating register activation link send results."""
+
+    naps_id: str
+    activation_link_expiry: str
+
+
+class SubmitButtonResponse(BaseModel):
+    """Pydantic model for validating submit button response."""
+
+    is_error: bool
+    is_success: bool
+    message: str
+    source: Literal["toast", "api", "timeout"]
+    api_response: Optional[dict]
+
+    model_config = ConfigDict(from_attributes=True)

@@ -15,23 +15,28 @@ and forwards the persisted page to the next assistant.
 """
 
 # Standard Library
-import asyncio
 
+# Standard Library
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 # Third Party Library
+from loguru import logger
 from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import LoginStudentQuery, LoginStudentResults
+from chaturai.chatur.schemas import (
+    LoginStudentQuery,
+    LoginStudentResults,
+    NextChatAction,
+)
 from chaturai.chatur.utils import (
     select_login_radio,
-    solve_and_fill_captcha,
+    solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
 )
 from chaturai.config import Settings
@@ -129,25 +134,32 @@ class LoginExistingStudent(
         if browser_session:
             page = browser_session.page
             otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
-            if await otp_field.is_visible():
-                print("Hey guess what? We've loaded the right page view!")
-            else:
-                print("THIS SHOULD NOT HAVE HAPPENED!")
-            await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # TODO: Inject OTP fill in logic here and navigating to the next page?
-            # NB: If page is updated at all during this logic, then we need to update
-            # the browser session in RAM!
+            await otp_field.is_visible()
+            await otp_field.fill(ctx.deps.login_student_query.user_query)
 
-            # 7.
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results="OTP successfully entered. "
-                    "Determine the next best assistant to call based on the student's "
-                    "latest message and your conversation with the student so far. If "
-                    "unclear, ask the student what they wish to do next."
-                )
+            submit_otp_response = await submit_and_capture_api_response(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/login-otp",
+                button_name="Login",
             )
+
+            if submit_otp_response.is_error:
+                end = End(
+                    LoginStudentResults(
+                        summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}"
+                    )
+                )
+            else:
+                # TODO: do not return an End object but pass on to other assistants.
+                end = End(
+                    LoginStudentResults(
+                        summary_of_page_results="OTP successfully entered. "
+                        "Determine the next best assistant to call based on the student's "
+                        "latest message and your conversation with the student so far. If "
+                        "unclear, ask the student what they wish to do next."
+                    )
+                )
 
             # 8.
             await save_browser_state(
@@ -191,44 +203,33 @@ class LoginExistingStudent(
             str(ctx.deps.login_student_query.email),
         )
 
-        # 5.
-        await solve_and_fill_captcha(page=page)
-
-        # TODO: Remove this
-        # Pause to verify in the browser. Can remove this later.
-        await asyncio.get_event_loop().run_in_executor(None, input)
-
-        # 6.
-        response_json = await submit_and_capture_api_response(
-            page=page,
-            button_name="Submit",
-            api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
-        )
-
-        # 7. Check the response
-        response = await response_json
-        if "status_code" in response:
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results=f"Cannot initiate login. {response['message']}"
-                )
+        # 5. Solve captcha and request OTP
+        try:
+            response = await solve_and_submit_captcha_with_retries(
+                page=page,
+                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
+                button_name="Submit",
             )
-            # TODO: handle error cases better
-        else:
-            data = response["data"]
-            assert response["status"] == "success"
-            assert data["email"] == ctx.deps.login_student_query.email
-
             end = End(
                 LoginStudentResults(
                     summary_of_page_results="Initiated login. "
-                    "Please request OTP from the student. It should be sent to the "
-                    "mobile number or the email address. Remind the student that "
-                    "this is time-sensitive information!"
+                    "Please ask the student for a 6-digit OTP which should be "
+                    "sent to the registered mobile number and "
+                    "the email. Remind the student that the OTP is valid for 10 minutes.",
+                    next_chat_action=NextChatAction.REQUEST_OTP,
                 )
             )
 
-        # 8.
+        except RuntimeError:
+            end = End(
+                LoginStudentResults(
+                    summary_of_page_results=f"Cannot intiate login. {response.message}"
+                )
+            )
+
+            # TODO: handle error cases better
+
+        # 7.
         await save_browser_state(
             page=page,
             redis_client=ctx.deps.redis_client,
@@ -273,29 +274,28 @@ async def login_student(
     ✅ WHEN TO USE THIS ASSISTANT
     Use this assistant **only** in the following situations:
         1. An **existing student** needs to log into the Indian government
-            apprenticeship portal to continue with their application process. This is
-            typically the case when the student has already completed the initial
-            account registration and now wants to:
-            - Fill out or update their apprenticeship profile,
-            - Submit necessary documents, or
-            - Apply for available apprenticeship opportunities.
-        2. A student has previously started an application process but did **not
-            complete** it, and now they want to resume their session by logging in.
+            Apprenticeship Portal to complete their profile.
+        2. A student has provided an OTP upon your request. You should use this
+            assistant to submit the OTP to complete the login.
 
      This assistant is used **only to facilitate a login for an already registered
-     student**. It ensures that the student is authenticated on the portal so they can
-     proceed to the next step in their apprenticeship journey. **After calling this
-     assistant, you should use another assistant appropriate for the next step**, such
-     as completing profile details, uploading documents, or searching and applying for
-     apprenticeships.
+     student**. It
+        1. initiates the login process on the portal with the provided email,
+            and, if successful, requests student for the OTP they should receive
+            in their registered email and mobile,
+        2. accepts the OTP from the student and submits it to the portal, and, if
+            successful, determine the next step based on the chat history.
+     **After calling this assistant, you should use another assistant appropriate
+     for the next step**, such as completing the profile, searching and applying
+     for apprenticeships, or reviewing and signing contracts.
 
     📝 HOW TO CALL THIS ASSISTANT
     Phrase your explanation as a **direct message** to the assistant. **Do not** use
     first-person language (e.g., “I will use...” or “I’m going to call...”). Instead,
     use imperative phrasing, such as:
-        - "Log in the student so they can continue the application process."
-        - "Authenticate the existing student to resume their application workflow."
-        - "Initiate login for a registered student returning to complete their apprenticeship application."
+        - "Initiate the log in process for the student so they can complete their profile."
+        - "Submit the OTP provided by the student to complete the log in in order to
+            proceed with the profile completion."
 
     Provide the following information in your explanation to this assistant:
         - A clear explanation of **why** you are calling this assistant, with reference
@@ -335,6 +335,9 @@ async def login_student(
         The graph run result.
     """
 
+    logger.info(f"{explanation_for_call} for {chatur_query = }")
+    logger.info("Press Enter to continue!")
+    input()
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 

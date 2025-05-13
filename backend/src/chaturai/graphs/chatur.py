@@ -18,6 +18,7 @@ from chaturai.chatur.schemas import (
     ChaturFlowResults,
     ChaturQueryUnion,
     LoginStudentResults,
+    NextChatAction,
     RegisterStudentResults,
 )
 from chaturai.config import Settings
@@ -63,6 +64,7 @@ class ChaturState:
     last_assistant_call: str | None = None
     last_graph_run_results: Any = None
     last_graph_run_results_cache_key: str | None = None
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     def __post_init__(self) -> None:
         """Post-initialization processes."""
@@ -436,6 +438,11 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         explanation_for_student_input = (
             explanation_for_student or self._default_explanation
         )
+        if ctx.state.last_graph_run_results is not None:
+            next_chat_action = ctx.state.last_graph_run_results.next_chat_action
+        else:
+            next_chat_action = NextChatAction.REQUEST_USER_QUERY
+
         return End(  # type: ignore
             ChaturFlowResults(  # type: ignore
                 explanation_for_student_input=explanation_for_student_input,
@@ -445,6 +452,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 summary_for_student=self.summary_of_last_assistant_call
                 or explanation_for_student_input,
                 user_id=ctx.deps.chatur_query.user_id,
+                next_chat_action=next_chat_action,
             )
         )
 
