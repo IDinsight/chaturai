@@ -2,19 +2,12 @@
 
 The student login graph does the following:
 
-1. Navigate to the `Login as a candidate` page and auto-fill the required fields.
-2. Solve the text-based CAPTCHA.
-3. XXX
-4. Submit the login form.
-5. Return the graph run results containing (among other things) the persisted **page**
-    state for the next assistant.
-
-NB: This graph does **not** handle the entire Chatur process (e.g., E-KYC, bank account
-setup, profile completion, etc.). It simply logs an existing student into the portal
-and forwards the persisted page to the next assistant.
+1. Navigates to the login page of the candidate portal.
+2. Fills in the login form with the email.
+3. Solves the captcha and submits the form.
+4. Also clicks the Login button to trigger an OTP email and text message to the student.
+5. Persists both the browser and page states for the next assistant.
 """
-
-# Standard Library
 
 # Standard Library
 from copy import deepcopy
@@ -22,7 +15,6 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 # Third Party Library
-from loguru import logger
 from playwright.async_api import BrowserType
 from pydantic_graph import BaseNode, Edge, End, Graph, GraphRunContext
 from pydantic_graph.persistence.in_mem import FullStatePersistence
@@ -35,16 +27,12 @@ from chaturai.chatur.schemas import (
     NextChatAction,
 )
 from chaturai.chatur.utils import (
-    select_login_radio,
+    fill_login_email,
+    persist_browser_and_page,
     solve_and_submit_captcha_with_retries,
-    submit_and_capture_api_response,
 )
 from chaturai.config import Settings
-from chaturai.graphs.utils import (
-    load_browser_state,
-    save_browser_state,
-    save_graph_diagram,
-)
+from chaturai.graphs.utils import load_browser_state, save_graph_diagram
 from chaturai.metrics.logfire_metrics import login_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
 from chaturai.utils.browser import BrowserSessionStore
@@ -53,7 +41,6 @@ from chaturai.utils.general import telemetry_timer
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
-REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN = Settings.REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
 
@@ -77,6 +64,7 @@ class LoginStudentDeps:
     login_student_query: LoginStudentQuery
     redis_client: aioredis.Redis
 
+    login_get_otp_url: str = "https://api.apprenticeshipindia.gov.in/auth/login-get-otp"
     login_url: str = "https://www.apprenticeshipindia.gov.in/candidate-login"
     role_labels: dict[str, str] = field(
         default_factory=lambda: {
@@ -99,21 +87,19 @@ class LoginExistingStudent(
         self, ctx: GraphRunContext[LoginStudentState, LoginStudentDeps]
     ) -> Annotated[
         End[LoginStudentResults],
-        Edge(label="Login an existing student into the candidate portal"),
+        Edge(
+            label="Submit student's email for an OTP activation email on the candidate "
+            "portal"
+        ),
     ]:
         """The run proceeds as follows:
 
-        1. Load the correct browser page AND state.
-        2. Navigate to the page shell.
-        3. Switch into Login mode.
-        4. Enter email.
-        5. Solve and fill in the CAPTCHA.
-        6. Request the OTP for the student.
-        7. Construct the appropriate end response for the graph.
-        8. Save the browser state in Redis and close the browser.
-        9. Create the browser session (if it does not exist) and save/update the page
-            in RAM. Optionally, choose to reset the TTL to keep the browser session
-            alive.
+        1. Launch a new browser page.
+        2. Navigate to the login URL, select the login radio button, and fill in the
+            login form with the email.
+        3. Solve the captcha and submit the form.
+        4. Save the browser state in Redis and persist the page in the browser session
+            store.
 
         Parameters
         ----------
@@ -128,129 +114,53 @@ class LoginExistingStudent(
         """
 
         # 1.
-        browser_session = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
-        )
-        if browser_session:
-            page = browser_session.page
-            otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
-
-            await otp_field.is_visible()
-            await otp_field.fill(ctx.deps.login_student_query.user_query)
-
-            submit_otp_response = await submit_and_capture_api_response(
-                page=page,
-                api_url="https://api.apprenticeshipindia.gov.in/auth/login-otp",
-                button_name="Login",
-            )
-
-            if submit_otp_response.is_error:
-                end = End(
-                    LoginStudentResults(
-                        summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}"
-                    )
-                )
-            else:
-                # TODO: do not return an End object but pass on to other assistants.
-                end = End(
-                    LoginStudentResults(
-                        summary_of_page_results="OTP successfully entered. "
-                        "Determine the next best assistant to call based on the student's "
-                        "latest message and your conversation with the student so far. If "
-                        "unclear, ask the student what they wish to do next."
-                    )
-                )
-
-            # 8.
-            await save_browser_state(
-                page=page,
-                redis_client=ctx.deps.redis_client,
-                session_id=ctx.state.session_id,
-            )
-
-            # 9.
-            await ctx.deps.browser_session_store.create(
-                browser=browser_session.browser,  # Reuse the same browser here!
-                page=page,
-                session_id=ctx.state.session_id,
-                overwrite=True,  # Update if the page changed at all!
-            )
-            browser_session_saved = await ctx.deps.browser_session_store.get(
-                session_id=ctx.state.session_id
-            )
-            assert browser_session_saved, (
-                f"Browser session not saved in RAM for session ID: "
-                f"{ctx.state.session_id}"
-            )
-            await ctx.deps.browser_session_store.reset_ttl(
-                session_id=ctx.state.session_id
-            )
-            return end
-
         browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
         context = await browser.new_context(storage_state=ctx.state.browser_state)  # type: ignore
         page = await context.new_page()
 
         # 2.
-        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-
-        # 3.
-        await select_login_radio(page=page)
-
-        # 4.
-        await page.fill(
-            "input[placeholder='Enter Your Email ID']",
-            str(ctx.deps.login_student_query.email),
+        await fill_login_email(
+            email=str(ctx.deps.login_student_query.email),
+            page=page,
+            url=ctx.deps.login_url,
         )
 
-        # 5. Solve captcha and request OTP
+        # 3.
         try:
-            response = await solve_and_submit_captcha_with_retries(
-                page=page,
-                api_url="https://api.apprenticeshipindia.gov.in/auth/login-get-otp",
-                button_name="Submit",
+            _ = await solve_and_submit_captcha_with_retries(
+                api_url=ctx.deps.login_get_otp_url, button_name="Submit", page=page
             )
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results="Initiated login. "
-                    "Please ask the student for a 6-digit OTP which should be "
-                    "sent to the registered mobile number and "
-                    "the email. Remind the student that the OTP is valid for 10 minutes.",
-                    next_chat_action=NextChatAction.REQUEST_OTP,
-                )
+            message = (
+                "Initiated login. Please ask the student for a 6-digit OTP which "
+                "should be sent to the registered mobile number and the email. Remind "
+                "the student that the OTP is valid for 10 minutes."
             )
+            next_action = NextChatAction.REQUEST_OTP
 
-        except RuntimeError:
-            end = End(
-                LoginStudentResults(
-                    summary_of_page_results=f"Cannot intiate login. {response.message}"
-                )
+        except RuntimeError as e:
+            message = f"Cannot initiate login. {str(e)}"
+            next_action = NextChatAction.GO_TO_HELPDESK
+
+        end = End(
+            LoginStudentResults(  # type: ignore
+                next_chat_action=next_action,
+                session_id=ctx.state.session_id,
+                summary_of_page_results=message,
             )
+        )
 
-            # TODO: handle error cases better
-
-        # 7.
-        await save_browser_state(
+        # 4.
+        await persist_browser_and_page(
+            browser=browser,
+            browser_session_store=ctx.deps.browser_session_store,
+            cache_browser_state=True,
+            overwrite_browser_session=False,
             page=page,
             redis_client=ctx.deps.redis_client,
             session_id=ctx.state.session_id,
         )
 
-        # 9.
-        await ctx.deps.browser_session_store.create(
-            browser=browser,
-            overwrite=False,
-            page=page,
-            session_id=ctx.state.session_id,
-        )
-        browser_session_saved = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
-        )
-        assert browser_session_saved, (
-            f"Browser session not saved in RAM for session ID: "
-            f"{ctx.state.session_id}"
-        )
-        return end
+        return end  # type: ignore
 
 
 @telemetry_timer(metric_fn=login_agent_hist, unit="s")
@@ -266,25 +176,28 @@ async def login_student(
     reset_chat_session: bool = False,
 ) -> LoginStudentResults:
     """
-    🔍 Login Existing Student Assistant
+    🔐 Login Initiation Assistant for Existing Student
 
     **The student's email and password will be automatically provided to me for logging
     in. You do not need to ask the student for this information!**
 
     ✅ WHEN TO USE THIS ASSISTANT
     Use this assistant **only** in the following situations:
-        1. An **existing student** needs to log into the Indian government
-            Apprenticeship Portal to complete their profile.
-        2. A student has provided an OTP upon your request. You should use this
-            assistant to submit the OTP to complete the login.
+        1. To **initiate the login process** for a student who is **already
+            registered** on the Indian Government Apprenticeship Portal.
 
-     This assistant is used **only to facilitate a login for an already registered
-     student**. It
-        1. initiates the login process on the portal with the provided email,
-            and, if successful, requests student for the OTP they should receive
-            in their registered email and mobile,
-        2. accepts the OTP from the student and submits it to the portal, and, if
-            successful, determine the next step based on the chat history.
+    This assistant performs the initial login attempt using the provided credentials.
+    If the credentials are valid, it will prompt the system to send a One-Time Password
+    (OTP) to the student's registered email and mobile number.
+
+    🔄 IMPORTANT: This assistant **does not complete the full login process.**
+    It stops after triggering OTP delivery. A separate assistant must be used to
+    proceed once the student receives and shares their OTP.
+
+    📌 COMMON USE CASES
+        - A student needs to log in to complete their apprenticeship profile, but has
+            not yet received the OTP.
+
      **After calling this assistant, you should use another assistant appropriate
      for the next step**, such as completing the profile, searching and applying
      for apprenticeships, or reviewing and signing contracts.
@@ -293,22 +206,22 @@ async def login_student(
     Phrase your explanation as a **direct message** to the assistant. **Do not** use
     first-person language (e.g., “I will use...” or “I’m going to call...”). Instead,
     use imperative phrasing, such as:
-        - "Initiate the log in process for the student so they can complete their profile."
-        - "Submit the OTP provided by the student to complete the log in in order to
-            proceed with the profile completion."
+        - "Start the login process so the student receives an OTP on their registered contact details."
 
     Provide the following information in your explanation to this assistant:
         - A clear explanation of **why** you are calling this assistant, with reference
-            to the latest student message and the current state of th application
+            to the latest student message and the current state of the application
             process. **Remember, this assistant does not directly interact with the
             student---thus, the assistant is not aware of the conversation that is
             going on between you and the student!**
 
     🚫 DO NOT USE THIS ASSISTANT IF
-        - The student is **not yet registered** or is asking to create a new account.
-        - The student is already logged in and is trying to proceed with profile
-            completion, document upload, or application steps (use other assistants for
-            those actions).
+        - The student is **not yet registered** or is trying to create a new account.
+        - The student has **already received and shared the OTP** (use another
+            assistant to continue the candidate process instead).
+        - The student is already logged in and working on later steps like profile
+            completion, document upload, or application tasks (use other assistants for
+            those purposes).
 
     Parameters
     ----------
@@ -335,9 +248,7 @@ async def login_student(
         The graph run result.
     """
 
-    logger.info(f"{explanation_for_call} for {chatur_query = }")
-    logger.info("Press Enter to continue!")
-    input()
+    assert chatur_query.user_query
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 
@@ -380,7 +291,9 @@ async def login_student(
     fsp.set_graph_types(graph)
 
     # 6. Execute the graph until completion.
-    browser_state = await load_browser_state(redis_client=redis_client)
+    browser_state = await load_browser_state(
+        redis_client=redis_client, session_id=session_id
+    )
     graph_run_results = await graph.run(
         LoginExistingStudent(),
         deps=deps,

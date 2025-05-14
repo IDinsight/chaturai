@@ -135,6 +135,7 @@ Output just the JSON object. Do NOT include any extra commentary, labels, format
                 """
             ),
             "login_student_agent": dedent("""You are a helpful assistant."""),
+            "profile_completion_agent": dedent("""You are a helpful assistant."""),
             "register_student_agent": dedent("""You are a helpful assistant."""),
             "summarize_assistant_response": dedent(
                 """You are a student onboarding and apprenticeship application assistant.
@@ -272,6 +273,7 @@ Generate the response in the structured JSON format as described.
                 """
             ),
             "login_student_agent": dedent("""Please help me."""),
+            "profile_completion_agent": dedent("""Please help me."""),
             "register_student_agent": dedent("""Please help me."""),
             "summarize_assistant_response": dedent(
                 """Here is the reason why you were called:

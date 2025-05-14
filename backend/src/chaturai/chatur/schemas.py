@@ -1,10 +1,13 @@
 """This module contains Pydantic models for chatur."""
 
+# Future Library
+from __future__ import annotations
+
 # Standard Library
 import re
 
 from enum import Enum
-from typing import Annotated, Any, Literal, Optional
+from typing import Any, Literal, Optional
 
 # Third Party Library
 from pydantic import (
@@ -17,60 +20,59 @@ from pydantic import (
 )
 
 
+class NextChatAction(str, Enum):
+    """Enum for the next action to take in the chat flow. For now, this will be used to
+    determine the branches in Turn.io
+    """
+
+    GO_TO_AAQ = "GO_TO_AAQ"  # Pass query to AAQ
+    GO_TO_HELPDESK = "GO_TO_HELPDESK"  # Pass query to Helpdesk
+    GO_TO_MENU = "GO_TO_MENU"  # Go to menu
+    REQUEST_OTP = "REQUEST_OTP"  # Request OTP from the user
+    REQUEST_USER_QUERY = "REQUEST_USER_QUERY"  # Request user query
+
+
 # Queries.
 class BaseQuery(BaseModel):
     """Pydantic model for base queries, serving as a discriminator."""
 
-    type: str
-    user_query: str
+    email: EmailStr
+    otp: Optional[str] = Field(None, description="6-digit OTP sent to the student")
+    user_query: Optional[str] = Field(None, description="The student's message")
     user_id: str
 
     model_config = ConfigDict(from_attributes=True)
 
+    def model_post_init(self, context: Any) -> None:
+        """Validate the OTP/user query.
 
-class OTPQuery(BaseModel):
-    """Pydantic model for OTP field. Might remove later."""
+        Raises
+        ------
+        ValueError
+            If neither OTP nor user query is provided.
+            If the OTP is not exactly 6 digits.
+        """
 
-    otp: Optional[str] = Field(
-        None,
-        description="6-digit OTP sent to the student",
-    )
-
-    @field_validator("otp")
-    @classmethod
-    def validate_otp(cls, v: str | None) -> str | None:
-        """Validate the OTP"""
-        if v is None:
-            return v
-
-        if not (v.isdigit() and len(v) == 6):
-            raise ValueError(f"OTP must be exactly 6 digits: {v}")
-
-        return v
+        if not (self.otp or self.user_query):
+            raise ValueError("Either OTP or user_query must be provided")
+        if self.otp and not (self.otp.isdigit() and len(self.otp) == 6):
+            raise ValueError(f"OTP must be exactly 6 digits: {self.otp}")
 
 
-class LoginStudentQuery(BaseQuery, OTPQuery):
+class LoginStudentQuery(BaseQuery):
     """Pydantic model for validating student login queries."""
 
-    email: EmailStr
-    type: Literal["login"]
+
+class ProfileCompletionQuery(BaseQuery):
+    """Pydantic model for validating profile completion queries."""
+
+    father_name: str
+    mother_name: str
 
 
-class NextChatAction(str, Enum):
-    """Enum for the next action to take in the chat flow.
-    For now, this will be used to determine the branches in Trun.io"""
-
-    REQUEST_USER_QUERY = "REQUEST_USER_QUERY"  # Request user query
-    REQUEST_OTP = "REQUEST_OTP"  # Request OTP from the user
-    GO_TO_AAQ = "GO_TO_AAQ"  # Pass query to AAQ
-    GO_TO_HELPDESK = "GO_TO_HELPDESK"  # Pass query to Helpdesk
-    GO_TO_MENU = "GO_TO_MENU"  # Go to menu
-
-
-class RegisterStudentQuery(BaseQuery, OTPQuery):
+class RegisterStudentQuery(BaseQuery):
     """Pydantic model for validating student registration queries."""
 
-    email: EmailStr
     is_iti_student: bool = False
     is_new_student: bool
     mobile_number: str = Field(
@@ -80,7 +82,6 @@ class RegisterStudentQuery(BaseQuery, OTPQuery):
         None,
         description="At least 13-digit roll number; required if is_iti_student=True",
     )
-    type: Literal["registration"]
 
     @field_validator("mobile_number")
     @classmethod
@@ -167,10 +168,7 @@ class RegisterStudentQuery(BaseQuery, OTPQuery):
         return v
 
 
-ChaturQueryUnion = Annotated[
-    RegisterStudentQuery | LoginStudentQuery,
-    Field(discriminator="type"),
-]
+ChaturQueryUnion = ProfileCompletionQuery | RegisterStudentQuery | LoginStudentQuery
 
 
 # Graph run results.
@@ -180,10 +178,10 @@ class ChaturFlowResults(BaseModel):
     explanation_for_student_input: str
     last_assistant_call: str | None
     last_graph_run_results: Optional[Any] = None
+    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
     require_student_input: bool
     summary_for_student: str
     user_id: str
-    next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -191,8 +189,9 @@ class ChaturFlowResults(BaseModel):
 class PageResults(BaseModel):
     """Pydantic model for validating page results."""
 
-    summary_of_page_results: str
     next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
+    session_id: int | str
+    summary_of_page_results: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -201,25 +200,29 @@ class LoginStudentResults(PageResults):
     """Pydantic model for validating login student results."""
 
 
+class ProfileCompletionResults(PageResults):
+    """Pydantic model for validating profile completion results."""
+
+
 class RegisterStudentResults(PageResults):
     """Pydantic model for validating register student results."""
 
 
 # Adding these for now. Might remove later.
-class RegisterationCompleteResults(PageResults):
+class RegistrationCompleteResults(PageResults):
     """Pydantic model for validating register activation link send results."""
 
-    naps_id: str
     activation_link_expiry: str
+    naps_id: str
 
 
 class SubmitButtonResponse(BaseModel):
-    """Pydantic model for validating submit button response."""
+    """Pydantic model for validating submit button responses."""
 
+    api_response: Optional[dict[str, Any]]
     is_error: bool
     is_success: bool
     message: str
-    source: Literal["toast", "api", "timeout"]
-    api_response: Optional[dict]
+    source: Literal["api", "toast", "timeout"]
 
     model_config = ConfigDict(from_attributes=True)

@@ -45,9 +45,9 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
         ],
         "login.login_student": [
             "registration.register_student",
-            "login.login_student",  # TODO: remove this and move OTP verificaiton to profile completion
-            # "profile_completion.complete_profile",
+            "profile.complete_profile",
         ],
+        "profile.complete_profile": ["login.login_student", "profile.complete_profile"],
     }
     reverse_adjacency_list = defaultdict(list)
     for module_path, neighbors in adjacency_list.items():
@@ -82,13 +82,17 @@ def create_graph_mappings() -> None:
     Settings._INTERNAL_GRAPH_MAPPING = graph_mapping
 
 
-async def load_browser_state(*, redis_client: aioredis.Redis) -> dict[str, Any]:
+async def load_browser_state(
+    *, redis_client: aioredis.Redis, session_id: int | str
+) -> dict[str, Any]:
     """Load browser state from Redis or return a default browser state.
 
     Parameters
     ----------
     redis_client
         The Redis client.
+    session_id
+        The session ID to use for the Redis cache key.
 
     Returns
     -------
@@ -96,7 +100,8 @@ async def load_browser_state(*, redis_client: aioredis.Redis) -> dict[str, Any]:
         The browser state.
     """
 
-    browser_state = await redis_client.get(REDIS_CACHE_PREFIX_BROWSER_STATE)
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
+    browser_state = await redis_client.get(redis_cache_key)
     if browser_state:
         return json.loads(browser_state)
     logger.warning(
@@ -147,6 +152,26 @@ def load_graph_run_results(
     return [model_class.model_validate(result) for result in graph_run_results]
 
 
+async def save_browser_state(
+    *, page: Page, redis_client: aioredis.Redis, session_id: int | str
+) -> None:
+    """Save browser state to Redis.
+
+    Parameters
+    ----------
+    page
+        The Playwright page object.
+    redis_client
+        The Redis client.
+    session_id
+        The session ID to use for the Redis cache key.
+    """
+
+    browser_state = await page.context.storage_state()
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
+    await redis_client.set(redis_cache_key, json.dumps(browser_state))
+
+
 def save_graph_diagram(*, graph: Graph) -> None:
     """Save the graph as a Mermaid diagram.
 
@@ -172,26 +197,6 @@ def save_graph_diagram(*, graph: Graph) -> None:
         )
     except (httpx.HTTPStatusError, httpx.ReadTimeout) as e:
         logger.error(f"Failed to save graph diagram for '{graph.name}' due to: {e}")
-
-
-async def save_browser_state(
-    *, page: Page, redis_client: aioredis.Redis, session_id: int | str
-) -> None:
-    """Save browser state to Redis.
-
-    Parameters
-    ----------
-    page
-        The Playwright page object.
-    redis_client
-        The Redis client.
-    session_id
-        The session ID to use for the Redis cache key.
-    """
-
-    browser_state = await page.context.storage_state()
-    redis_cache_key = f"{REDIS_CACHE_PREFIX_BROWSER_STATE}_{session_id}"
-    await redis_client.set(redis_cache_key, json.dumps(browser_state))
 
 
 async def save_graph_run_results(

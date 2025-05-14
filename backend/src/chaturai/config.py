@@ -85,12 +85,6 @@ class BackendSettings(BaseSettings):
     REDIS_CACHE_PREFIX_GRAPH_CHATUR: str = os.getenv(
         "REDIS_CACHE_PREFIX_GRAPH_CHATUR", "graph_chatur"
     )
-    REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION: str = os.getenv(
-        "REDIS_CACHE_PREFIX_GRAPH_STUDENT_REGISTRATION", "graph_student_registration"
-    )
-    REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN: str = os.getenv(
-        "REDIS_CACHE_PREFIX_GRAPH_STUDENT_LOGIN", "graph_student_login"
-    )
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis://localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
 
