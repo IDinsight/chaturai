@@ -763,7 +763,7 @@ async def load_state(
             model_class = RegisterStudentResults
         case "login.login_student":
             model_class = LoginStudentResults
-        case "profile_completion.complete_profile":
+        case "profile.complete_profile":
             model_class = ProfileCompletionResults
         case _:
             raise ValueError(f"Unknown last assistant call: {last_assistant_call}")
