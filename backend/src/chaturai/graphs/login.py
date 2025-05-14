@@ -26,10 +26,7 @@ from chaturai.chatur.schemas import (
     LoginStudentResults,
     NextChatAction,
 )
-from chaturai.chatur.utils import (
-    select_login_radio,
-    solve_and_submit_captcha_with_retries,
-)
+from chaturai.chatur.utils import fill_email, solve_and_submit_captcha_with_retries
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
     load_browser_state,
@@ -122,11 +119,10 @@ class LoginExistingStudent(
         page = await context.new_page()
 
         # 2.
-        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-        await select_login_radio(page=page)
-        await page.fill(
-            "input[placeholder='Enter Your Email ID']",
-            str(ctx.deps.login_student_query.email),
+        await fill_email(
+            email=str(ctx.deps.login_student_query.email),
+            page=page,
+            url=ctx.deps.login_url,
         )
 
         # 3.

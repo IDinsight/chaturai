@@ -21,6 +21,24 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from chaturai.chatur.schemas import SubmitButtonResponse
 
 
+async def fill_email(*, email: str, page: Page, url: str) -> None:
+    """Fill the email field in the form.
+
+    Parameters
+    ----------
+    email
+        The email to fill in the field.
+    page
+        The Playwright page object.
+    url
+        The URL to navigate to.
+    """
+
+    await page.goto(url, wait_until="domcontentloaded")
+    await select_login_radio(page=page)
+    await page.fill("input[placeholder='Enter Your Email ID']", email)
+
+
 async def fill_otp(*, otp: int | str, page: Page) -> None:
     """Fill the OTP field in the form.
 
