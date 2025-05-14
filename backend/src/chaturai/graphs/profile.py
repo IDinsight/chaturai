@@ -26,7 +26,7 @@ from chaturai.chatur.schemas import (
     ProfileCompletionQuery,
     ProfileCompletionResults,
 )
-from chaturai.chatur.utils import submit_and_capture_api_response
+from chaturai.chatur.utils import fill_otp, submit_and_capture_api_response
 from chaturai.config import Settings
 from chaturai.graphs.utils import (
     load_browser_state,
@@ -125,9 +125,11 @@ class CompleteStudentProfile(
         page = browser_session.page
 
         # 2.
-        otp_field = page.locator("input[placeholder='Enter 6 Digit OTP']")
-        await otp_field.is_visible()
-        await otp_field.fill(ctx.deps.profile_completion_query.user_query)
+        await fill_otp(
+            otp=ctx.deps.profile_completion_query.otp
+            or ctx.deps.profile_completion_query.user_query,
+            page=page,
+        )
 
         # 3.
         submit_otp_response = await submit_and_capture_api_response(

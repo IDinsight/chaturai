@@ -27,6 +27,7 @@ from chaturai.chatur.schemas import (
     RegistrationCompleteResults,
 )
 from chaturai.chatur.utils import (
+    fill_otp,
     select_register_radio,
     solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
@@ -198,10 +199,10 @@ class RegisterNewStudent(
             page = browser_session.page
 
             # 2.1.
-            otp_field_selector = "input[placeholder='Enter 6 Digit OTP']"
-            await page.wait_for_selector(otp_field_selector, state="visible")
-            await page.fill(
-                otp_field_selector, str(ctx.deps.register_student_query.otp)
+            await fill_otp(
+                otp=ctx.deps.register_student_query.otp
+                or ctx.deps.register_student_query.user_query,
+                page=page,
             )
 
             # 2.2.

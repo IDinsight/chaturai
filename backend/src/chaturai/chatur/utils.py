@@ -21,6 +21,22 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from chaturai.chatur.schemas import SubmitButtonResponse
 
 
+async def fill_otp(*, otp: int | str, page: Page) -> None:
+    """Fill the OTP field in the form.
+
+    Parameters
+    ----------
+    otp
+        The OTP to fill in the field.
+    page
+        The Playwright page object.
+    """
+
+    otp_field_selector = "input[placeholder='Enter 6 Digit OTP']"
+    await page.wait_for_selector(otp_field_selector, state="visible")
+    await page.fill(otp_field_selector, str(otp))
+
+
 def preprocess_captcha_image(*, image_buffer: bytes) -> MatLike:
     """Preprocess the captcha image to improve OCR accuracy.
 
