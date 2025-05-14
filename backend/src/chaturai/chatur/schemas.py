@@ -43,7 +43,7 @@ class BaseQuery(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    def model_post_init(self, __context: Any) -> None:
+    def model_post_init(self, context: Any) -> None:
         """Validate the OTP/user query.
 
         Raises
