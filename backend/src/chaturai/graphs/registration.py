@@ -28,6 +28,7 @@ from chaturai.chatur.schemas import (
 )
 from chaturai.chatur.utils import (
     fill_otp,
+    fill_roll_number,
     select_register_radio,
     solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
@@ -127,12 +128,11 @@ class RegisterNewStudent(
         page = await browser.new_page()
 
         # 2.
-        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-        await select_register_radio(page=page)
-        await page.locator("label:has-text('ITI Student')").click(force=True)
-        roll_selector = "input[placeholder*='Roll']"
-        await page.wait_for_selector(roll_selector, state="visible")
-        await page.fill(roll_selector, str(ctx.deps.register_student_query.roll_number))
+        await fill_roll_number(
+            page=page,
+            roll_number=ctx.deps.register_student_query.roll_number,
+            url=ctx.deps.login_url,
+        )
 
         # 3.
         response_json = await submit_and_capture_api_response(

@@ -37,6 +37,27 @@ async def fill_otp(*, otp: int | str, page: Page) -> None:
     await page.fill(otp_field_selector, str(otp))
 
 
+async def fill_roll_number(*, page: Page, roll_number: str, url: str) -> None:
+    """Fill the roll number field in the form.
+
+    Parameters
+    ----------
+    page
+        The Playwright page object.
+    roll_number
+        The roll number to fill in the field.
+    url
+        The URL to navigate to.
+    """
+
+    await page.goto(url, wait_until="domcontentloaded")
+    await select_register_radio(page=page)
+    await page.locator("label:has-text('ITI Student')").click(force=True)
+    roll_selector = "input[placeholder*='Roll']"
+    await page.wait_for_selector(roll_selector, state="visible")
+    await page.fill(roll_selector, roll_number)
+
+
 def preprocess_captcha_image(*, image_buffer: bytes) -> MatLike:
     """Preprocess the captcha image to improve OCR accuracy.
 
