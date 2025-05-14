@@ -77,6 +77,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         openapi_tags=tags_metadata,
         title="ChaturAI APIs",
+        swagger_ui_parameters={
+            "swagger_js_url": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+            "swagger_css_url": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
+        },
     )
 
     # 1.

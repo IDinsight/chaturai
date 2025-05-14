@@ -120,12 +120,17 @@ start-docker-compose-dev: ## Start Docker Compose dev environment
 
 stop-docker-compose-dev: ## Stop Docker Compose dev environment
 	@echo "$(RED)Spinning down dev Docker containers...$(RESET)"
-	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev down --volumes
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.dev.yml -p chaturai-dev down
 
 # Prod
-prod-run:  ## Start Docker Compose prod environment
+run-prod:  ## Start Docker Compose prod environment
 	@echo "$(GREEN)Spinning up prod Docker containers...$(RESET)"
 	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p chaturai up --build -d --remove-orphans
+	@docker system prune -f
+
+stop-prod:  ## Stop Docker Compose prod environment
+	@echo "$(RED)Spinning down prod Docker containers...$(RESET)"
+	@docker compose -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.yml -f ${CURDIR}/cicd/deployment/docker-compose/docker-compose.testing.yml -p chaturai down
 	@docker system prune -f
 
 # Scraper
