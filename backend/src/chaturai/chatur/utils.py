@@ -26,8 +26,8 @@ from chaturai.graphs.utils import save_browser_state
 from chaturai.utils.browser import BrowserSessionStore
 
 
-async def fill_email(*, email: str, page: Page, url: str) -> None:
-    """Fill the email field in the form.
+async def fill_login_email(*, email: str, page: Page, url: str) -> None:
+    """Fill the email field in the login form.
 
     Parameters
     ----------

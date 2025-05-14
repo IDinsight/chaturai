@@ -392,7 +392,7 @@ async def load_state(
         f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Profile_Completion_{session_id}"
     )
 
-    # 1.
+    # 1. If using the profile assistant for the first time.
     if reset_state or not await redis_client.exists(redis_cache_key):
         return redis_cache_key, ProfileCompletionState(
             browser_state=last_browser_state,
@@ -400,7 +400,7 @@ async def load_state(
             session_id=session_id,
         )
 
-    # 2.
+    # 2. If this is _not_ the first time profile assistant is being called.
     raw_snapshot = await redis_client.get(redis_cache_key)
     persistence.load_json(raw_snapshot)
     snapshot = await persistence.load_all()

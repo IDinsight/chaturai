@@ -27,7 +27,7 @@ from chaturai.chatur.schemas import (
     NextChatAction,
 )
 from chaturai.chatur.utils import (
-    fill_email,
+    fill_login_email,
     persist_browser_and_page,
     solve_and_submit_captcha_with_retries,
 )
@@ -119,7 +119,7 @@ class LoginExistingStudent(
         page = await context.new_page()
 
         # 2.
-        await fill_email(
+        await fill_login_email(
             email=str(ctx.deps.login_student_query.email),
             page=page,
             url=ctx.deps.login_url,
