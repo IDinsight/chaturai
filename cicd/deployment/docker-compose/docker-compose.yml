@@ -62,7 +62,6 @@ services:
     image: ghcr.io/berriai/litellm:main-v1.67.0-stable
     ports:
       - "4000:4000"
-      - "4001:4001"  # Debugging port for LiteLLM
     restart: always
     volumes:
       - ${PATHS_SECRETS_DIR}/gcp_credentials.json:/app/gcp_credentials.json
@@ -73,7 +72,6 @@ services:
     image: redis:6.0-alpine
     ports:
       - "6379:6379"
-      - "6380:6380"  # Debugging port for Redis
     restart: always
 
 volumes:
