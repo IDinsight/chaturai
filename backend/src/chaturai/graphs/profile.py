@@ -26,13 +26,13 @@ from chaturai.chatur.schemas import (
     ProfileCompletionQuery,
     ProfileCompletionResults,
 )
-from chaturai.chatur.utils import fill_otp, submit_and_capture_api_response
-from chaturai.config import Settings
-from chaturai.graphs.utils import (
-    load_browser_state,
-    save_browser_state,
-    save_graph_diagram,
+from chaturai.chatur.utils import (
+    fill_otp,
+    persist_browser_and_page,
+    submit_and_capture_api_response,
 )
+from chaturai.config import Settings
+from chaturai.graphs.utils import load_browser_state, save_graph_diagram
 from chaturai.metrics.logfire_metrics import profile_completion_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
 from chaturai.utils.browser import BrowserSessionStore
@@ -101,9 +101,8 @@ class CompleteStudentProfile(
             the student.
         3. Submit the OTP and capture the API response.
         4. Construct the appropriate response based on the API response.
-        5. Save the browser state in Redis.
-        6. Persist the page in the browser session store.
-        7. Reset the TTL of the browser session store.
+        5. Save the browser state in Redis, persist the page in the browser session
+            store, and reset the TTL of the browser session store.
 
         Parameters
         ----------
@@ -162,29 +161,16 @@ class CompleteStudentProfile(
             )
 
         # 5.
-        await save_browser_state(
+        await persist_browser_and_page(
+            browser=browser_session.browser,  # Reuse the same browser here!
+            browser_session_store=ctx.deps.browser_session_store,
+            cache_browser_state=True,
+            overwrite_browser_session=True,  # Update if the page changed at all!
             page=page,
             redis_client=ctx.deps.redis_client,
+            reset_ttl=True,
             session_id=ctx.state.session_id,
         )
-
-        # 6.
-        await ctx.deps.browser_session_store.create(
-            browser=browser_session.browser,  # Reuse the same browser here!
-            overwrite=True,  # Update if the page changed at all!
-            page=page,
-            session_id=ctx.state.session_id,
-        )
-        browser_session_saved = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
-        )
-        assert browser_session_saved, (
-            f"Browser session not saved in RAM for session ID: "
-            f"{ctx.state.session_id}"
-        )
-
-        # 7.
-        await ctx.deps.browser_session_store.reset_ttl(session_id=ctx.state.session_id)
 
         return end  # type: ignore
 

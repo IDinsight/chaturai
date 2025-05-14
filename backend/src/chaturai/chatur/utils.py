@@ -5,6 +5,7 @@ import asyncio
 import random
 
 from contextlib import suppress
+from typing import Optional
 
 # Third Party Library
 import cv2
@@ -13,12 +14,16 @@ import pytesseract
 
 from cv2.typing import MatLike
 from loguru import logger
+from playwright.async_api import Browser
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import SubmitButtonResponse
+from chaturai.graphs.utils import save_browser_state
+from chaturai.utils.browser import BrowserSessionStore
 
 
 async def fill_email(*, email: str, page: Page, url: str) -> None:
@@ -74,6 +79,60 @@ async def fill_roll_number(*, page: Page, roll_number: str, url: str) -> None:
     roll_selector = "input[placeholder*='Roll']"
     await page.wait_for_selector(roll_selector, state="visible")
     await page.fill(roll_selector, roll_number)
+
+
+async def persist_browser_and_page(
+    *,
+    browser: Browser,
+    browser_session_store: BrowserSessionStore,
+    cache_browser_state: bool = False,
+    overwrite_browser_session: bool = False,
+    page: Page,
+    redis_client: Optional[aioredis.Redis] = None,
+    reset_ttl: bool = False,
+    session_id: int | str,
+) -> None:
+    """Persist the browser and page session.
+
+    Parameters
+    ----------
+    browser
+        The Playwright `Browser` that owns *page*.
+    browser_session_store
+        The `BrowserSessionStore` instance to store the session.
+    cache_browser_state
+        Specifies whether to save the browser state in Redis.
+    overwrite_browser_session
+        If True, an existing browser session with the same `session_id` will be
+        **closed** and replaced.
+    page
+        The current tab whose DOM you want to preserve.
+    redis_client
+        The Redis client.
+    reset_ttl
+        Specifies whether to reset the TTL of the browser session.
+    session_id
+        A unique ID that identifies the session inside this Python process.
+    """
+
+    if cache_browser_state:
+        assert isinstance(redis_client, aioredis.Redis)
+        await save_browser_state(
+            page=page, redis_client=redis_client, session_id=session_id
+        )
+
+    await browser_session_store.create(
+        browser=browser,
+        overwrite=overwrite_browser_session,
+        page=page,
+        session_id=session_id,
+    )
+    browser_session_saved = await browser_session_store.get(session_id=session_id)
+    assert browser_session_saved, (
+        f"Browser session not saved in RAM for session ID: " f"{session_id}"
+    )
+    if reset_ttl:
+        await browser_session_store.reset_ttl(session_id=session_id)
 
 
 def preprocess_captcha_image(*, image_buffer: bytes) -> MatLike:

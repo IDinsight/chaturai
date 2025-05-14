@@ -26,13 +26,13 @@ from chaturai.chatur.schemas import (
     LoginStudentResults,
     NextChatAction,
 )
-from chaturai.chatur.utils import fill_email, solve_and_submit_captcha_with_retries
-from chaturai.config import Settings
-from chaturai.graphs.utils import (
-    load_browser_state,
-    save_browser_state,
-    save_graph_diagram,
+from chaturai.chatur.utils import (
+    fill_email,
+    persist_browser_and_page,
+    solve_and_submit_captcha_with_retries,
 )
+from chaturai.config import Settings
+from chaturai.graphs.utils import load_browser_state, save_graph_diagram
 from chaturai.metrics.logfire_metrics import login_agent_hist
 from chaturai.prompts.chatur import ChaturPrompts
 from chaturai.utils.browser import BrowserSessionStore
@@ -98,8 +98,8 @@ class LoginExistingStudent(
         2. Navigate to the login URL, select the login radio button, and fill in the
             login form with the email.
         3. Solve the captcha and submit the form.
-        4. Save the browser state in Redis.
-        5. Persist the page in the browser session store.
+        4. Save the browser state in Redis and persist the page in the browser session
+            store.
 
         Parameters
         ----------
@@ -150,26 +150,16 @@ class LoginExistingStudent(
         )
 
         # 4.
-        await save_browser_state(
+        await persist_browser_and_page(
+            browser=browser,
+            browser_session_store=ctx.deps.browser_session_store,
+            cache_browser_state=True,
+            overwrite_browser_session=False,
             page=page,
             redis_client=ctx.deps.redis_client,
             session_id=ctx.state.session_id,
         )
 
-        # 5.
-        await ctx.deps.browser_session_store.create(
-            browser=browser,
-            overwrite=False,
-            page=page,
-            session_id=ctx.state.session_id,
-        )
-        browser_session_saved = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
-        )
-        assert browser_session_saved, (
-            f"Browser session not saved in RAM for session ID: "
-            f"{ctx.state.session_id}"
-        )
         return end  # type: ignore
 
 

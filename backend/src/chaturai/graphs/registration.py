@@ -29,6 +29,7 @@ from chaturai.chatur.schemas import (
 from chaturai.chatur.utils import (
     fill_otp,
     fill_roll_number,
+    persist_browser_and_page,
     select_register_radio,
     solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
@@ -160,8 +161,8 @@ class RegisterNewStudent(
             2.3. If the response is successful, extract the NAPS ID and activation link
                 expiry date from the response. Otherwise, extract the error messages
                 from the response.
-            2.4. Persist the page in the browser session store.
-            2.5. Reset the TTL of the browser session store.
+            2.4. Persist the page in the browser session store and reset the TTL of the
+                browser session store.
         3. Navigate to the login URL, select the register radio button, and fill in the
             registration form.
         4. Solve the captcha and submit the form.
@@ -242,24 +243,15 @@ class RegisterNewStudent(
                 )
 
             # 2.4.
-            await ctx.deps.browser_session_store.create(
+            await persist_browser_and_page(
                 browser=browser_session.browser,  # Reuse the same browser here!
-                overwrite=True,  # Update if the page changed at all!
+                browser_session_store=ctx.deps.browser_session_store,
+                overwrite_browser_session=True,  # Update if the page changed at all!
                 page=page,
+                reset_ttl=True,
                 session_id=ctx.state.session_id,
             )
-            browser_session_saved = await ctx.deps.browser_session_store.get(
-                session_id=ctx.state.session_id
-            )
-            assert browser_session_saved, (
-                f"Browser session not saved in RAM for session ID: "
-                f"{ctx.state.session_id}"
-            )
 
-            # 2.5.
-            await ctx.deps.browser_session_store.reset_ttl(
-                session_id=ctx.state.session_id
-            )
             return end  # type: ignore
 
         # 3.
@@ -302,18 +294,12 @@ class RegisterNewStudent(
         )
 
         # 5.
-        await ctx.deps.browser_session_store.create(
+        await persist_browser_and_page(
             browser=browser,
-            overwrite=False,
+            browser_session_store=ctx.deps.browser_session_store,
+            overwrite_browser_session=False,
             page=page,
             session_id=ctx.state.session_id,
-        )
-        browser_session_saved = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
-        )
-        assert browser_session_saved, (
-            f"Browser session not saved in RAM for session ID: "
-            f"{ctx.state.session_id}"
         )
 
         return end  # type: ignore
