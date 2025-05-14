@@ -31,8 +31,8 @@ TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 async def chatur_flow(
     chatur_query: ChaturQueryUnion,
     request: Request,
-    csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     api_key: str = Depends(get_api_key),
+    csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     generate_graph_diagrams: bool = False,
     reset_chat_and_graph_state: bool = False,
 ) -> ChaturFlowResults:
@@ -44,6 +44,8 @@ async def chatur_flow(
     \t\tThe query object.
     \n\trequest
     \t\tThe FastAPI request object.
+    \n\tapi_key
+    \t\tThe API key for authentication.
     \n\tcsm
     \t\tAn async chat session manager that manages the chat sessions for each user.
     \n\tapi_key

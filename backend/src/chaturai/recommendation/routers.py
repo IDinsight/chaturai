@@ -34,6 +34,7 @@ TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 async def recommend_apprenticeship(
     request: Request,
     student: StudentProfile,
+    api_key: str = Depends(get_api_key),
     asession: AsyncSession = Depends(get_async_session),
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     include_score_components: bool = Query(
@@ -47,7 +48,6 @@ async def recommend_apprenticeship(
         le=100,
     ),
     reset_chat_session: bool = False,
-    api_key: str = Depends(get_api_key),
 ) -> list[RecommendationResult]:
     """Get personalized apprenticeship recommendations for a student.
 
@@ -66,6 +66,8 @@ async def recommend_apprenticeship(
     \t\tThe FastAPI request object.
     \n\tstudent
     \t\tStudent profile and preferences object.
+    \n\tapi_key
+    \t\tThe API key for authentication.
     \n\tasession
     \t\tThe SQLAlchemy async session to use for all database connections.
     \n\tcsm
@@ -78,8 +80,6 @@ async def recommend_apprenticeship(
     \t\tSpecifies whether to reset the chat session for the user. This can be used to
     \t\tclear the chat history and start a new session. This is useful for testing or
     \t\tdebugging purposes. By default, it is set to `False`.
-    \n\tapi_key
-    \t\tThe API key for authentication.
 
     Returns
     -------
@@ -87,6 +87,7 @@ async def recommend_apprenticeship(
     \t\tThe list of recommended opportunities sorted by match score.
     """
 
+    logger.info(f"{api_key = }")
     logger.info(f"{request = }")
     logger.info(f"{asession = }")
     logger.info(f"{csm = }")

@@ -7,10 +7,8 @@ from logging.config import fileConfig
 from pathlib import Path
 
 # Third Party Library
-from sqlalchemy import create_engine, engine_from_config, pool
-
-# Package Library
 from alembic import context  # type: ignore
+from sqlalchemy import create_engine, engine_from_config, pool
 
 # Append the framework path.
 env_script_directory = Path(__file__).resolve().parents[1]
