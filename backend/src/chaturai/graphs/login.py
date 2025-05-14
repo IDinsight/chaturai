@@ -5,7 +5,7 @@ The student login graph does the following:
 1. Navigates to the login page of the candidate portal.
 2. Fills in the login form with the email.
 3. Solves the captcha and submits the form.
-4. Also clicks the OTP activation button to trigger an email to the student.
+4. Also clicks the Login button to trigger an OTP email and text message to the student.
 5. Persists both the browser and page states for the next assistant.
 """
 
