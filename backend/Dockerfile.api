@@ -5,7 +5,7 @@ ARG NAME=chaturai
 ARG PORT=8000
 ARG HOME_DIR=/usr/src/${NAME}
 RUN apt-get update && apt-get install -y \
-    gcc libpq-dev wget git curl && apt-get install tesseract-ocr -y
+    gcc libpq-dev wget git curl tesseract-ocr
 
 RUN set -ex && apt-get autoremove -y --purge wget && rm -rf /var/lib/apt/lists/*
 
@@ -17,14 +17,17 @@ COPY pyproject.toml poetry.lock ${HOME_DIR}/
 WORKDIR ${HOME_DIR}
 RUN poetry install --no-root --without dev
 
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
+    playwright install --with-deps --only-shell chromium-headless-shell
+
 ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
 ENV PORT=${PORT}
 
 COPY . ${HOME_DIR}
 
 WORKDIR ${HOME_DIR}
-RUN ["chmod", "+x", "startup.sh"]
 
 EXPOSE ${PORT}
 
-CMD ["./startup.sh"]
+CMD ["python", "src/chaturai/entries/main.py"]

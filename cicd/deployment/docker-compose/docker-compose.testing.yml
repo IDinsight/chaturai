@@ -10,6 +10,14 @@ services:
         awslogs-create-group: "true"
 
   api:
+    environment:
+      - CHAT_ENV=testing
+      - LOGFIRE_ENVIRONMENT=testing
+    command: >
+      /bin/sh -c "
+      python -m alembic upgrade head &&
+      python src/chaturai/entries/main.py --no-reload"
+
     logging:
       driver: awslogs
       options:
@@ -25,4 +33,22 @@ services:
         awslogs-region: "ap-south-1"
         awslogs-group: "chaturai-testing"
         awslogs-stream: db-container
+        awslogs-create-group: "true"
+
+  redis:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "chaturai-testing"
+        awslogs-stream: redis-container
+        awslogs-create-group: "true"
+
+  litellm-proxy:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: "ap-south-1"
+        awslogs-group: "chaturai-testing"
+        awslogs-stream: litellm-proxy-container
         awslogs-create-group: "true"

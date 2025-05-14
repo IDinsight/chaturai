@@ -58,7 +58,7 @@ import_heading_stdlib = "Standard Library"
 import_heading_thirdparty = "Third Party Library"
 include_trailing_comma = true
 known_first_party = "chaturai"
-known_third_party = "git, mpi4py, ntpath, numpy, pexpect, pytest, sphinx_rtd_theme, yaml"
+known_third_party = "alembic, git, mpi4py, ntpath, numpy, pexpect, pytest, sphinx_rtd_theme, yaml"
 line_length = 88
 lines_between_types = 1
 multi_line_output = 3
@@ -107,7 +107,6 @@ litellm = {extras = ["proxy"], version = "^1.67.2"}
 logfire = {extras = ["fastapi", "redis", "system-metrics"], version = "^3.14.1"}
 loguru = "^0.7.2"
 openai = "^1.61.1"
-opencv-python = "^4.11.0.86"
 opentelemetry-exporter-otlp = "1.32.1"
 opentelemetry-instrumentation-aiohttp-client = "0.53b1"
 opentelemetry-instrumentation-grpc = "0.53b1"
@@ -139,6 +138,7 @@ typer = "^0.15.1"
 typing-extensions = "^4.12.2"
 uvicorn-worker = "0.3.0"
 vertexai = "^1.71.1"
+opencv-python-headless = "^4.11.0.86"
 
 [tool.poetry.group.dev]
 optional = true

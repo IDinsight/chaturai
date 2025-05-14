@@ -1,5 +1,5 @@
-{$DOMAIN:localhost} {
-    handle_path {$BACKEND_ROOT_PATH:}/* {
+{$DOMAIN_NAME:localhost} {
+    handle_path {$PATHS_BACKEND_ROOT:}/* {
         reverse_proxy api:8000 {
             transport http {
                 dial_timeout 100s

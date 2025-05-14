@@ -12,7 +12,6 @@ python src/chaturai/entries/scrape_opportunities.py
 """
 
 # Standard Library
-import os
 import signal
 import sys
 
@@ -24,12 +23,13 @@ import typer
 # Append the framework path. NB: This is required if this entry point is invoked from
 # the command line. However, it is not necessary if it is imported from a pip install.
 if __name__ == "__main__":
-    PACKAGE_PATH_ROOT = str(Path(__file__).resolve())
-    PACKAGE_PATH_SPLIT = PACKAGE_PATH_ROOT.split(os.path.join("backend"))
-    PACKAGE_PATH = Path(PACKAGE_PATH_SPLIT[0]) / "backend" / "src"
-    if PACKAGE_PATH not in sys.path:
-        print(f"Appending '{PACKAGE_PATH}' to system path...")
-        sys.path.append(str(PACKAGE_PATH))
+    package_path = (
+        Path(__file__).resolve().parents[2]
+    )  # src directory containing chaturai
+
+    if package_path not in sys.path:
+        print(f"Appending '{package_path}' to system path...")
+        sys.path.append(str(package_path))
 
 # Package Library
 from chaturai.config import Settings

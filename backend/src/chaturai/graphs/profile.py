@@ -136,7 +136,9 @@ class CompleteStudentProfile(
         )
 
         logger.info(f"{submit_otp_response = }")
-        await asyncio.get_event_loop().run_in_executor(None, input)
+
+        if not Settings.PLAYWRIGHT_HEADLESS:
+            await asyncio.get_event_loop().run_in_executor(None, input)
 
         # 4.
         if submit_otp_response.is_error:

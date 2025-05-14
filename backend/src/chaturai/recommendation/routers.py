@@ -12,6 +12,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Package Library
+from chaturai.auth.utils import get_api_key
 from chaturai.config import Settings
 from chaturai.db.utils import get_async_session
 from chaturai.recommendation.basic_recommendation import BasicRecommendationEngine
@@ -33,6 +34,7 @@ TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 async def recommend_apprenticeship(
     request: Request,
     student: StudentProfile,
+    api_key: str = Depends(get_api_key),
     asession: AsyncSession = Depends(get_async_session),
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     include_score_components: bool = Query(
@@ -64,6 +66,8 @@ async def recommend_apprenticeship(
     \t\tThe FastAPI request object.
     \n\tstudent
     \t\tStudent profile and preferences object.
+    \n\tapi_key
+    \t\tThe API key for authentication.
     \n\tasession
     \t\tThe SQLAlchemy async session to use for all database connections.
     \n\tcsm
@@ -83,6 +87,7 @@ async def recommend_apprenticeship(
     \t\tThe list of recommended opportunities sorted by match score.
     """
 
+    logger.info(f"{api_key = }")
     logger.info(f"{request = }")
     logger.info(f"{asession = }")
     logger.info(f"{csm = }")

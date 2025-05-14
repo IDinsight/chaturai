@@ -22,6 +22,7 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import SubmitButtonResponse
+from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state
 from chaturai.utils.browser import BrowserSessionStore
 
@@ -335,11 +336,11 @@ async def solve_and_submit_captcha_with_retries(
         await page.wait_for_timeout(random.randint(1500, 3000))
         await solve_and_fill_captcha(page=page)
 
-        # TODO: Remove this line
-        logger.debug(
-            f"Remaining retries: {max_retries - attempt}. Press Enter to continue.. "
-        )
-        await asyncio.get_event_loop().run_in_executor(None, input)
+        if not Settings.PLAYWRIGHT_HEADLESS:
+            logger.debug(
+                f"Remaining retries: {max_retries - attempt}. Press Enter to continue.. "
+            )
+            await asyncio.get_event_loop().run_in_executor(None, input)
 
         response = await submit_and_capture_api_response(
             api_url=api_url, button_name=button_name, page=page, timeout=timeout

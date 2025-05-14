@@ -125,7 +125,10 @@ class RegisterNewStudent(
         assert ctx.deps.register_student_query.is_iti_student
 
         # 1.
-        browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+        browser = await ctx.deps.browser.launch(
+            headless=PLAYWRIGHT_HEADLESS,
+            channel="chromium-headless-shell" if PLAYWRIGHT_HEADLESS else "chromium",
+        )
         page = await browser.new_page()
 
         # 2.
@@ -186,9 +189,15 @@ class RegisterNewStudent(
                 ctx=ctx
             )
             logger.info(f"{iti_student_details = }")
-            await asyncio.get_event_loop().run_in_executor(None, input)
+            if not Settings.PLAYWRIGHT_HEADLESS:
+                await asyncio.get_event_loop().run_in_executor(None, input)
         else:
-            browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
+            browser = await ctx.deps.browser.launch(
+                headless=PLAYWRIGHT_HEADLESS,
+                channel=(
+                    "chromium-headless-shell" if PLAYWRIGHT_HEADLESS else "chromium"
+                ),
+            )
             page = await browser.new_page()
 
         # 2.
