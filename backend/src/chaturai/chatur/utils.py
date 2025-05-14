@@ -60,6 +60,34 @@ async def fill_otp(*, otp: int | str, page: Page) -> None:
     await page.fill(otp_field_selector, str(otp))
 
 
+async def fill_registration_form(
+    *,
+    email: str,
+    mobile_number: str,
+    page: Page,
+    url: str,
+) -> None:
+    """Fill the registration form with email and mobile number.
+
+    Parameters
+    ----------
+    email
+        The email to fill in the field.
+    mobile_number
+        The mobile number to fill in the field.
+    page
+        The Playwright page object.
+    url
+        The URL to navigate to.
+    """
+
+    await page.goto(url, wait_until="domcontentloaded")
+    await select_register_radio(page=page)
+    await page.fill("input[placeholder='Enter your mobile number']", mobile_number)
+    await page.fill("input[placeholder='Enter Your Email ID']", email)
+    await page.fill("input[placeholder='Confirm Your Email ID']", email)
+
+
 async def fill_roll_number(*, page: Page, roll_number: str, url: str) -> None:
     """Fill the roll number field in the form.
 

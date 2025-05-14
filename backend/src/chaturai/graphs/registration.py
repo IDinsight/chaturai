@@ -28,9 +28,9 @@ from chaturai.chatur.schemas import (
 )
 from chaturai.chatur.utils import (
     fill_otp,
+    fill_registration_form,
     fill_roll_number,
     persist_browser_and_page,
-    select_register_radio,
     solve_and_submit_captcha_with_retries,
     submit_and_capture_api_response,
 )
@@ -255,19 +255,11 @@ class RegisterNewStudent(
             return end  # type: ignore
 
         # 3.
-        await page.goto(ctx.deps.login_url, wait_until="domcontentloaded")
-        await select_register_radio(page=page)
-        await page.fill(
-            "input[placeholder='Enter your mobile number']",
-            ctx.deps.register_student_query.mobile_number,
-        )
-        await page.fill(
-            "input[placeholder='Enter Your Email ID']",
-            str(ctx.deps.register_student_query.email),
-        )
-        await page.fill(
-            "input[placeholder='Confirm Your Email ID']",
-            str(ctx.deps.register_student_query.email),
+        await fill_registration_form(
+            email=str(ctx.deps.register_student_query.email),
+            mobile_number=ctx.deps.register_student_query.mobile_number,
+            page=page,
+            url=ctx.deps.login_url,
         )
 
         # 4.
