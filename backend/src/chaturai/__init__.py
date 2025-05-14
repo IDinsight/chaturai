@@ -147,13 +147,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     The process is as follows:
 
-    1. Load the embedding model.
-    2. Connect to Redis.
-    3. Set up Playwright automation procedures.
-    4. Create graph descriptions for ChaturAI.
-    5. Yield control to the application.
-    6. Close the Redis connection when the application finishes.
-    7. Stop Playwright when the application finishes.
+    1. Connect to Redis.
+    2. Set up Playwright automation procedures.
+    3. Create graph descriptions for ChaturAI.
+    4. Yield control to the application.
+    5. Close the Redis connection when the application finishes.
+    6. Stop Playwright when the application finishes.
 
     Parameters
     ----------
@@ -166,21 +165,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     make_dir(Path(os.getenv("PATHS_LOGS_DIR", "/tmp")) / "chat_sessions")
 
     # 1.
-    # app.state.embedding_model_openai = load_embedding_model(  # pylint: disable=all
-    #     embedding_model_name=MODELS_EMBEDDING_OPENAI
-    # )
-    # app.state.embedding_model_st = load_embedding_model(  # pylint: disable=all
-    #     embedding_model_name=MODELS_EMBEDDING_ST
-    # )
-
-    # 2.
     logger.info("Initializing Redis client...")
     app.state.redis = await aioredis.from_url(
         f"{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
     )
     logger.success("Redis connection established!")
 
-    # 3.
+    # 2.
     logger.info("Setting up Playwright automation procedures...")
     pw = await async_playwright().start()
     app.state.browser = pw.chromium
@@ -188,22 +179,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     asyncio.create_task(_browser_sweeper(app=app))
     logger.success("Finished setting up Playwright automation procedures!")
 
-    # 4.
+    # 3.
     logger.info("Loading graph descriptions for ChaturAI...")
     create_graph_mappings()
     logger.success("Finished loading graph descriptions for the ChaturAI!")
 
     logger.log("CELEBRATE", "Ready to roll! 🚀")
 
-    # 5.
+    # 4.
     yield
 
-    # 6.
+    # 5.
     logger.info("Closing Redis connection...")
     await app.state.redis.close()
     logger.success("Redis connection closed!")
 
-    # 7.
+    # 6.
     logger.info("Stopping Playwright...")
     await pw.stop()
     logger.success("Playwright stopped!")
