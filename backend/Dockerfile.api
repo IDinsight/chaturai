@@ -1,4 +1,4 @@
-FROM python:3.12.10-slim-bookworm
+FROM python:3.11-slim-bookworm
 LABEL maintainer="IDinsight"
 
 ARG NAME=chaturai
@@ -16,6 +16,10 @@ COPY pyproject.toml poetry.lock ${HOME_DIR}/
 
 WORKDIR ${HOME_DIR}
 RUN poetry install --no-root --without dev
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
+    playwright install --with-deps --only-shell chromium-headless-shell
 
 ENV PYTHONPATH="${PYTHONPATH}:${HOME_DIR}"
 ENV PORT=${PORT}

@@ -12,6 +12,7 @@ from fastapi import APIRouter, Body, Depends
 from fastapi.requests import Request
 
 # Package Library
+from chaturai.auth.utils import get_api_key
 from chaturai.chatur.schemas import ChaturFlowResults, ChaturQueryUnion
 from chaturai.config import Settings
 from chaturai.graphs.chatur import chatur
@@ -33,6 +34,7 @@ async def chatur_flow(
     chatur_query: Annotated[ChaturQueryUnion, Body(embed=False)],
     request: Request,
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
+    api_key: str = Depends(get_api_key),
     generate_graph_diagrams: bool = False,
     reset_chat_and_graph_state: bool = False,
 ) -> ChaturFlowResults:
@@ -46,6 +48,8 @@ async def chatur_flow(
     \t\tThe FastAPI request object.
     \n\tcsm
     \t\tAn async chat session manager that manages the chat sessions for each user.
+    \n\tapi_key
+    \t\tThe API key for authentication.
     \n\tgenerate_graph_diagrams
     \t\tSpecifies whether to generate graph diagrams for the endpoint.
     \n\treset_chat_and_graph_state

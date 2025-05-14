@@ -24,7 +24,6 @@ from chaturai.config import Settings
 from chaturai.graphs.utils import create_graph_mappings
 from chaturai.prometheus_middleware import PrometheusMiddleware
 from chaturai.utils.browser import BrowserSessionStore
-from chaturai.utils.embeddings import load_embedding_model
 from chaturai.utils.general import make_dir
 from chaturai.utils.logging_ import initialize_logger
 
@@ -163,12 +162,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     make_dir(Path(os.getenv("PATHS_LOGS_DIR", "/tmp")) / "chat_sessions")
 
     # 1.
-    app.state.embedding_model_openai = load_embedding_model(  # pylint: disable=all
-        embedding_model_name=MODELS_EMBEDDING_OPENAI
-    )
-    app.state.embedding_model_st = load_embedding_model(  # pylint: disable=all
-        embedding_model_name=MODELS_EMBEDDING_ST
-    )
+    # app.state.embedding_model_openai = load_embedding_model(  # pylint: disable=all
+    #     embedding_model_name=MODELS_EMBEDDING_OPENAI
+    # )
+    # app.state.embedding_model_st = load_embedding_model(  # pylint: disable=all
+    #     embedding_model_name=MODELS_EMBEDDING_ST
+    # )
 
     # 2.
     logger.info("Initializing Redis client...")

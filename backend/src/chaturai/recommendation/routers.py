@@ -12,6 +12,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Package Library
+from chaturai.auth.utils import get_api_key
 from chaturai.config import Settings
 from chaturai.db.utils import get_async_session
 from chaturai.recommendation.basic_recommendation import BasicRecommendationEngine
@@ -46,6 +47,7 @@ async def recommend_apprenticeship(
         le=100,
     ),
     reset_chat_session: bool = False,
+    api_key: str = Depends(get_api_key),
 ) -> list[RecommendationResult]:
     """Get personalized apprenticeship recommendations for a student.
 
@@ -76,6 +78,8 @@ async def recommend_apprenticeship(
     \t\tSpecifies whether to reset the chat session for the user. This can be used to
     \t\tclear the chat history and start a new session. This is useful for testing or
     \t\tdebugging purposes. By default, it is set to `False`.
+    \n\tapi_key
+    \t\tThe API key for authentication.
 
     Returns
     -------

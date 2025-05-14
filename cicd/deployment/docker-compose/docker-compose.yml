@@ -28,6 +28,7 @@ services:
     environment:
       - POSTGRES_HOST=db
       - LITELLM_ENDPOINT=http://litellm-proxy:4000
+      - REDIS_HOST=redis://redis
       - PATHS_PROJECT_DIR=/usr/src/chaturai
       - PATHS_LOGS_DIR=/usr/src/chaturai/logs
       - PATHS_SECRETS_DIR=/usr/src/chaturai/secrets
