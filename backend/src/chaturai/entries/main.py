@@ -49,14 +49,14 @@ assert (
 # Instantiate typer apps for the command line interface.
 cli = typer.Typer()
 
-PATHS_BACKEND_ROOT = Settings.PATHS_BACKEND_ROOT
+
 app = create_app()
 
 
 class Worker(UvicornWorker):
     """Custom worker class to allow `root_path` to be passed to Uvicorn."""
 
-    CONFIG_KWARGS = {"root_path": PATHS_BACKEND_ROOT}
+    CONFIG_KWARGS = {"root_path": Settings.PATHS_BACKEND_ROOT}
 
 
 @cli.command()
@@ -91,6 +91,7 @@ def start(host: str = "0.0.0.0", port: int = 8000, reload: bool = True) -> None:
         log_level=Settings.LOGGING_LOG_LEVEL.lower(),
         reload=reload,
         reload_dirs=[str(project_dir / "backend" / "src")],
+        root_path=Settings.PATHS_BACKEND_ROOT,
     )
 
 

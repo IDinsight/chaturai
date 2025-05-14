@@ -186,7 +186,8 @@ class RegisterNewStudent(
                 ctx=ctx
             )
             logger.info(f"{iti_student_details = }")
-            await asyncio.get_event_loop().run_in_executor(None, input)
+            if not Settings.PLAYWRIGHT_HEADLESS:
+                await asyncio.get_event_loop().run_in_executor(None, input)
         else:
             browser = await ctx.deps.browser.launch(headless=PLAYWRIGHT_HEADLESS)
             page = await browser.new_page()
