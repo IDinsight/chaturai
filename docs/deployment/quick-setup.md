@@ -34,7 +34,7 @@
 
 ## Deploy using Docker Compose
 
-In the `chaturai` repository root, run `make prod-run`!
+In the `chaturai` repository root, run `make run-prod`!
 
 !!! info "Chaturai runs Playwright headlessly inside Docker."
     To run headfully for debuggin purposes, follow the local development setup instructions (currently the best source is the [our repo's readme](https://github.com/IDinsight/chaturai)).
