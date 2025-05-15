@@ -23,7 +23,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import SubmitButtonResponse
+from chaturai.chatur.schemas import ChaturFlowResults, SubmitButtonResponse
 from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state
 from chaturai.prompts.chatur import ChaturPrompts
@@ -586,19 +586,17 @@ def translation_sandwich(
     """
 
     @wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def wrapper(**kwargs: Any) -> ChaturFlowResults:
         """Wrapper function to translate before and after calling the chatur agent.
 
         Parameters
         ----------
-        args
-            Additional positional arguments.
         kwargs
             Additional keyword arguments.
 
         Returns
         -------
-        Any
+        ChaturFlowResults
             The response from calling the chatur agent.
         """
 
@@ -627,7 +625,7 @@ def translation_sandwich(
             chatur_query.user_query_translated = chatur_query.user_query
 
         # Call chatur agent.
-        chatur_agent_response = await func(*args, **kwargs)
+        chatur_agent_response = await func(**kwargs)
 
         # Back translation (English -> Hindi) if required.
         if translation_dict["requires_translation"]:

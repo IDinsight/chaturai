@@ -56,7 +56,7 @@ async def chatur_flow(
     Returns
     -------
     \n\tChaturFlowResults
-    \t\tThe Chatur response.
+    \t\tThe chatur agent response.
     """
 
     return await chatur(
