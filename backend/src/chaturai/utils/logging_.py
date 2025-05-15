@@ -153,7 +153,7 @@ def initialize_logger(
             repository="https://github.com/IDinsight/chaturai",
             revision="main",
         ),
-        console=logfire.ConsoleOptions(min_log_level=LOGGING_LOG_LEVEL.lower()),
+        console=False,
     )
 
     # Remove any default handlers attached to the root logger.
