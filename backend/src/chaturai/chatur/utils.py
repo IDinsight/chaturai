@@ -2,10 +2,12 @@
 
 # Standard Library
 import asyncio
+import json
 import random
 
 from contextlib import suppress
-from typing import Optional
+from functools import wraps
+from typing import Any, Awaitable, Callable, Optional
 
 # Third Party Library
 import cv2
@@ -24,7 +26,52 @@ from redis import asyncio as aioredis
 from chaturai.chatur.schemas import SubmitButtonResponse
 from chaturai.config import Settings
 from chaturai.graphs.utils import save_browser_state
+from chaturai.prompts.chatur import ChaturPrompts
+from chaturai.schemas import ValidatorCall
 from chaturai.utils.browser import BrowserSessionStore
+from chaturai.utils.litellm_ import get_acompletion
+
+LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
+TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
+
+
+def check_student_translation_response(content: str) -> None:
+    """Assert that the generated response from the LLM is correct.
+
+    Parameters
+    ----------
+    content
+        The generated response from the LLM.
+    """
+
+    generated_response = json.loads(content)
+    assert (
+        "requires_translation" in generated_response
+    ), "`requires_translation` key not found."
+    assert isinstance(generated_response["requires_translation"], bool), (
+        f"requires_translation` must be a boolean.\n"
+        f"Got: {type(generated_response['requires_translation'])}"
+    )
+    if generated_response["requires_translation"]:
+        assert generated_response[
+            "translated_text"
+        ], "`translated_text` must not be empty if `requires_translation` is `true`."
+
+
+def check_chatur_agent_translation_response(content: str) -> None:
+    """Assert that the generated response from the LLM is correct.
+
+    Parameters
+    ----------
+    content
+        The generated response from the LLM.
+    """
+
+    generated_response = json.loads(content)
+    assert "translated_text" in generated_response, "`translated_text` key not found."
+    assert generated_response[
+        "translated_text"
+    ], "`translated_text` key must not be empty."
 
 
 async def fill_login_email(*, email: str, page: Page, url: str) -> None:
@@ -520,3 +567,92 @@ async def submit_and_capture_api_response(
         message="No toast or API response detected.",
         source="timeout",
     )
+
+
+def translation_sandwich(
+    func: Callable[..., Awaitable[Any]],
+) -> Callable[..., Awaitable[Any]]:
+    """Decorator to handle translation for the chatur agent.
+
+    Parameters
+    ----------
+    func
+        The function to be decorated.
+
+    Returns
+    -------
+    Callable[..., Awaitable[Any]]
+        The decorated function.
+    """
+
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrapper function to translate before and after calling the chatur agent.
+
+        Parameters
+        ----------
+        args
+            Additional positional arguments.
+        kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        Any
+            The response from calling the chatur agent.
+        """
+
+        chatur_query = kwargs["chatur_query"]
+
+        # Forward translation (Hindi -> English) if required.
+        if chatur_query.user_query:
+            response = await get_acompletion(
+                model=LITELLM_MODEL_CHAT,
+                system_msg=ChaturPrompts.system_messages["translate_student_message"],
+                text_generation_params=TEXT_GENERATION_BEDROCK,
+                user_msg=ChaturPrompts.prompts["translate_student_message"].format(
+                    student_message=chatur_query.user_query
+                ),
+                validator_call=ValidatorCall(
+                    num_retries=3, validator_module=check_student_translation_response
+                ),
+            )
+            translation_dict = json.loads(response)
+            if translation_dict["requires_translation"]:
+                chatur_query.user_query_translated = translation_dict["translated_text"]
+            else:
+                chatur_query.user_query_translated = chatur_query.user_query
+        else:
+            translation_dict = {"requires_translation": False, "translated_text": None}
+            chatur_query.user_query_translated = chatur_query.user_query
+
+        # Call chatur agent.
+        chatur_agent_response = await func(*args, **kwargs)
+
+        # Back translation (English -> Hindi) if required.
+        if translation_dict["requires_translation"]:
+            response = await get_acompletion(
+                model=LITELLM_MODEL_CHAT,
+                system_msg=ChaturPrompts.system_messages[
+                    "translate_chatur_agent_message"
+                ],
+                text_generation_params=TEXT_GENERATION_BEDROCK,
+                user_msg=ChaturPrompts.prompts["translate_chatur_agent_message"].format(
+                    summary_for_student=chatur_agent_response.summary_for_student
+                ),
+                validator_call=ValidatorCall(
+                    num_retries=3,
+                    validator_module=check_chatur_agent_translation_response,
+                ),
+            )
+            translation_dict = json.loads(response)
+            translated_text = translation_dict["translated_text"]
+            chatur_agent_response.summary_for_student_translated = translated_text
+        else:
+            chatur_agent_response.summary_for_student_translated = (
+                chatur_agent_response.summary_for_student
+            )
+
+        return chatur_agent_response
+
+    return wrapper

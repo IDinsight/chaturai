@@ -248,7 +248,7 @@ async def login_student(
         The graph run result.
     """
 
-    assert chatur_query.user_query
+    assert chatur_query.user_query_translated
     chatur_query = deepcopy(chatur_query)
     chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
 

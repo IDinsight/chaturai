@@ -1,8 +1,5 @@
 """This module contains FastAPI routers for chatur endpoints."""
 
-# Standard Library
-import os
-
 # Third Party Library
 import logfire
 
@@ -12,7 +9,7 @@ from fastapi.requests import Request
 # Package Library
 from chaturai.auth.utils import get_api_key
 from chaturai.chatur.schemas import ChaturFlowResults, ChaturQueryUnion
-from chaturai.config import Settings
+from chaturai.chatur.utils import translation_sandwich
 from chaturai.graphs.chatur import chatur
 from chaturai.utils.chat import AsyncChatSessionManager, get_chat_session_manager
 
@@ -22,12 +19,10 @@ TAG_METADATA = {
 }
 router = APIRouter(tags=[TAG_METADATA["name"]])
 
-GOOGLE_CREDENTIALS_FP = os.getenv("PATHS_GOOGLE_CREDENTIALS")
-TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
-
 
 @router.post("/chatur-flow", response_model=ChaturFlowResults)
 @logfire.instrument("Running Chatur flow endpoint...")
+@translation_sandwich
 async def chatur_flow(
     chatur_query: ChaturQueryUnion,
     request: Request,

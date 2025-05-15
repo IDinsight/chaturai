@@ -237,7 +237,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
             user_msg=ChaturPrompts.prompts["summarize_assistant_response"].format(
                 assistant_call_results=ctx.state.last_graph_run_results,
                 explanation_for_assistant_call=explanation_for_assistant_call,
-                student_message=ctx.deps.chatur_query.user_query,
+                student_message=ctx.deps.chatur_query.user_query_translated,
             ),
         )
         self.summary_of_last_assistant_call = content
@@ -272,7 +272,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         if self.summary_of_last_assistant_call is None:
             message = ChaturPrompts.prompts["chatur_agent"].format(
                 student_inner_thoughts=self.student_inner_thoughts,
-                student_message=ctx.deps.chatur_query.user_query,
+                student_message=ctx.deps.chatur_query.user_query_translated,
             )
         else:
             message = (
@@ -513,7 +513,7 @@ class DetermineStudentIntent(BaseNode[ChaturState, ChaturDeps, dict[str, Any]]):
         chat_history = deepcopy(chat_history)
         chat_history.append(
             {
-                "content": ctx.deps.chatur_query.user_query,
+                "content": ctx.deps.chatur_query.user_query_translated,
                 "name": str(ctx.state.session_id),
                 "role": "user",
             }

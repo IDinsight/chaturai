@@ -126,7 +126,7 @@ class CompleteStudentProfile(
         # 2.
         await fill_otp(
             otp=ctx.deps.profile_completion_query.otp
-            or ctx.deps.profile_completion_query.user_query,
+            or ctx.deps.profile_completion_query.user_query_translated,
             page=page,
         )
 
@@ -264,9 +264,11 @@ async def complete_profile(
         The graph run result.
     """
 
-    assert chatur_query.user_query or chatur_query.otp
+    assert chatur_query.user_query_translated or chatur_query.otp
     chatur_query = deepcopy(chatur_query)
-    chatur_query.user_query = chatur_query.user_query or chatur_query.otp
+    chatur_query.user_query_translated = (
+        chatur_query.user_query_translated or chatur_query.otp
+    )
     chatur_query.user_id = f"Profile_Completion_Agent_Graph_{chatur_query.user_id}"
 
     # 1. Initialize the chat history, chat parameters, and the session ID for the agent.

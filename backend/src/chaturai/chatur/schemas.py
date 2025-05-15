@@ -39,6 +39,9 @@ class BaseQuery(BaseModel):
     email: EmailStr
     otp: Optional[str] = Field(None, description="6-digit OTP sent to the student")
     user_query: Optional[str] = Field(None, description="The student's message")
+    user_query_translated: str | None = Field(
+        None, description="Translated student message"
+    )
     user_id: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -181,6 +184,7 @@ class ChaturFlowResults(BaseModel):
     next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
     require_student_input: bool
     summary_for_student: str
+    summary_for_student_translated: str
     user_id: str
 
     model_config = ConfigDict(from_attributes=True)
