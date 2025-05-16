@@ -509,6 +509,10 @@ async def submit_and_capture_api_response(
             assert message_text is not None
             message_text = message_text.strip()
 
+            # Close the toast message to avoid having multiple toasts.
+            # TODO: Handle multiple toasts.
+            await page.locator("#toast-container .toast-error").click()
+
             return SubmitButtonResponse(
                 api_response=None,
                 is_error=is_error,

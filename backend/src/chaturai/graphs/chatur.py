@@ -272,7 +272,8 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         if self.summary_of_last_assistant_call is None:
             message = ChaturPrompts.prompts["chatur_agent"].format(
                 student_inner_thoughts=self.student_inner_thoughts,
-                student_message=ctx.deps.chatur_query.user_query_translated,
+                student_message=ctx.deps.chatur_query.user_query_translated
+                or ctx.deps.chatur_query.otp,
             )
         else:
             message = (
@@ -465,6 +466,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 require_student_input=True,  # Always True for now
                 summary_for_student=self.summary_of_last_assistant_call
                 or explanation_for_student_input,
+                summary_for_student_translated="",
                 user_id=ctx.deps.chatur_query.user_id,
                 next_chat_action=next_chat_action,
             )

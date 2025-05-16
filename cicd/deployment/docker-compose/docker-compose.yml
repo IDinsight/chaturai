@@ -30,6 +30,7 @@ services:
       - LITELLM_ENDPOINT=http://litellm-proxy:4000
       - REDIS_HOST=redis://redis
       - PLAYWRIGHT_HEADLESS=true
+      - PATHS_BACKEND_ROOT=/api
       - PATHS_PROJECT_DIR=/usr/src/chaturai
       - PATHS_LOGS_DIR=/usr/src/chaturai/logs
       - PATHS_SECRETS_DIR=/usr/src/chaturai/secrets

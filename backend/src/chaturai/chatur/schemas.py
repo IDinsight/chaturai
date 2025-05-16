@@ -121,17 +121,17 @@ class RegisterStudentQuery(BaseQuery):
             v = v[2:]
 
         # 3.
-        if not (v.isdigit() and len(v) == 10):
+        pattern = r"^(?:\+?91\s*)?([1-9](?:\d\s*){9})$"
+        match = re.match(pattern, v)
+        if not match:
             raise ValueError(
-                f"Mobile number must be exactly 10 digits after removing any '+91' "
-                f"prefix: {v}"
+                f"Expected a 10-digit number starting with 1-9 (ignoring +91 country code) but got {v}."
             )
 
         # 4.
-        if not re.match(r"^[6-9]\d{9}$", v):
-            raise ValueError(f"Indian mobile number must start with 6, 7, 8, or 9: {v}")
-
-        return v
+        phone_number = match.group(1)
+        stripped_phone_number = re.sub(r"\s+", "", phone_number)
+        return stripped_phone_number
 
     @field_validator("roll_number", mode="after")
     @classmethod
