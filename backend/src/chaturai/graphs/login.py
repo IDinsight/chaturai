@@ -131,7 +131,7 @@ class LoginExistingStudent(
                 api_url=ctx.deps.login_get_otp_url, button_name="Submit", page=page
             )
             message = (
-                "Initiated login. Please ask the student for a 6-digit OTP which "
+                "Initiated login. Please ask the student to enter the 6-digit OTP which "
                 "should be sent to the registered mobile number and the email. Remind "
                 "the student that the OTP is valid for 10 minutes."
             )
