@@ -30,6 +30,7 @@ services:
       - LITELLM_ENDPOINT=http://litellm-proxy:4000
       - REDIS_HOST=redis://redis
       - PLAYWRIGHT_HEADLESS=true
+      - PATHS_BACKEND_ROOT=/api
       - PATHS_PROJECT_DIR=/usr/src/chaturai
       - PATHS_LOGS_DIR=/usr/src/chaturai/logs
       - PATHS_SECRETS_DIR=/usr/src/chaturai/secrets
@@ -41,7 +42,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:15
+    image: ${DOCKER_POSTGRES_IMAGE}
     env_file:
       - ${PATHS_PROJECT_DIR}/backend/.env
     ports:
@@ -59,7 +60,7 @@ services:
     container_name: litellm-proxy
     env_file:
       - ${PATHS_PROJECT_DIR}/cicd/litellm/.env
-    image: ghcr.io/berriai/litellm:main-v1.67.0-stable
+    image: ${DOCKER_LITELLM_IMAGE}
     ports:
       - "4000:4000"
     restart: always
@@ -69,7 +70,7 @@ services:
 
   redis:
     container_name: redis-local
-    image: redis:6.0-alpine
+    image: ${DOCKER_REDIS_IMAGE}
     ports:
       - "6379:6379"
     restart: always
