@@ -497,21 +497,30 @@ async def submit_and_capture_api_response(
             toast_message = await page.wait_for_selector(
                 "#toast-container .toast-message", state="attached", timeout=timeout
             )
-            # Check if it's an error or success toast.
-            is_error = await page.locator("#toast-container .toast-error").is_visible()
-            is_success = await page.locator(
-                "#toast-container .toast-success"
-            ).is_visible()
 
-            # Get the message text.
+            # Check for error toasts
+            error_locator = page.locator("#toast-container .toast-error")
+            is_error_present = await error_locator.first.is_visible()
+
+            if is_error_present:
+                is_error = True  # Set main error flag
+            else:
+                is_error = False
+
+            # Check for success toast
+            success_locator = page.locator("#toast-container .toast-success")
+            is_success_present = await success_locator.is_visible()
+
+            if is_success_present:
+                is_success = True  # Set main success flag
+            else:
+                is_success = False
+
+            # Get the message text across all toasts.
             assert toast_message is not None
             message_text = await toast_message.text_content()
             assert message_text is not None
             message_text = message_text.strip()
-
-            # Close the toast message to avoid having multiple toasts.
-            # TODO: Handle multiple toasts.
-            await page.locator("#toast-container .toast-error").click()
 
             return SubmitButtonResponse(
                 api_response=None,
