@@ -458,15 +458,17 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         else:
             next_chat_action = NextChatAction.REQUEST_USER_QUERY
 
+        summary_for_student = (
+            self.summary_of_last_assistant_call or explanation_for_student_input
+        )
         return End(  # type: ignore
             ChaturFlowResults(  # type: ignore
                 explanation_for_student_input=explanation_for_student_input,
                 last_assistant_call=ctx.state.last_assistant_call,
                 last_graph_run_results=ctx.state.last_graph_run_results,
                 require_student_input=True,  # Always True for now
-                summary_for_student=self.summary_of_last_assistant_call
-                or explanation_for_student_input,
-                summary_for_student_translated="",
+                summary_for_student=summary_for_student,
+                summary_for_student_translated=summary_for_student,
                 user_id=ctx.deps.chatur_query.user_id,
                 next_chat_action=next_chat_action,
             )

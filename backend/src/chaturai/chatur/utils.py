@@ -650,10 +650,6 @@ def translation_sandwich(
             translation_dict = json.loads(response)
             translated_text = translation_dict["translated_text"]
             chatur_agent_response.summary_for_student_translated = translated_text
-        else:
-            chatur_agent_response.summary_for_student_translated = (
-                chatur_agent_response.summary_for_student
-            )
 
         return chatur_agent_response
 
