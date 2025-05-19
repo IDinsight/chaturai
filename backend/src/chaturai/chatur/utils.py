@@ -461,8 +461,8 @@ async def submit_and_capture_api_response(
             json_response = await response.json()
 
             if "errors" in json_response:
-                # json_response["errors"] is keyed by fields with error message values.
-                message_text = " ".join(json_response["errors"].values())
+                # json_response["errors"] is keyed by fields with error messages list values.
+                message_text = " ".join(*zip(*json_response["errors"].values()))
                 is_error = True
                 is_success = False
             elif "message" in json_response:
