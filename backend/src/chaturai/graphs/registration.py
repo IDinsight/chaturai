@@ -217,7 +217,7 @@ class RegisterNewStudent(
 
             try:
                 # 2.2.
-                otp_text = extract_otp(otp_message=otp_message)
+                otp_text = extract_otp(otp_message)
 
                 # 2.3.
                 await fill_otp(otp=otp_text, page=page)
