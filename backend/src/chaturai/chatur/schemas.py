@@ -18,6 +18,7 @@ from pydantic import (
     ValidationInfo,
     field_validator,
 )
+from pydantic.json_schema import SkipJsonSchema
 
 
 class NextChatAction(str, Enum):
@@ -39,7 +40,7 @@ class BaseQuery(BaseModel):
     email: EmailStr
     otp: Optional[str] = Field(None, description="6-digit OTP sent to the student")
     user_query: Optional[str] = Field(None, description="The student's message")
-    user_query_translated: str | None = Field(
+    user_query_translated: SkipJsonSchema[str | None] = Field(
         None, description="Translated student message"
     )
     user_id: str
@@ -113,22 +114,15 @@ class RegisterStudentQuery(BaseQuery):
         """
 
         # 1.
-        if v.startswith("+"):
-            v = v[1:]
-
-        # 2.
-        if v.startswith("91") and len(v) > 10:
-            v = v[2:]
-
-        # 3.
         pattern = r"^(?:\+?91\s*)?([1-9](?:\d\s*){9})$"
         match = re.match(pattern, v)
+
         if not match:
             raise ValueError(
                 f"Expected a 10-digit number starting with 1-9 (ignoring +91 country code) but got {v}."
             )
 
-        # 4.
+        # 2.
         phone_number = match.group(1)
         stripped_phone_number = re.sub(r"\s+", "", phone_number)
         return stripped_phone_number
