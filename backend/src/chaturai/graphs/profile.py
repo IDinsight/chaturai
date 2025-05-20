@@ -146,7 +146,6 @@ class CompleteStudentProfile(
         else:
             # 3.
             otp_text = match.group()
-            logger.info(f"OTP text: {otp_text}")
 
             await fill_otp(
                 otp=otp_text,
