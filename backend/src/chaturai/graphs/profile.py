@@ -132,7 +132,7 @@ class CompleteStudentProfile(
 
         try:
             # 3.
-            otp_text = extract_otp(otp_message=otp_message)
+            otp_text = extract_otp(otp_message)
 
             # 4.
             await fill_otp(otp=otp_text, page=page)
