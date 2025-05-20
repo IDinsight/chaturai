@@ -138,22 +138,22 @@ class CompleteStudentProfile(
             await fill_otp(otp=otp_text, page=page)
 
             # 5.
-            submit_otp_response = await submit_and_capture_api_response(
+            login_otp_response = await submit_and_capture_api_response(
                 page=page, api_url=ctx.deps.login_otp_url, button_name="Login"
             )
 
-            logger.info(f"{submit_otp_response = }")
+            logger.info(f"{login_otp_response = }")
 
             if not Settings.PLAYWRIGHT_HEADLESS:
                 await asyncio.get_event_loop().run_in_executor(None, input)
 
             # 6.
-            if submit_otp_response.is_error:
+            if login_otp_response.is_error:
                 end = End(
                     ProfileCompletionResults(  # type: ignore
                         next_chat_action=NextChatAction.GO_TO_HELPDESK,
                         session_id=ctx.state.session_id,
-                        summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}",
+                        summary_of_page_results=f"Cannot complete login. {login_otp_response.message}",
                     )
                 )
             else:
