@@ -348,6 +348,8 @@ async def register_student(
             account**.
         2. An existing student indicates they wish to **register afresh and create a
             new account**.
+        3. You have just intiated the registration process for a student, and they
+            have shared an OTP to complete the registration.
 
     This assistant focuses **exclusively on registering students by creating accounts
     on the official portal.** **After calling this assistant, be sure to inform the
@@ -370,10 +372,8 @@ async def register_student(
             going on between you and the student!**
 
     🚫 DO NOT USE THIS ASSISTANT IF
-        - You are trying to **continue the registration process** for a student who
-            already initiated the registration process.
         - You are trying to **log in a student who already has an account**.
-        - You are trying to **continue the application or document submission** process
+        - You are trying to **continue the profile completion** process
             for a student with an existing account.
 
     Parameters
