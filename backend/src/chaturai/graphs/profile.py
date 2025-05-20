@@ -7,7 +7,6 @@ The profile completion graph does the following:
 
 # Standard Library
 import asyncio
-import re
 
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -28,6 +27,7 @@ from chaturai.chatur.schemas import (
     ProfileCompletionResults,
 )
 from chaturai.chatur.utils import (
+    extract_otp,
     fill_otp,
     persist_browser_and_page,
     submit_and_capture_api_response,
@@ -130,29 +130,14 @@ class CompleteStudentProfile(
             or ctx.deps.profile_completion_query.user_query_translated
         )
 
-        # 3.
-        # Look for a 6-digit number in the message, not preceded or followed by
-        # another digit.
-        match = re.search(r"(?<!\d)\d{6}(?!\d)", otp_message)
-        if not match:
-            end = End(
-                ProfileCompletionResults(  # type: ignore
-                    next_chat_action=NextChatAction.REQUEST_USER_QUERY,
-                    session_id=ctx.state.session_id,
-                    summary_of_page_results=f"Cannot complete login. OTP not found "
-                    f"in the message: {otp_message}",
-                )
-            )
-        else:
+        try:
             # 3.
-            otp_text = match.group()
-
-            await fill_otp(
-                otp=otp_text,
-                page=page,
-            )
+            otp_text = extract_otp(otp_message=otp_message)
 
             # 4.
+            await fill_otp(otp=otp_text, page=page)
+
+            # 5.
             submit_otp_response = await submit_and_capture_api_response(
                 page=page, api_url=ctx.deps.login_otp_url, button_name="Login"
             )
@@ -162,7 +147,7 @@ class CompleteStudentProfile(
             if not Settings.PLAYWRIGHT_HEADLESS:
                 await asyncio.get_event_loop().run_in_executor(None, input)
 
-            # 5.
+            # 6.
             if submit_otp_response.is_error:
                 end = End(
                     ProfileCompletionResults(  # type: ignore
@@ -183,6 +168,14 @@ class CompleteStudentProfile(
                         "unclear, ask the student what they wish to do next.",
                     )
                 )
+        except ValueError as e:
+            end = End(
+                ProfileCompletionResults(  # type: ignore
+                    next_chat_action=NextChatAction.REQUEST_USER_QUERY,
+                    session_id=ctx.state.session_id,
+                    summary_of_page_results=f"Cannot complete login. {str(e)}",
+                )
+            )
 
         # 6.
         await persist_browser_and_page(

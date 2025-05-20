@@ -27,6 +27,7 @@ from chaturai.chatur.schemas import (
     RegistrationCompleteResults,
 )
 from chaturai.chatur.utils import (
+    extract_otp,
     fill_otp,
     fill_registration_form,
     fill_roll_number,
@@ -209,45 +210,61 @@ class RegisterNewStudent(
             page = browser_session.page
 
             # 2.1.
-            await fill_otp(
-                otp=ctx.deps.register_student_query.otp
-                or ctx.deps.register_student_query.user_query_translated,
-                page=page,
+            otp_message = (
+                ctx.deps.profile_completion_query.otp
+                or ctx.deps.profile_completion_query.user_query_translated
             )
 
-            # 2.2.
-            response_json = await submit_and_capture_api_response(
-                api_url=ctx.deps.register_otp_url, button_name="Submit", page=page
-            )
-            response = await response_json
+            try:
+                # 2.2.
+                otp_text = extract_otp(otp_message=otp_message)
 
-            # 2.3.
-            if "errors" in response:
-                error_messages = " ".join(response["errors"].values())
-                end = End(  # type: ignore
-                    RegisterStudentResults(  # type: ignore
-                        next_chat_action=NextChatAction.GO_TO_HELPDESK,
-                        session_id=ctx.state.session_id,
-                        summary_of_page_results=f"Error in registration: {error_messages}",
-                    )
+                # 2.3.
+                await fill_otp(otp=otp_text, page=page)
+
+                # 2.2.
+                response_json = await submit_and_capture_api_response(
+                    api_url=ctx.deps.register_otp_url, button_name="Submit", page=page
                 )
-            else:
-                assert response["status"] == "success"
-                candidate_info = response.get("data", {}).get("candidate", {})
-                naps_id = candidate_info["code"]
-                activation_link_expiry = candidate_info["activation_link_expiry_date"]
+                response = await response_json
+
+                # 2.3.
+                if "errors" in response:
+                    error_messages = " ".join(response["errors"].values())
+                    end = End(  # type: ignore
+                        RegisterStudentResults(  # type: ignore
+                            next_chat_action=NextChatAction.GO_TO_HELPDESK,
+                            session_id=ctx.state.session_id,
+                            summary_of_page_results=f"Error in registration: {error_messages}",
+                        )
+                    )
+                else:
+                    assert response["status"] == "success"
+                    candidate_info = response.get("data", {}).get("candidate", {})
+                    naps_id = candidate_info["code"]
+                    activation_link_expiry = candidate_info[
+                        "activation_link_expiry_date"
+                    ]
+                    end = End(
+                        RegistrationCompleteResults(
+                            activation_link_expiry=activation_link_expiry,
+                            naps_id=naps_id,
+                            session_id=ctx.state.session_id,
+                            summary_of_page_results="Registration completed successfully. "
+                            f"Your NAPS ID is {naps_id}. "
+                            f"Please prompt the student to check their email for the "
+                            f"activation link. Remind them that they must click on the "
+                            f"link before {activation_link_expiry} to be able to log in, "
+                            f"and complete their candidate profile in order to start "
+                            f"applying for apprenticeships.",
+                        )
+                    )
+            except ValueError as e:
                 end = End(
-                    RegistrationCompleteResults(  # type: ignore
-                        activation_link_expiry=activation_link_expiry,
-                        naps_id=naps_id,
+                    RegisterStudentResults(
+                        next_chat_action=NextChatAction.REQUEST_USER_QUERY,
                         session_id=ctx.state.session_id,
-                        summary_of_page_results="Registration completed successfully. "
-                        f"Your NAPS ID is {naps_id}. "
-                        f"Please prompt the student to check their email for the "
-                        f"activation link. Remind them that they must click on the "
-                        f"link before {activation_link_expiry} to be able to log in, "
-                        f"and complete their candidate profile in order to start "
-                        f"applying for apprenticeships.",
+                        summary_of_page_results=f"Cannot complete registration: {str(e)}",
                     )
                 )
 

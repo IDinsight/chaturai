@@ -4,6 +4,7 @@
 import asyncio
 import json
 import random
+import re
 
 from contextlib import suppress
 from functools import wraps
@@ -72,6 +73,28 @@ def check_chatur_agent_translation_response(content: str) -> None:
     assert generated_response[
         "translated_text"
     ], "`translated_text` key must not be empty."
+
+
+def extract_otp(message: str) -> str:
+    """Look for a 6-digit number in the message, not preceded or followed by
+    another digit.
+
+    Parameters
+    ----------
+    message
+        The message containing the OTP.
+
+    Returns
+    -------
+    str
+        The extracted OTP.
+    """
+
+    match = re.search(r"(?<!\d)\d{6}(?!\d)", message)
+    if match:
+        return match.group(0)
+    else:
+        raise ValueError(f"OTP not found in the message: {message}")
 
 
 async def fill_login_email(*, email: str, page: Page, url: str) -> None:
@@ -380,7 +403,7 @@ async def solve_and_submit_captcha_with_retries(
     """
 
     for attempt in range(max_retries):
-        await page.wait_for_timeout(random.randint(1500, 3000))
+        await page.wait_for_timeout(random.randint(1000, 2000))
         await solve_and_fill_captcha(page=page)
 
         if not Settings.PLAYWRIGHT_HEADLESS:
