@@ -93,8 +93,8 @@ def extract_otp(message: str) -> str:
     match = re.search(r"(?<!\d)\d{6}(?!\d)", message)
     if match:
         return match.group(0)
-    else:
-        raise ValueError(f"OTP not found in the message: {message}")
+
+    raise ValueError(f"OTP not found in the message: {message}")
 
 
 async def fill_login_email(*, email: str, page: Page, url: str) -> None:
@@ -523,21 +523,11 @@ async def submit_and_capture_api_response(
 
             # Check for error toasts
             error_locator = page.locator("#toast-container .toast-error")
-            is_error_present = await error_locator.first.is_visible()
-
-            if is_error_present:
-                is_error = True  # Set main error flag
-            else:
-                is_error = False
+            is_error = await error_locator.first.is_visible()
 
             # Check for success toast
             success_locator = page.locator("#toast-container .toast-success")
-            is_success_present = await success_locator.is_visible()
-
-            if is_success_present:
-                is_success = True  # Set main success flag
-            else:
-                is_success = False
+            is_success = await success_locator.is_visible()
 
             # Get the message text across all toasts.
             assert toast_message is not None
