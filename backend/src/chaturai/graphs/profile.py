@@ -27,6 +27,7 @@ from chaturai.chatur.schemas import (
     ProfileCompletionResults,
 )
 from chaturai.chatur.utils import (
+    extract_otp,
     fill_otp,
     persist_browser_and_page,
     submit_and_capture_api_response,
@@ -124,45 +125,59 @@ class CompleteStudentProfile(
         page = browser_session.page
 
         # 2.
-        await fill_otp(
-            otp=ctx.deps.profile_completion_query.otp
-            or ctx.deps.profile_completion_query.user_query_translated,
-            page=page,
+        otp_message = (
+            ctx.deps.profile_completion_query.otp
+            or ctx.deps.profile_completion_query.user_query_translated
         )
 
-        # 3.
-        submit_otp_response = await submit_and_capture_api_response(
-            page=page, api_url=ctx.deps.login_otp_url, button_name="Login"
-        )
+        try:
+            # 3.
+            otp_text = extract_otp(otp_message)
 
-        logger.info(f"{submit_otp_response = }")
+            # 4.
+            await fill_otp(otp=otp_text, page=page)
 
-        if not Settings.PLAYWRIGHT_HEADLESS:
-            await asyncio.get_event_loop().run_in_executor(None, input)
-
-        # 4.
-        if submit_otp_response.is_error:
-            end = End(
-                ProfileCompletionResults(  # type: ignore
-                    next_chat_action=NextChatAction.GO_TO_HELPDESK,
-                    session_id=ctx.state.session_id,
-                    summary_of_page_results=f"Cannot complete login. {submit_otp_response.message}",
-                )
+            # 5.
+            login_otp_response = await submit_and_capture_api_response(
+                page=page, api_url=ctx.deps.login_otp_url, button_name="Login"
             )
-        else:
-            # TODO: Do not return an End object but pass on to other assistants.
+
+            logger.info(f"{login_otp_response = }")
+
+            if not Settings.PLAYWRIGHT_HEADLESS:
+                await asyncio.get_event_loop().run_in_executor(None, input)
+
+            # 6.
+            if login_otp_response.is_error:
+                end = End(
+                    ProfileCompletionResults(  # type: ignore
+                        next_chat_action=NextChatAction.GO_TO_HELPDESK,
+                        session_id=ctx.state.session_id,
+                        summary_of_page_results=f"Cannot complete login. {login_otp_response.message}",
+                    )
+                )
+            else:
+                # TODO: Do not return an End object but pass on to other assistants.
+                end = End(
+                    ProfileCompletionResults(  # type: ignore
+                        next_chat_action=NextChatAction.REQUEST_USER_QUERY,
+                        session_id=ctx.state.session_id,
+                        summary_of_page_results="OTP successfully entered. "
+                        "Determine the next best assistant to call based on the student's "
+                        "latest message and your conversation with the student so far. If "
+                        "unclear, ask the student what they wish to do next.",
+                    )
+                )
+        except ValueError as e:
             end = End(
                 ProfileCompletionResults(  # type: ignore
                     next_chat_action=NextChatAction.REQUEST_USER_QUERY,
                     session_id=ctx.state.session_id,
-                    summary_of_page_results="OTP successfully entered. "
-                    "Determine the next best assistant to call based on the student's "
-                    "latest message and your conversation with the student so far. If "
-                    "unclear, ask the student what they wish to do next.",
+                    summary_of_page_results=f"Cannot complete login. {str(e)}",
                 )
             )
 
-        # 5.
+        # 6.
         await persist_browser_and_page(
             browser=browser_session.browser,  # Reuse the same browser here!
             browser_session_store=ctx.deps.browser_session_store,

@@ -4,6 +4,7 @@
 import asyncio
 import json
 import random
+import re
 
 from contextlib import suppress
 from functools import wraps
@@ -72,6 +73,28 @@ def check_chatur_agent_translation_response(content: str) -> None:
     assert generated_response[
         "translated_text"
     ], "`translated_text` key must not be empty."
+
+
+def extract_otp(message: str) -> str:
+    """Look for a 6-digit number in the message, not preceded or followed by
+    another digit.
+
+    Parameters
+    ----------
+    message
+        The message containing the OTP.
+
+    Returns
+    -------
+    str
+        The extracted OTP.
+    """
+
+    match = re.search(r"(?<!\d)\d{6}(?!\d)", message)
+    if match:
+        return match.group(0)
+
+    raise ValueError(f"OTP not found in the message: {message}")
 
 
 async def fill_login_email(*, email: str, page: Page, url: str) -> None:
@@ -380,7 +403,7 @@ async def solve_and_submit_captcha_with_retries(
     """
 
     for attempt in range(max_retries):
-        await page.wait_for_timeout(random.randint(1500, 3000))
+        await page.wait_for_timeout(random.randint(1000, 2000))
         await solve_and_fill_captcha(page=page)
 
         if not Settings.PLAYWRIGHT_HEADLESS:
@@ -461,8 +484,8 @@ async def submit_and_capture_api_response(
             json_response = await response.json()
 
             if "errors" in json_response:
-                # json_response["errors"] is keyed by fields with error message values.
-                message_text = " ".join(json_response["errors"].values())
+                # json_response["errors"] is keyed by fields with error messages list values.
+                message_text = " ".join(*zip(*json_response["errors"].values()))
                 is_error = True
                 is_success = False
             elif "message" in json_response:
@@ -497,21 +520,26 @@ async def submit_and_capture_api_response(
             toast_message = await page.wait_for_selector(
                 "#toast-container .toast-message", state="attached", timeout=timeout
             )
-            # Check if it's an error or success toast.
-            is_error = await page.locator("#toast-container .toast-error").is_visible()
-            is_success = await page.locator(
-                "#toast-container .toast-success"
-            ).is_visible()
 
-            # Get the message text.
+            # Check for error toasts
+            error_locator = page.locator("#toast-container .toast-error")
+            is_error = await error_locator.first.is_visible()
+
+            # Check for success toast
+            success_locator = page.locator("#toast-container .toast-success")
+            is_success = await success_locator.is_visible()
+
+            # Get the message text across all toasts.
             assert toast_message is not None
             message_text = await toast_message.text_content()
             assert message_text is not None
             message_text = message_text.strip()
 
-            # Close the toast message to avoid having multiple toasts.
-            # TODO: Handle multiple toasts.
-            await page.locator("#toast-container .toast-error").click()
+            # Close current toast messages
+            all_toasts = await page.locator("#toast-container .toast-message").all()
+            for toast_handle in all_toasts:
+                if await toast_handle.is_visible():
+                    await toast_handle.click(timeout=100)
 
             return SubmitButtonResponse(
                 api_response=None,
