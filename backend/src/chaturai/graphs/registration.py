@@ -185,6 +185,7 @@ class RegisterNewStudent(
         """
 
         # 1.
+        # TODO: implement this block once the ITI student details are available.
         if ctx.deps.register_student_query.is_iti_student:
             browser, page, iti_student_details = await self.get_iti_student_details(
                 ctx=ctx
@@ -192,16 +193,8 @@ class RegisterNewStudent(
             logger.info(f"{iti_student_details = }")
             if not Settings.PLAYWRIGHT_HEADLESS:
                 await asyncio.get_event_loop().run_in_executor(None, input)
-        else:
-            browser = await ctx.deps.browser.launch(
-                headless=PLAYWRIGHT_HEADLESS,
-                channel=(
-                    "chromium-headless-shell" if PLAYWRIGHT_HEADLESS else "chromium"
-                ),
-            )
-            page = await browser.new_page()
 
-        # 2.
+        # 1.
         browser_session = await ctx.deps.browser_session_store.get(
             session_id=ctx.state.session_id
         )
@@ -209,38 +202,38 @@ class RegisterNewStudent(
         if browser_session:
             page = browser_session.page
 
-            # 2.1.
+            # 1.1.
             otp_message = (
-                ctx.deps.profile_completion_query.otp
-                or ctx.deps.profile_completion_query.user_query_translated
+                ctx.deps.register_student_query.otp
+                or ctx.deps.register_student_query.user_query_translated
             )
 
             try:
-                # 2.2.
+                # 1.2.
                 otp_text = extract_otp(otp_message)
 
-                # 2.3.
+                # 1.3.
                 await fill_otp(otp=otp_text, page=page)
 
-                # 2.2.
-                response_json = await submit_and_capture_api_response(
+                # 1.4.
+                register_otp_response = await submit_and_capture_api_response(
                     api_url=ctx.deps.register_otp_url, button_name="Submit", page=page
                 )
-                response = await response_json
+
+                logger.info(f"{register_otp_response = }")
 
                 # 2.3.
-                if "errors" in response:
-                    error_messages = " ".join(response["errors"].values())
+                if register_otp_response.is_error:
                     end = End(  # type: ignore
                         RegisterStudentResults(  # type: ignore
                             next_chat_action=NextChatAction.GO_TO_HELPDESK,
                             session_id=ctx.state.session_id,
-                            summary_of_page_results=f"Error in registration: {error_messages}",
+                            summary_of_page_results=f"Error in registration: {register_otp_response.message}",
                         )
                     )
                 else:
-                    assert response["status"] == "success"
-                    candidate_info = response.get("data", {}).get("candidate", {})
+                    api_response = register_otp_response.api_response
+                    candidate_info = api_response.get("data", {}).get("candidate", {})
                     naps_id = candidate_info["code"]
                     activation_link_expiry = candidate_info[
                         "activation_link_expiry_date"
@@ -268,7 +261,7 @@ class RegisterNewStudent(
                     )
                 )
 
-            # 2.4.
+            # 1.4.
             await persist_browser_and_page(
                 browser=browser_session.browser,  # Reuse the same browser here!
                 browser_session_store=ctx.deps.browser_session_store,
@@ -279,6 +272,13 @@ class RegisterNewStudent(
             )
 
             return end  # type: ignore
+
+        # 2.
+        browser = await ctx.deps.browser.launch(
+            headless=PLAYWRIGHT_HEADLESS,
+            channel=("chromium-headless-shell" if PLAYWRIGHT_HEADLESS else "chromium"),
+        )
+        page = await browser.new_page()
 
         # 3.
         await fill_registration_form(
@@ -295,7 +295,7 @@ class RegisterNewStudent(
             )
             message = (
                 "Initiated account creation successfully. "
-                "Please request OTP from the student. It should be sent to the "
+                "Ask the student to share the OTP. It should be sent to the "
                 "mobile number or the email address."
             )
             next_action = NextChatAction.REQUEST_OTP
@@ -348,6 +348,8 @@ async def register_student(
             account**.
         2. An existing student indicates they wish to **register afresh and create a
             new account**.
+        3. You have just intiated the registration process for a student, and they
+            have shared an OTP to complete the registration.
 
     This assistant focuses **exclusively on registering students by creating accounts
     on the official portal.** **After calling this assistant, be sure to inform the
@@ -370,10 +372,8 @@ async def register_student(
             going on between you and the student!**
 
     🚫 DO NOT USE THIS ASSISTANT IF
-        - You are trying to **continue the registration process** for a student who
-            already initiated the registration process.
         - You are trying to **log in a student who already has an account**.
-        - You are trying to **continue the application or document submission** process
+        - You are trying to **continue the profile completion** process
             for a student with an existing account.
 
     Parameters
