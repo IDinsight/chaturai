@@ -12,6 +12,7 @@ from chaturai.chatur.schemas import ChaturFlowResults, ChaturQueryUnion
 from chaturai.chatur.utils import translation_sandwich
 from chaturai.graphs.chatur import chatur
 from chaturai.utils.chat import AsyncChatSessionManager, get_chat_session_manager
+from chaturai.utils.general import llm_enhanced_validation
 
 TAG_METADATA = {
     "description": "_Requires API key._ Chatur automation flow",
@@ -20,6 +21,7 @@ TAG_METADATA = {
 router = APIRouter(tags=[TAG_METADATA["name"]])
 
 
+@llm_enhanced_validation(pydantic_models=ChaturQueryUnion)
 @router.post("/chatur-flow", response_model=ChaturFlowResults)
 @logfire.instrument("Running Chatur flow endpoint...")
 @translation_sandwich

@@ -25,7 +25,11 @@ from pathlib import Path
 import typer
 import uvicorn
 
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from loguru import logger
+from pydantic import ValidationError
 from uvicorn_worker import UvicornWorker
 
 # Append the framework path. NB: This is required if this entry point is invoked from
@@ -41,6 +45,7 @@ if __name__ == "__main__":
 # Package Library
 from chaturai import create_app
 from chaturai.config import Settings
+from chaturai.utils.general import unwrap_union_type
 
 assert (
     sys.version_info.major >= 3 and sys.version_info.minor >= 11
@@ -57,6 +62,86 @@ class Worker(UvicornWorker):
     """Custom worker class to allow `root_path` to be passed to Uvicorn."""
 
     CONFIG_KWARGS = {"root_path": Settings.PATHS_BACKEND_ROOT}
+
+
+@app.exception_handler(RequestValidationError)
+async def global_validation_error_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """Handles all FastAPI validation errors. If the endpoint is annotated with
+    LLM-enhanced validation metadata, it revalidates the raw input against the expected
+    Pydantic model(s) and produces a contextual explanation via LLM.
+
+    NB: If this handler is called, it means that the initial validation by FastAPI has
+    already failed. Here, we are re-validating again using the Pydantic model(s) and
+    contextualizing the error(s) using LLM for the service that invoked the endpoint.
+
+    Parameters
+    ----------
+    request
+        The FastAPI request object.
+    exc
+        The FastAPI validation error object.
+
+    Returns
+    -------
+    JSONResponse
+        A JSON response containing the validation error details and a contextual
+        explanation.
+    """
+
+    endpoint = getattr(request.scope["route"], "endpoint", None)
+
+    if endpoint and getattr(endpoint, "_pydantic_models", False):
+        all_errors = []
+        pydantic_models = getattr(endpoint, "_pydantic_models", None)
+        raw_input = await request.json()
+        if pydantic_models:
+            for pydantic_model in unwrap_union_type(model_union=pydantic_models):
+                try:
+                    pydantic_model(**raw_input)
+                except ValidationError as e:
+                    all_errors.append((pydantic_model.__name__, e.errors()))
+                except Exception as e:  # pylint: disable=W0718
+                    all_errors.append(
+                        (
+                            pydantic_model.__name__,
+                            [
+                                {
+                                    "input": raw_input,
+                                    "loc": ("__exception__",),
+                                    "msg": str(e),
+                                    "type": "runtime_exception",
+                                }
+                            ],
+                        )
+                    )
+
+            logger.error("The following errors were encountered during validation:")
+            for model_name, errors in all_errors:
+                logger.error(f"  → {model_name}:")
+                for err in errors:
+                    logger.error(f"    - {err}")
+
+            error_summary = ""  # await explain_with_llm(raw_input, all_errors)
+
+            return JSONResponse(
+                content={
+                    "all_errors": [
+                        {"model": model_name, "errors": errors}
+                        for model_name, errors in all_errors
+                    ],
+                    "error_summary": error_summary,
+                    "message": "Validation failed",
+                },
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+    # Default FastAPI validation error structure for non-enhanced endpoints.
+    return JSONResponse(
+        content={"detail": exc.errors()},
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    )
 
 
 @cli.command()
