@@ -296,7 +296,7 @@ class RegisterNewStudent(
             message = (
                 "Initiated account creation successfully. "
                 "Ask the student to share the OTP. It should be sent to the "
-                "mobile number or the email address."
+                "mobile number."
             )
             next_action = NextChatAction.REQUEST_OTP
         except RuntimeError as e:
