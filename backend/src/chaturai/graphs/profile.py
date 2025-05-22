@@ -302,9 +302,7 @@ async def complete_profile(
     )
 
     # 7. Execute the graph until completion.
-    graph_run_results = await graph.run(
-        CompleteStudentProfile(), deps=deps, persistence=fsp, state=state
-    )
+    await graph.run(CompleteStudentProfile(), deps=deps, persistence=fsp, state=state)
 
     # 8. Update the chat history for the agent.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
@@ -322,7 +320,7 @@ async def complete_profile(
         session_id=session_id,
     )
 
-    return graph_run_results.output
+    return state.profile_completion_results
 
 
 async def load_state(
