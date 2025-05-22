@@ -93,7 +93,8 @@ class RegisterStudentQuery(BaseQuery):
         """Validate the mobile number as follows:
 
         1. Remove leading plus sign if present.
-        2. If it starts with country code '91' and is longer than 10 digits, strip it off.
+        2. If it starts with country code '91' and is longer than 10 digits, strip it
+            off.
         3. Ensure the number is exactly 10 digits.
         4. Ensure the number starts with 6, 7, 8, or 9.
 
@@ -177,6 +178,7 @@ class ChaturFlowResults(BaseModel):
     last_graph_run_results: Optional[Any] = None
     next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
     require_student_input: bool
+    session_id: int | str
     summary_for_student: str
     summary_for_student_translated: str
     user_id: str

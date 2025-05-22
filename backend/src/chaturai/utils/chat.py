@@ -208,6 +208,38 @@ class AsyncChatSessionManager:
         )
         return chat_params
 
+    async def check_if_chat_session_exists(
+        self, *, namespace: str, signed: bool = True, user_id: str
+    ) -> tuple[bool, int | str]:
+        """Check if the chat session exists in Redis.
+
+        Parameters
+        ----------
+        namespace
+            The namespace to use for generating the chat session ID. This is used to
+            uniquely identify the chat session within a specific namespace (e.g.,
+            "chat").
+        signed
+            Specifies whether to return a signed integer for the session ID.
+        user_id
+            The ID of the user initiating the session. This is used to uniquely identify
+            the user for whom the session ID is being generated.
+
+        Returns
+        -------
+        tuple[bool, int | str]
+            A tuple containing a boolean indicating whether the chat session exists and
+            the session ID.
+        """
+
+        context = self._build_context(
+            namespace=namespace, signed=signed, user_id=user_id
+        )
+        session_id = self._hash_context_to_int32(context=context, signed=signed)
+        redis_key = self.get_redis_key(session_id=session_id)
+        chat_session_exists = bool(await self.redis_client.exists(redis_key))
+        return chat_session_exists, session_id
+
     async def dump_chat_session_to_file(self, *, session_id: int | str) -> None:
         """Dump a chat session to a timestamped JSON file asynchronously.
 

@@ -63,7 +63,7 @@ app = create_app()
 class Worker(UvicornWorker):
     """Custom worker class to allow `root_path` to be passed to Uvicorn."""
 
-    CONFIG_KWARGS = {"root_path": Settings.PATHS_BACKEND_ROOT}
+    CONFIG_KWARGS = {"root_path": os.getenv("PATHS_BACKEND_ROOT", "")}
 
 
 @app.exception_handler(RequestValidationError)
@@ -95,7 +95,9 @@ async def global_validation_error_handler(
     endpoint = getattr(request.scope["route"], "endpoint", None)
 
     if endpoint and getattr(endpoint, "_pydantic_models", False):
-        all_errors = await revalidate_request(endpoint=endpoint, request=request)
+        all_errors = await revalidate_request_for_errors(
+            endpoint=endpoint, request=request
+        )
         if all_errors:
             error_summary = ""  # await explain_with_llm(raw_input, all_errors)
 
@@ -118,10 +120,11 @@ async def global_validation_error_handler(
     )
 
 
-async def revalidate_request(
+async def revalidate_request_for_errors(
     *, endpoint: Callable[..., Awaitable[Any]], request: Request
 ) -> list[tuple[str, list[ErrorDetails]]]:
-    """Revalidates the request input against the expected Pydantic model(s).
+    """Revalidate the request input against the expected Pydantic model(s) for error
+    handling.
 
     Parameters
     ----------
@@ -204,7 +207,7 @@ def start(host: str = "0.0.0.0", port: int = 8000, reload: bool = True) -> None:
         log_level=Settings.LOGGING_LOG_LEVEL.lower(),
         reload=reload,
         reload_dirs=[str(project_dir / "backend" / "src")],
-        root_path=Settings.PATHS_BACKEND_ROOT,
+        root_path=os.getenv("PATHS_BACKEND_ROOT", ""),
     )
 
 

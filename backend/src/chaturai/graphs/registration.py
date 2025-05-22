@@ -43,16 +43,21 @@ from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import AsyncChatSessionManager, log_chat_history
 from chaturai.utils.general import telemetry_timer
 
+AGENTS_REGISTER_STUDENT = Settings.AGENTS_REGISTER_STUDENT
+GRAPHS_REGISTER_STUDENT = Settings.GRAPHS_REGISTER_STUDENT
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
-TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
+REDIS_CACHE_PREFIX_REGISTER_STUDENT = Settings.REDIS_CACHE_PREFIX_REGISTER_STUDENT
+TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 
 
 @dataclass
 class RegisterStudentState:
     """The state tracks the progress of the student registration graph."""
 
-    session_id: int | str
+    registration_results: RegisterStudentResults | RegistrationCompleteResults = field(
+        default_factory=dict
+    )
 
 
 @dataclass
@@ -63,11 +68,9 @@ class RegisterStudentDeps:
 
     browser: BrowserType
     browser_session_store: BrowserSessionStore
-    chat_history: list[dict[str, str | None]]
-    chat_params: dict[str, Any]
-    explanation_for_call: str
     redis_client: aioredis.Redis
     register_student_query: RegisterStudentQuery
+    session_id: int | str
 
     candidate_details_url: str = (
         "https://api.apprenticeshipindia.gov.in/auth/get-candidate-details-from-ncvt"
@@ -77,23 +80,10 @@ class RegisterStudentDeps:
         "https://api.apprenticeshipindia.gov.in/auth/register-get-otp"
     )
     register_otp_url: str = "https://api.apprenticeshipindia.gov.in/auth/register-otp"
-    role_labels: dict[str, str] = field(
-        default_factory=lambda: {
-            "assistant": "Register Student Agent",
-            "system": "System",
-            "user": "Student",
-        }
-    )
 
 
 @dataclass
-class RegisterNewStudent(
-    BaseNode[
-        RegisterStudentState,
-        RegisterStudentDeps,
-        RegisterStudentResults | RegistrationCompleteResults,
-    ]
-):
+class RegisterNewStudent(BaseNode[RegisterStudentState, RegisterStudentDeps, dict]):
     """This node registers a new student."""
 
     docstring_notes = True
@@ -152,7 +142,7 @@ class RegisterNewStudent(
     async def run(
         self, ctx: GraphRunContext[RegisterStudentState, RegisterStudentDeps]
     ) -> Annotated[
-        End[RegisterStudentResults | RegistrationCompleteResults],
+        End[dict],
         Edge(label="Register a new student on the candidate portal"),
     ]:
         """The run proceeds as follows:
@@ -180,8 +170,8 @@ class RegisterNewStudent(
 
         Returns
         -------
-        End[RegisterStudentResults] | RegistrationCompleteResults]
-            The results of the graph run or the next node in the graph run.
+        End[dict]
+            The end result of the graph run.
         """
 
         # 1.
@@ -194,28 +184,26 @@ class RegisterNewStudent(
             if not Settings.PLAYWRIGHT_HEADLESS:
                 await asyncio.get_event_loop().run_in_executor(None, input)
 
-        # 1.
+        # 2.
         browser_session = await ctx.deps.browser_session_store.get(
-            session_id=ctx.state.session_id
+            session_id=ctx.deps.session_id
         )
 
+        # 2.1.
         if browser_session:
             page = browser_session.page
 
-            # 1.1.
             otp_message = (
                 ctx.deps.register_student_query.otp
                 or ctx.deps.register_student_query.user_query_translated
             )
 
             try:
-                # 1.2.
-                otp_text = extract_otp(otp_message)
+                otp_text = extract_otp(message=otp_message)
 
-                # 1.3.
                 await fill_otp(otp=otp_text, page=page)
 
-                # 1.4.
+                # 2.2.
                 register_otp_response = await submit_and_capture_api_response(
                     api_url=ctx.deps.register_otp_url, button_name="Submit", page=page
                 )
@@ -224,12 +212,10 @@ class RegisterNewStudent(
 
                 # 2.3.
                 if register_otp_response.is_error:
-                    end = End(  # type: ignore
-                        RegisterStudentResults(  # type: ignore
-                            next_chat_action=NextChatAction.GO_TO_HELPDESK,
-                            session_id=ctx.state.session_id,
-                            summary_of_page_results=f"Error in registration: {register_otp_response.message}",
-                        )
+                    ctx.state.registration_results = RegisterStudentResults(
+                        next_chat_action=NextChatAction.GO_TO_HELPDESK,
+                        session_id=ctx.deps.session_id,
+                        summary_of_page_results=f"Error in registration: {register_otp_response.message}",
                     )
                 else:
                     api_response = register_otp_response.api_response
@@ -238,49 +224,44 @@ class RegisterNewStudent(
                     activation_link_expiry = candidate_info[
                         "activation_link_expiry_date"
                     ]
-                    end = End(
-                        RegistrationCompleteResults(
-                            activation_link_expiry=activation_link_expiry,
-                            naps_id=naps_id,
-                            session_id=ctx.state.session_id,
-                            summary_of_page_results="Registration completed successfully. "
-                            f"Your NAPS ID is {naps_id}. "
-                            f"Please prompt the student to check their email for the "
-                            f"activation link. Remind them that they must click on the "
-                            f"link before {activation_link_expiry} to be able to log in, "
-                            f"and complete their candidate profile in order to start "
-                            f"applying for apprenticeships.",
-                        )
+                    ctx.state.registration_results = RegistrationCompleteResults(
+                        activation_link_expiry=activation_link_expiry,
+                        naps_id=naps_id,
+                        session_id=ctx.deps.session_id,
+                        summary_of_page_results="Registration completed successfully. "
+                        f"Your NAPS ID is {naps_id}. "
+                        f"Please prompt the student to check their email for the "
+                        f"activation link. Remind them that they must click on the "
+                        f"link before {activation_link_expiry} to be able to log in, "
+                        f"and complete their candidate profile in order to start "
+                        f"applying for apprenticeships.",
                     )
             except ValueError as e:
-                end = End(
-                    RegisterStudentResults(
-                        next_chat_action=NextChatAction.REQUEST_USER_QUERY,
-                        session_id=ctx.state.session_id,
-                        summary_of_page_results=f"Cannot complete registration: {str(e)}",
-                    )
+                ctx.state.registration_results = RegisterStudentResults(
+                    next_chat_action=NextChatAction.REQUEST_USER_QUERY,
+                    session_id=ctx.deps.session_id,
+                    summary_of_page_results=f"Cannot complete registration: {str(e)}",
                 )
 
-            # 1.4.
+            # 2.4.
             await persist_browser_and_page(
                 browser=browser_session.browser,  # Reuse the same browser here!
                 browser_session_store=ctx.deps.browser_session_store,
                 overwrite_browser_session=True,  # Update if the page changed at all!
                 page=page,
                 reset_ttl=True,
-                session_id=ctx.state.session_id,
+                session_id=ctx.deps.session_id,
             )
 
-            return end  # type: ignore
+            return End({})
 
-        # 2.
+        # 3.
         browser = await ctx.deps.browser.launch(
             headless=PLAYWRIGHT_HEADLESS,
             channel=("chromium-headless-shell" if PLAYWRIGHT_HEADLESS else "chromium"),
         )
         page = await browser.new_page()
 
-        # 3.
         await fill_registration_form(
             email=str(ctx.deps.register_student_query.email),
             mobile_number=ctx.deps.register_student_query.mobile_number,
@@ -303,12 +284,10 @@ class RegisterNewStudent(
             message = f"Could not initiate registration. {str(e)}"
             next_action = NextChatAction.GO_TO_HELPDESK
 
-        end = End(  # type: ignore
-            RegisterStudentResults(  # type: ignore
-                next_chat_action=next_action,
-                session_id=ctx.state.session_id,
-                summary_of_page_results=message,
-            )
+        ctx.state.registration_results = RegisterStudentResults(
+            next_chat_action=next_action,
+            session_id=ctx.deps.session_id,
+            summary_of_page_results=message,
         )
 
         # 5.
@@ -317,10 +296,60 @@ class RegisterNewStudent(
             browser_session_store=ctx.deps.browser_session_store,
             overwrite_browser_session=False,
             page=page,
-            session_id=ctx.state.session_id,
+            session_id=ctx.deps.session_id,
         )
 
-        return end  # type: ignore
+        return End({})
+
+
+async def load_state(
+    *,
+    persistence: FullStatePersistence,
+    redis_client: aioredis.Redis,
+    reset_state: bool,
+    session_id: int | str,
+) -> tuple[str, RegisterStudentState]:
+    """Load state for the graph.
+
+    The process is as follows:
+
+    1. If a previous state does not exist, then we initialize a new, clean state.
+    2. Otherwise, we load the last state for the graph.
+
+    NB: The Register Student graph currently overwrites its state each time it's
+    executed. However, we leave the option to reload previous states here for future
+    use.
+
+    Parameters
+    ----------
+    persistence
+        The persistence object for the graph.
+    redis_client
+        The Redis client.
+    reset_state
+        Specifies whether to reset the state.
+    session_id
+        The session ID for the graph.
+
+    Returns
+    -------
+    tuple[str, RegisterStudentState]
+        The Redis cache key and the state for the graph.
+    """
+
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_REGISTER_STUDENT}_{session_id}"
+
+    # 1.
+    if reset_state or not await redis_client.exists(redis_cache_key):
+        return redis_cache_key, RegisterStudentState()
+
+    # 2.
+    raw_snapshot = await redis_client.get(redis_cache_key)
+    persistence.load_json(raw_snapshot)
+    snapshot = await persistence.load_all()
+    state = snapshot[-1].state
+
+    return redis_cache_key, state
 
 
 @telemetry_timer(metric_fn=register_student_agent_hist, unit="s")
@@ -330,7 +359,6 @@ async def register_student(
     browser_session_store: BrowserSessionStore,
     chatur_query: RegisterStudentQuery,
     csm: AsyncChatSessionManager,
-    explanation_for_call: str = "No explanation provided.",
     generate_graph_diagram: bool = False,
     redis_client: aioredis.Redis,
     reset_chat_session: bool = False,
@@ -386,8 +414,6 @@ async def register_student(
         The query object.
     csm
         An async chat session manager that manages the chat sessions for each user.
-    explanation_for_call
-        An explanation as to why the assistant is being called.
     generate_graph_diagram
         Specifies whether to generate ALL graph diagrams using the Mermaid API (free).
     redis_client
@@ -406,15 +432,15 @@ async def register_student(
     chatur_query.user_query_translated = (
         chatur_query.user_query_translated or chatur_query.otp
     )
-    chatur_query.user_id = f"Register_Student_Agent_Graph_{chatur_query.user_id}"
+    chatur_query.user_id = f"{GRAPHS_REGISTER_STUDENT}_{chatur_query.user_id}"
 
     # 1. Initialize the chat history, chat parameters, and the session ID for the agent.
-    chat_history, chat_params, session_id = await csm.init_chat_session(
+    chat_history, _, session_id = await csm.init_chat_session(
         model_name="chat",
-        namespace="register-student-agent",
+        namespace=AGENTS_REGISTER_STUDENT,
         reset_chat_session=reset_chat_session,
         system_message=ChaturPrompts.system_messages["register_student_agent"],
-        text_generation_params=TEXT_GENERATION_GEMINI,
+        text_generation_params=TEXT_GENERATION_BEDROCK,
         topic=None,
         user_id=chatur_query.user_id,
     )
@@ -422,7 +448,7 @@ async def register_student(
     # 2. Create the graph.
     graph = Graph(
         auto_instrument=True,
-        name="Register_Student_Agent_Graph",
+        name=GRAPHS_REGISTER_STUDENT,
         nodes=[RegisterNewStudent],
         state_type=RegisterStudentState,
     )
@@ -435,30 +461,40 @@ async def register_student(
     deps = RegisterStudentDeps(
         browser=browser,
         browser_session_store=browser_session_store,
-        chat_history=chat_history,
-        chat_params=chat_params,
-        explanation_for_call=explanation_for_call,
         redis_client=redis_client,
         register_student_query=chatur_query,
+        session_id=session_id,
     )
 
     # 5. Set graph persistence.
     fsp = FullStatePersistence(deep_copy=True)
     fsp.set_graph_types(graph)
 
-    # 6. Execute the graph until completion.
-    graph_run_results = await graph.run(
+    # 6. Load the appropriate graph state.
+    redis_cache_key, state = await load_state(
+        persistence=fsp,
+        redis_client=redis_client,
+        reset_state=reset_chat_session,
+        session_id=session_id,
+    )
+
+    # 7. Execute the graph until completion.
+    await graph.run(
         RegisterNewStudent(),
         deps=deps,
         persistence=fsp,
-        state=RegisterStudentState(session_id=session_id),
+        state=state,
     )
 
-    # 7. Update the chat history.
+    # 8. Update the chat history.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
-    # 8. Log the agent chat history at the end of each step (just for debugging
+    # 9. Save the graph snapshot to Redis.
+    snapshot_json = fsp.dump_json()
+    await redis_client.set(redis_cache_key, snapshot_json)
+
+    # 10. Log the agent chat history at the end of each step (just for debugging
     # purposes).
     log_chat_history(
         chat_history=chat_history,
@@ -466,4 +502,4 @@ async def register_student(
         session_id=session_id,
     )
 
-    return graph_run_results.output
+    return state.registration_results

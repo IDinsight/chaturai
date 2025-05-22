@@ -28,7 +28,7 @@ router = APIRouter(tags=[TAG_METADATA["name"]])
 async def chatur_flow(
     chatur_query: ChaturQueryUnion,
     request: Request,
-    api_key: str = Depends(get_api_key),
+    api_key: str = Depends(get_api_key),  # pylint: disable=W0613
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     generate_graph_diagrams: bool = False,
     reset_chat_and_graph_state: bool = False,

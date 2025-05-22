@@ -33,6 +33,7 @@ from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.litellm_ import get_acompletion
 
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
+REDIS_CACHE_PREFIX_CHAT_CLEANED = Settings.REDIS_CACHE_PREFIX_CHAT_CLEANED
 TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 
 
@@ -75,7 +76,7 @@ def check_chatur_agent_translation_response(content: str) -> None:
     ], "`translated_text` key must not be empty."
 
 
-def extract_otp(message: str) -> str:
+def extract_otp(*, message: str) -> str:
     """Look for a 6-digit number in the message, not preceded or followed by
     another digit.
 
@@ -621,6 +622,21 @@ def translation_sandwich(
     async def wrapper(**kwargs: Any) -> ChaturFlowResults:
         """Wrapper function to translate before and after calling the chatur agent.
 
+        The process is as follows:
+
+        1. If `user_query` is provided, then we invoke the LLM to check if translation
+            is required. If required, the LLM call will automatically make the forward
+            translation from Hindi -> English. The translated query populates the
+            `user_query_translated` field in the `chatur_query` object.
+        2. If `user_query` is not provided, then `user_query_translated` is set to
+            `user_query` by default.
+        3. Call the chatur agent and have it do its thing.
+        4. If forward translation was done, then we invoke the LLM to do the backward
+            translation from English -> Hindi. The translated response populates the
+            `summary_for_student_translated` field in the `chatur_agent_response`
+            object.
+        5. We update the cleaned chat history in Redis.
+
         Parameters
         ----------
         kwargs
@@ -634,7 +650,7 @@ def translation_sandwich(
 
         chatur_query = kwargs["chatur_query"]
 
-        # Forward translation (Hindi -> English) if required.
+        # 1.
         if chatur_query.user_query:
             response = await get_acompletion(
                 model=LITELLM_MODEL_CHAT,
@@ -652,14 +668,15 @@ def translation_sandwich(
                 chatur_query.user_query_translated = translation_dict["translated_text"]
             else:
                 chatur_query.user_query_translated = chatur_query.user_query
+        # 2.
         else:
             translation_dict = {"requires_translation": False, "translated_text": None}
             chatur_query.user_query_translated = chatur_query.user_query
 
-        # Call chatur agent.
+        # 3.
         chatur_agent_response = await func(**kwargs)
 
-        # Back translation (English -> Hindi) if required.
+        # 4.
         if translation_dict["requires_translation"]:
             response = await get_acompletion(
                 model=LITELLM_MODEL_CHAT,
@@ -679,6 +696,70 @@ def translation_sandwich(
             translated_text = translation_dict["translated_text"]
             chatur_agent_response.summary_for_student_translated = translated_text
 
+        # 5.
+        await update_cleaned_chat_history(
+            graph_run_output=chatur_agent_response,
+            redis_client=kwargs["request"].app.state.redis,
+            reset_chat_history=kwargs["reset_chat_and_graph_state"],
+            user_message=chatur_query.user_query or chatur_query.otp,
+        )
+
         return chatur_agent_response
 
     return wrapper
+
+
+async def update_cleaned_chat_history(
+    *,
+    graph_run_output: ChaturFlowResults,
+    redis_client: aioredis.Redis,
+    reset_chat_history: bool,
+    user_message: str,
+) -> None:
+    """Update the cleaned chat history between the chatur agent and the student. The
+    cleaned chat history removes unnecessary information such as agent inner thoughts,
+    (raw) last graph run results, etc., and keeps only the relevant information for
+    display and frontend use.
+
+    Parameters
+    ----------
+    graph_run_output
+        The graph run output for the chatur agent.
+    redis_client
+        The Redis client.
+    reset_chat_history
+        Specifies whether to reset the cleaned chat history.
+    user_message
+        The student message to the chatur agent at the start of each call.
+    """
+
+    session_id = graph_run_output.session_id
+
+    logger.info(f"Updating cleaned chat history for session: {session_id}")
+
+    cleaned_chat_cache_key = (
+        f"{REDIS_CACHE_PREFIX_CHAT_CLEANED}_Chatur_Agent_{session_id}"
+    )
+    cleaned_chat_history = []
+    if not reset_chat_history:
+        value = await redis_client.get(cleaned_chat_cache_key)
+        if value is not None:
+            try:
+                cleaned_chat_history = json.loads(value)
+            except json.JSONDecodeError:
+                logger.error(
+                    f"Error encountered while loading cleaned chat history for "
+                    f"session: {session_id}"
+                )
+
+    cleaned_chat_history.append(
+        {
+            "agent": graph_run_output.summary_for_student_translated,
+            "student": user_message,
+            "explanation_for_student_input": graph_run_output.explanation_for_student_input,
+            "last_assistant_call": graph_run_output.last_assistant_call,
+            "next_chat_action": graph_run_output.next_chat_action,
+        }
+    )
+    await redis_client.set(cleaned_chat_cache_key, json.dumps(cleaned_chat_history))
+    logger.success(f"Finished updating cleaned chat history for session!: {session_id}")
