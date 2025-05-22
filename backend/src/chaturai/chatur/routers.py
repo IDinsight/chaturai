@@ -35,6 +35,9 @@ async def chatur_flow(
 ) -> ChaturFlowResults:
     """Chatur flow.
 
+    NB: Do not declare a `_pydantic_models` variable within this function since it is
+    assigned by the `llm_enhanced_validation` decorator.
+
     Parameters
     ----------
     \n\tchatur_query

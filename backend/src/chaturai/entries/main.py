@@ -20,6 +20,7 @@ import os
 import sys
 
 from pathlib import Path
+from typing import Any, Awaitable, Callable
 
 # Third Party Library
 import typer
@@ -30,6 +31,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 from uvicorn_worker import UvicornWorker
 
 # Append the framework path. NB: This is required if this entry point is invoked from
@@ -93,36 +95,8 @@ async def global_validation_error_handler(
     endpoint = getattr(request.scope["route"], "endpoint", None)
 
     if endpoint and getattr(endpoint, "_pydantic_models", False):
-        all_errors = []
-        pydantic_models = getattr(endpoint, "_pydantic_models", None)
-        raw_input = await request.json()
-        if pydantic_models:
-            for pydantic_model in unwrap_union_type(model_union=pydantic_models):
-                try:
-                    pydantic_model(**raw_input)
-                except ValidationError as e:
-                    all_errors.append((pydantic_model.__name__, e.errors()))
-                except Exception as e:  # pylint: disable=W0718
-                    all_errors.append(
-                        (
-                            pydantic_model.__name__,
-                            [
-                                {
-                                    "input": raw_input,
-                                    "loc": ("__exception__",),
-                                    "msg": str(e),
-                                    "type": "runtime_exception",
-                                }
-                            ],
-                        )
-                    )
-
-            logger.error("The following errors were encountered during validation:")
-            for model_name, errors in all_errors:
-                logger.error(f"  → {model_name}:")
-                for err in errors:
-                    logger.error(f"    - {err}")
-
+        all_errors = await revalidate_request(endpoint=endpoint, request=request)
+        if all_errors:
             error_summary = ""  # await explain_with_llm(raw_input, all_errors)
 
             return JSONResponse(
@@ -142,6 +116,60 @@ async def global_validation_error_handler(
         content={"detail": exc.errors()},
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
+
+
+async def revalidate_request(
+    *, endpoint: Callable[..., Awaitable[Any]], request: Request
+) -> list[tuple[str, list[ErrorDetails]]]:
+    """Revalidates the request input against the expected Pydantic model(s).
+
+    Parameters
+    ----------
+    endpoint
+        The FastAPI endpoint function.
+    request
+        The FastAPI request object.
+
+    Returns
+    -------
+    list[tuple[str, list[ErrorDetails]]]
+        A list of tuples containing the model name and the validation errors.
+    """
+
+    all_errors = []
+    pydantic_models = getattr(endpoint, "_pydantic_models", None)
+    if pydantic_models:
+        try:
+            raw_input = await request.json()
+        except Exception:  # pylint: disable=W0718
+            raw_input = {}
+
+        for pydantic_model in unwrap_union_type(model_union=pydantic_models):
+            try:
+                pydantic_model(**raw_input)
+            except ValidationError as e:
+                all_errors.append((pydantic_model.__name__, e.errors()))
+            except Exception as e:  # pylint: disable=W0718
+                all_errors.append(
+                    (
+                        pydantic_model.__name__,
+                        [
+                            {
+                                "input": raw_input,
+                                "loc": ("__exception__",),
+                                "msg": str(e),
+                                "type": "runtime_exception",
+                            }
+                        ],
+                    )
+                )
+
+        logger.error("The following errors were encountered during validation:")
+        for model_name, errors in all_errors:
+            logger.error(f"  → {model_name}:")
+            for err in errors:
+                logger.error(f"    - {err}")
+    return all_errors
 
 
 @cli.command()
