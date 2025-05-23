@@ -123,7 +123,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
     student_intent: Literal["proceed", "revert"]
 
     _default_explanation: str = "No explanation available."
-    _default_first_assistant: str = "registration.register_student"
+    _default_first_assistant: str = Settings._INTERNAL_REGISTER_STUDENT
     docstring_notes = True
     summary_of_last_assistant_call: str | None = None
 
