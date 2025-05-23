@@ -192,7 +192,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         """
 
         match assistant_name:
-            case "registration.register_student":
+            case Settings._INTERNAL_REGISTER_STUDENT:
                 graph_run_results = await register_student(
                     browser=ctx.deps.browser,
                     browser_session_store=ctx.deps.browser_session_store,
@@ -202,7 +202,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
-            case "login.login_student":
+            case Settings._INTERNAL_LOGIN_STUDENT:
                 graph_run_results = await login_student(
                     browser=ctx.deps.browser,
                     browser_session_store=ctx.deps.browser_session_store,
@@ -212,7 +212,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
-            case "profile.complete_profile":
+            case Settings._INTERNAL_PROFILE_COMPLETION:
                 graph_run_results = await complete_profile(
                     browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
@@ -777,11 +777,11 @@ async def load_state(
     match last_assistant_call:
         case None:
             model_class = None
-        case "registration.register_student":
+        case Settings._INTERNAL_REGISTER_STUDENT:
             model_class = RegisterStudentResults
-        case "login.login_student":
+        case Settings._INTERNAL_LOGIN_STUDENT:
             model_class = LoginStudentResults
-        case "profile.complete_profile":
+        case Settings._INTERNAL_PROFILE_COMPLETION:
             model_class = ProfileCompletionResults
         case _:
             raise ValueError(f"Unknown last assistant call: {last_assistant_call}")

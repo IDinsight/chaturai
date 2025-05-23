@@ -20,7 +20,10 @@ class BackendSettings(BaseSettings):
     """Pydantic settings for backend."""
 
     # Internal settings
+    _INTERNAL_LOGIN_STUDENT: str = "login.login_student"
     _INTERNAL_GRAPH_MAPPING: Optional[dict[str, Any]] = None
+    _INTERNAL_PROFILE_COMPLETION: str = "profile.complete_profile"
+    _INTERNAL_REGISTER_STUDENT: str = "registration.register_student"
 
     # Agents
     AGENTS_CHATUR_AGENT: str = "chatur-agent"

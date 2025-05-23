@@ -39,15 +39,18 @@ def create_adjacency_lists() -> tuple[dict[str, list[str]], dict[str, list[str]]
     """
 
     adjacency_list: dict[str, list[str]] = {
-        "registration.register_student": [
-            "registration.register_student",
-            "login.login_student",
+        Settings._INTERNAL_REGISTER_STUDENT: [
+            Settings._INTERNAL_REGISTER_STUDENT,
+            Settings._INTERNAL_LOGIN_STUDENT,
         ],
-        "login.login_student": [
-            "registration.register_student",
-            "profile.complete_profile",
+        Settings._INTERNAL_LOGIN_STUDENT: [
+            Settings._INTERNAL_REGISTER_STUDENT,
+            Settings._INTERNAL_PROFILE_COMPLETION,
         ],
-        "profile.complete_profile": ["login.login_student", "profile.complete_profile"],
+        Settings._INTERNAL_PROFILE_COMPLETION: [
+            Settings._INTERNAL_LOGIN_STUDENT,
+            Settings._INTERNAL_PROFILE_COMPLETION,
+        ],
     }
     reverse_adjacency_list = defaultdict(list)
     for module_path, neighbors in adjacency_list.items():
