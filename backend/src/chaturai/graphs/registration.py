@@ -21,8 +21,8 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import (
+    BaseQuery,
     NextChatAction,
-    RegisterStudentQuery,
     RegisterStudentResults,
     RegistrationCompleteResults,
 )
@@ -69,7 +69,7 @@ class RegisterStudentDeps:
     browser: BrowserType
     browser_session_store: BrowserSessionStore
     redis_client: aioredis.Redis
-    register_student_query: RegisterStudentQuery
+    register_student_query: BaseQuery
     session_id: int | str
 
     candidate_details_url: str = (
@@ -357,7 +357,7 @@ async def register_student(
     *,
     browser: BrowserType,
     browser_session_store: BrowserSessionStore,
-    chatur_query: RegisterStudentQuery,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
     generate_graph_diagram: bool = False,
     redis_client: aioredis.Redis,

@@ -19,9 +19,9 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import (
+    BaseQuery,
     LoginStudentResults,
     NextChatAction,
-    ProfileCompletionQuery,
     ProfileCompletionResults,
 )
 from chaturai.chatur.utils import (
@@ -61,7 +61,7 @@ class ProfileCompletionDeps:
     """This class contains dependencies used by nodes in the profile completion graph."""
 
     browser_session_store: BrowserSessionStore
-    profile_completion_query: ProfileCompletionQuery
+    profile_completion_query: BaseQuery
     redis_client: aioredis.Redis
     session_id: int | str
 
@@ -173,7 +173,7 @@ class CompleteStudentProfile(
 async def complete_profile(
     *,
     browser_session_store: BrowserSessionStore,
-    chatur_query: ProfileCompletionQuery,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
     generate_graph_diagram: bool = False,
     last_graph_run_results: LoginStudentResults | ProfileCompletionResults,

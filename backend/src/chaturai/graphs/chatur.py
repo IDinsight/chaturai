@@ -15,8 +15,8 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import (
+    BaseQuery,
     ChaturFlowResults,
-    ChaturQueryUnion,
     LoginStudentResults,
     NextChatAction,
     ProfileCompletionResults,
@@ -84,7 +84,7 @@ class ChaturDeps:
     browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
-    chatur_query: ChaturQueryUnion
+    chatur_query: BaseQuery
     csm: AsyncChatSessionManager
     redis_client: aioredis.Redis
     session_id: int | str
@@ -556,7 +556,7 @@ async def chatur(
     *,
     browser: BrowserType,
     browser_session_store: BrowserSessionStore,
-    chatur_query: ChaturQueryUnion,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
     generate_graph_diagrams: bool = False,
     redis_client: aioredis.Redis,
@@ -609,7 +609,7 @@ async def chatur(
     """
 
     chatur_query = deepcopy(chatur_query)
-    chatur_query.user_id = f"Chatur_Agent_Graph_{chatur_query.user_id}"
+    chatur_query.user_id = f"{GRAPHS_CHATUR_AGENT}_{chatur_query.user_id}"
 
     # 1.
     await reset_assistants(

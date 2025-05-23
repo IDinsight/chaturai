@@ -752,13 +752,11 @@ async def update_cleaned_chat_history(
                     f"session: {session_id}"
                 )
 
+    cleaned_chat_history.append({"content": user_message, "role": "student"})
     cleaned_chat_history.append(
         {
-            "agent": graph_run_output.summary_for_student_translated,
-            "student": user_message,
-            "explanation_for_student_input": graph_run_output.explanation_for_student_input,
-            "last_assistant_call": graph_run_output.last_assistant_call,
-            "next_chat_action": graph_run_output.next_chat_action,
+            "content": graph_run_output.summary_for_student_translated,
+            "role": "assistant",
         }
     )
     await redis_client.set(cleaned_chat_cache_key, json.dumps(cleaned_chat_history))

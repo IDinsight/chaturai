@@ -21,11 +21,7 @@ from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import (
-    LoginStudentQuery,
-    LoginStudentResults,
-    NextChatAction,
-)
+from chaturai.chatur.schemas import BaseQuery, LoginStudentResults, NextChatAction
 from chaturai.chatur.utils import (
     fill_login_email,
     persist_browser_and_page,
@@ -61,7 +57,7 @@ class LoginStudentDeps:
 
     browser: BrowserType
     browser_session_store: BrowserSessionStore
-    login_student_query: LoginStudentQuery
+    login_student_query: BaseQuery
     redis_client: aioredis.Redis
     session_id: int | str
 
@@ -212,7 +208,7 @@ async def login_student(
     *,
     browser: BrowserType,
     browser_session_store: BrowserSessionStore,
-    chatur_query: LoginStudentQuery,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
     generate_graph_diagram: bool = False,
     redis_client: aioredis.Redis,
