@@ -38,7 +38,18 @@ class BaseQuery(BaseModel):
     """Pydantic model for base queries, serving as a discriminator."""
 
     email: EmailStr
+    father_name: Optional[str] = Field(None, description="Father's name")
+    is_iti_student: Optional[bool] = False
+    is_new_student: Optional[bool] = None
+    mobile_number: Optional[str] = Field(
+        None, description="10-digit Indian mobile number; accepts optional +91 prefix"
+    )
+    mother_name: Optional[str] = Field(None, description="Mother's name")
     otp: Optional[str] = Field(None, description="6-digit OTP sent to the student")
+    roll_number: Optional[str] = Field(
+        None,
+        description="At least 13-digit roll number; required if is_iti_student=True",
+    )
     user_query: Optional[str] = Field(None, description="The student's message")
     user_query_translated: SkipJsonSchema[str | None] = Field(
         None, description="Translated student message"
@@ -62,38 +73,14 @@ class BaseQuery(BaseModel):
         if self.otp and not (self.otp.isdigit() and len(self.otp) == 6):
             raise ValueError(f"OTP must be exactly 6 digits: {self.otp}")
 
-
-class LoginStudentQuery(BaseQuery):
-    """Pydantic model for validating student login queries."""
-
-
-class ProfileCompletionQuery(BaseQuery):
-    """Pydantic model for validating profile completion queries."""
-
-    father_name: str
-    mother_name: str
-
-
-class RegisterStudentQuery(BaseQuery):
-    """Pydantic model for validating student registration queries."""
-
-    is_iti_student: bool = False
-    is_new_student: bool
-    mobile_number: str = Field(
-        ..., description="10-digit Indian mobile number; accepts optional +91 prefix"
-    )
-    roll_number: Optional[str] = Field(
-        None,
-        description="At least 13-digit roll number; required if is_iti_student=True",
-    )
-
     @field_validator("mobile_number")
     @classmethod
-    def validate_mobile_number(cls, v: str) -> str:
+    def validate_mobile_number(cls, v: Optional[str]) -> Optional[str]:
         """Validate the mobile number as follows:
 
         1. Remove leading plus sign if present.
-        2. If it starts with country code '91' and is longer than 10 digits, strip it off.
+        2. If it starts with country code '91' and is longer than 10 digits, strip it
+            off.
         3. Ensure the number is exactly 10 digits.
         4. Ensure the number starts with 6, 7, 8, or 9.
 
@@ -104,14 +91,17 @@ class RegisterStudentQuery(BaseQuery):
 
         Returns
         -------
-        str
-            The validated mobile number.
+        Optional[str]
+            The validated mobile number or None.
 
         Raises
         ------
         ValueError
             If the mobile number is not valid.
         """
+
+        if v is None:
+            return v
 
         # 1.
         pattern = r"^(?:\+?91\s*)?([1-9](?:\d\s*){9})$"
@@ -165,9 +155,6 @@ class RegisterStudentQuery(BaseQuery):
         return v
 
 
-ChaturQueryUnion = ProfileCompletionQuery | RegisterStudentQuery | LoginStudentQuery
-
-
 # Graph run results.
 class ChaturFlowResults(BaseModel):
     """Pydantic model for validating chatur flow results."""
@@ -177,6 +164,7 @@ class ChaturFlowResults(BaseModel):
     last_graph_run_results: Optional[Any] = None
     next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
     require_student_input: bool
+    session_id: int | str
     summary_for_student: str
     summary_for_student_translated: str
     user_id: str

@@ -20,13 +20,28 @@ class BackendSettings(BaseSettings):
     """Pydantic settings for backend."""
 
     # Internal settings
+    _INTERNAL_LOGIN_STUDENT: str = "login.login_student"
     _INTERNAL_GRAPH_MAPPING: Optional[dict[str, Any]] = None
+    _INTERNAL_PROFILE_COMPLETION: str = "profile.complete_profile"
+    _INTERNAL_REGISTER_STUDENT: str = "registration.register_student"
+
+    # Agents
+    AGENTS_CHATUR_AGENT: str = "chatur-agent"
+    AGENTS_LOGIN_STUDENT: str = "login-student-agent"
+    AGENTS_PROFILE_COMPLETION: str = "profile-completion-agent"
+    AGENTS_REGISTER_STUDENT: str = "register-student-agent"
 
     # Chat
     CHAT_ENV: str = "dev"
 
     # FastAPI
     FASTAPI_API_KEY: str
+
+    # Graphs
+    GRAPHS_CHATUR_AGENT: str = "Chatur_Agent_Graph"
+    GRAPHS_LOGIN_STUDENT: str = "Login_Student_Graph"
+    GRAPHS_PROFILE_COMPLETION: str = "Profile_Completion_Graph"
+    GRAPHS_REGISTER_STUDENT: str = "Register_Student_Graph"
 
     # LiteLLM
     LITELLM_API_KEY: str = os.getenv("LITELLM_API_KEY", "dummy-key")
@@ -54,9 +69,6 @@ class BackendSettings(BaseSettings):
     # OpenAI #
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
-    # Paths
-    PATHS_BACKEND_ROOT: str = ""
-
     # Playwright
     PLAYWRIGHT_HEADLESS: bool = False
     PLAYWRIGHT_PAGE_TTL: int = 600
@@ -82,8 +94,23 @@ class BackendSettings(BaseSettings):
         "REDIS_CACHE_PREFIX_BROWSER_STATE", "browser_state"
     )
     REDIS_CACHE_PREFIX_CHAT: str = os.getenv("REDIS_CACHE_PREFIX_CHAT", "chat_sessions")
+    REDIS_CACHE_PREFIX_CHAT_CLEANED: str = os.getenv(
+        "REDIS_CACHE_PREFIX_CHAT_CLEANED", "chat_sessions_cleaned"
+    )
     REDIS_CACHE_PREFIX_GRAPH_CHATUR: str = os.getenv(
         "REDIS_CACHE_PREFIX_GRAPH_CHATUR", "graph_chatur"
+    )
+    REDIS_CACHE_PREFIX_CHATUR_AGENT: str = (
+        f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Chatur_Agent"
+    )
+    REDIS_CACHE_PREFIX_LOGIN_STUDENT: str = (
+        f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Login_Student"
+    )
+    REDIS_CACHE_PREFIX_PROFILE_COMPLETION: str = (
+        f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Profile_Completion"
+    )
+    REDIS_CACHE_PREFIX_REGISTER_STUDENT: str = (
+        f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Register_Student"
     )
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis://localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))

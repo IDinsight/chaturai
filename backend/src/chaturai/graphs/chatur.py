@@ -15,8 +15,8 @@ from redis import asyncio as aioredis
 
 # Package Library
 from chaturai.chatur.schemas import (
+    BaseQuery,
     ChaturFlowResults,
-    ChaturQueryUnion,
     LoginStudentResults,
     NextChatAction,
     ProfileCompletionResults,
@@ -50,8 +50,19 @@ from chaturai.utils.chat import (
 from chaturai.utils.general import telemetry_timer
 from chaturai.utils.litellm_ import get_acompletion
 
+AGENTS_CHATUR_AGENT = Settings.AGENTS_CHATUR_AGENT
+AGENTS_LOGIN_STUDENT = Settings.AGENTS_LOGIN_STUDENT
+AGENTS_PROFILE_COMPLETION = Settings.AGENTS_PROFILE_COMPLETION
+AGENTS_REGISTER_STUDENT = Settings.AGENTS_REGISTER_STUDENT
+GRAPHS_CHATUR_AGENT = Settings.GRAPHS_CHATUR_AGENT
+GRAPHS_LOGIN_STUDENT = Settings.GRAPHS_LOGIN_STUDENT
+GRAPHS_PROFILE_COMPLETION = Settings.GRAPHS_PROFILE_COMPLETION
+GRAPHS_REGISTER_STUDENT = Settings.GRAPHS_REGISTER_STUDENT
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
-REDIS_CACHE_PREFIX_GRAPH_CHATUR = Settings.REDIS_CACHE_PREFIX_GRAPH_CHATUR
+REDIS_CACHE_PREFIX_CHATUR_AGENT = Settings.REDIS_CACHE_PREFIX_CHATUR_AGENT
+REDIS_CACHE_PREFIX_LOGIN_STUDENT = Settings.REDIS_CACHE_PREFIX_LOGIN_STUDENT
+REDIS_CACHE_PREFIX_PROFILE_COMPLETION = Settings.REDIS_CACHE_PREFIX_PROFILE_COMPLETION
+REDIS_CACHE_PREFIX_REGISTER_STUDENT = Settings.REDIS_CACHE_PREFIX_REGISTER_STUDENT
 TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 
@@ -60,18 +71,9 @@ TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
 class ChaturState:
     """The state tracks the progress of the Chatur graph."""
 
-    session_id: int | str
-
-    chatur_queries: list[ChaturQueryUnion] = field(default_factory=list)
     last_assistant_call: str | None = None
     last_graph_run_results: Any = None
-    last_graph_run_results_cache_key: str | None = None
     next_chat_action: NextChatAction = NextChatAction.REQUEST_USER_QUERY
-
-    def __post_init__(self) -> None:
-        """Post-initialization processes."""
-
-        self.last_graph_run_results_cache_key = f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_last_graph_run_results_{self.session_id}"
 
 
 @dataclass
@@ -82,9 +84,10 @@ class ChaturDeps:
     browser_session_store: BrowserSessionStore
     chat_history: list[dict[str, str | None]]
     chat_params: dict[str, Any]
-    chatur_query: ChaturQueryUnion
+    chatur_query: BaseQuery
     csm: AsyncChatSessionManager
     redis_client: aioredis.Redis
+    session_id: int | str
 
     inner_thought_template: str = """-- MY OWN INNER THOUGHT START --
 
@@ -93,6 +96,7 @@ class ChaturDeps:
 -- MY OWN INNER THOUGHT END --
         """
     generate_graph_diagrams: bool = False
+    last_graph_run_results_cache_key: str | None = None
     reset_chat_session: bool = False
     role_labels: dict[str, str] = field(
         default_factory=lambda: {
@@ -102,6 +106,11 @@ class ChaturDeps:
             "user": "Student",
         }
     )
+
+    def __post_init__(self) -> None:
+        """Post-initialization processes."""
+
+        self.last_graph_run_results_cache_key = f"{REDIS_CACHE_PREFIX_CHATUR_AGENT}_last_graph_run_results_{self.session_id}"
 
 
 @dataclass
@@ -114,7 +123,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
     student_intent: Literal["proceed", "revert"]
 
     _default_explanation: str = "No explanation available."
-    _default_first_assistant: str = "registration.register_student"
+    _default_first_assistant: str = Settings._INTERNAL_REGISTER_STUDENT
     docstring_notes = True
     summary_of_last_assistant_call: str | None = None
 
@@ -183,35 +192,31 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         """
 
         match assistant_name:
-            case "registration.register_student":
+            case Settings._INTERNAL_REGISTER_STUDENT:
                 graph_run_results = await register_student(
                     browser=ctx.deps.browser,
                     browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
-                    explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
-            case "login.login_student":
+            case Settings._INTERNAL_LOGIN_STUDENT:
                 graph_run_results = await login_student(
                     browser=ctx.deps.browser,
                     browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
-                    explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
                     redis_client=ctx.deps.redis_client,
                     reset_chat_session=ctx.deps.reset_chat_session,
                 )
-            case "profile.complete_profile":
+            case Settings._INTERNAL_PROFILE_COMPLETION:
                 graph_run_results = await complete_profile(
-                    browser=ctx.deps.browser,
                     browser_session_store=ctx.deps.browser_session_store,
                     chatur_query=ctx.deps.chatur_query,
                     csm=ctx.deps.csm,
-                    explanation_for_call=explanation_for_assistant_call,
                     generate_graph_diagram=ctx.deps.generate_graph_diagrams,
                     last_graph_run_results=ctx.state.last_graph_run_results,
                     redis_client=ctx.deps.redis_client,
@@ -288,7 +293,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
             message=message,
             remove_json_strs=True,
             role="user",
-            session_id=ctx.state.session_id,
+            session_id=ctx.deps.session_id,
             validator_call=ValidatorCall(num_retries=3, validator_module=json.loads),
         )
         json_response = json.loads(content)
@@ -296,13 +301,13 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         log_chat_history(
             chat_history=ctx.deps.chat_history,
             context="Chatur Agent: after determining next step",
-            session_id=ctx.state.session_id,
+            session_id=ctx.deps.session_id,
         )
 
         await ctx.deps.csm.update_chat_history(
-            chat_history=ctx.deps.chat_history, session_id=ctx.state.session_id
+            chat_history=ctx.deps.chat_history, session_id=ctx.deps.session_id
         )
-        await ctx.deps.csm.dump_chat_session_to_file(session_id=ctx.state.session_id)
+        await ctx.deps.csm.dump_chat_session_to_file(session_id=ctx.deps.session_id)
 
         next_step = json_response["next_step"]
         assistant_name = next_step.get("assistant_name", None)
@@ -354,7 +359,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
             ),
             model=ctx.deps.chat_params["model"],
             model_context_length=ctx.deps.chat_params["max_input_tokens"],
-            name=ctx.state.session_id,
+            name=ctx.deps.session_id,
             role="assistant",
             total_tokens_for_next_generation=ctx.deps.chat_params["max_output_tokens"],
         )
@@ -362,7 +367,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         log_chat_history(
             chat_history=ctx.deps.chat_history,
             context="Chatur Agent: after process summary",
-            session_id=ctx.state.session_id,
+            session_id=ctx.deps.session_id,
         )
 
     async def run(self, ctx: GraphRunContext[ChaturState, ChaturDeps]) -> Annotated[
@@ -443,7 +448,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
         # 5.
         await save_graph_run_results(
             graph_run_results=ctx.state.last_graph_run_results,
-            redis_cache_key=ctx.state.last_graph_run_results_cache_key,
+            redis_cache_key=ctx.deps.last_graph_run_results_cache_key,
             redis_client=ctx.deps.redis_client,
         )
 
@@ -467,6 +472,7 @@ class SelectStudentOrAssistant(BaseNode[ChaturState, ChaturDeps, ChaturFlowResul
                 last_assistant_call=ctx.state.last_assistant_call,
                 last_graph_run_results=ctx.state.last_graph_run_results,
                 require_student_input=True,  # Always True for now
+                session_id=ctx.deps.session_id,
                 summary_for_student=summary_for_student,
                 summary_for_student_translated=summary_for_student,
                 user_id=ctx.deps.chatur_query.user_id,
@@ -514,11 +520,11 @@ class DetermineStudentIntent(BaseNode[ChaturState, ChaturDeps, dict[str, Any]]):
                 student_intent="proceed",
             )
 
-        chat_history = deepcopy(chat_history)
+        chat_history = deepcopy(chat_history[1:])  # Don't copy system message
         chat_history.append(
             {
                 "content": ctx.deps.chatur_query.user_query_translated,
-                "name": str(ctx.state.session_id),
+                "name": str(ctx.deps.session_id),
                 "role": "user",
             }
         )
@@ -550,7 +556,7 @@ async def chatur(
     *,
     browser: BrowserType,
     browser_session_store: BrowserSessionStore,
-    chatur_query: ChaturQueryUnion,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
     generate_graph_diagrams: bool = False,
     redis_client: aioredis.Redis,
@@ -560,16 +566,20 @@ async def chatur(
 
     The process is as follows:
 
-    1. Initialize the chat history, chat parameters, and the session ID for the agent.
-    2. Create the agent graph.
-    3. Generate the graph diagram (optional).
-    4. Set graph dependencies.
-    5. Set graph persistence.
-    6. Load the appropriate graph state.
-    7. Execute the graph until completion.
-    8. Update the chat history for the agent.
-    9. Save the graph snapshot to Redis.
-    10. Log the agent chat history at the end of each step (just for debugging
+    1. Reset the chat session and graph state for all assistants if specified. This has
+        to be done by the main chatur agent graph since this graph is the primary entry
+        point for the other graphs. Otherwise, the other graphs cannot reset their chat
+        sessions and graph state for subsequent calls.
+    2. Initialize the chat history, chat parameters, and the session ID for the agent.
+    3. Create the agent graph.
+    4. Generate the graph diagram (optional).
+    5. Set graph dependencies.
+    6. Set graph persistence.
+    7. Load the appropriate graph state.
+    8. Execute the graph until completion.
+    9. Update the chat history for the agent.
+    10. Save the graph snapshot to Redis.
+    11. Log the agent chat history at the end of each step (just for debugging
         purposes).
 
     Parameters
@@ -599,12 +609,21 @@ async def chatur(
     """
 
     chatur_query = deepcopy(chatur_query)
-    chatur_query.user_id = f"Chatur_Agent_Graph_{chatur_query.user_id}"
+    chatur_query.user_id = f"{GRAPHS_CHATUR_AGENT}_{chatur_query.user_id}"
 
     # 1.
+    await reset_assistants(
+        chatur_query_user_id=chatur_query.user_id,
+        csm=csm,
+        redis_client=redis_client,
+        reset_chat_and_graph_state=reset_chat_and_graph_state,
+    )
+
+    # 2.
+    chat_namespace = AGENTS_CHATUR_AGENT
     chat_history, chat_params, session_id = await csm.init_chat_session(
         model_name="chat",
-        namespace="chatur-agent",
+        namespace=chat_namespace,
         reset_chat_session=reset_chat_and_graph_state,
         system_message=ChaturPrompts.system_messages["chatur_agent"],
         text_generation_params=TEXT_GENERATION_BEDROCK,
@@ -612,19 +631,19 @@ async def chatur(
         user_id=chatur_query.user_id,
     )
 
-    # 2.
+    # 3.
     graph = Graph(
         auto_instrument=True,
-        name="Chatur_Agent_Graph",
+        name=GRAPHS_CHATUR_AGENT,
         nodes=[DetermineStudentIntent, SelectStudentOrAssistant],
         state_type=ChaturState,
     )
 
-    # 3.
+    # 4.
     if generate_graph_diagrams:
         save_graph_diagram(graph=graph)
 
-    # 4.
+    # 5.
     deps = ChaturDeps(
         browser=browser,
         browser_session_store=browser_session_store,
@@ -635,35 +654,36 @@ async def chatur(
         generate_graph_diagrams=generate_graph_diagrams,
         redis_client=redis_client,
         reset_chat_session=reset_chat_and_graph_state,
+        session_id=session_id,
     )
 
-    # 5.
+    # 6.
     fsp = FullStatePersistence(deep_copy=True)
     fsp.set_graph_types(graph)
 
-    # 6.
+    # 7.
     redis_cache_key, state = await load_state(
-        chatur_query=chatur_query,
+        last_graph_run_results_cache_key=deps.last_graph_run_results_cache_key,
         persistence=fsp,
         redis_client=redis_client,
         reset_state=reset_chat_and_graph_state,
         session_id=session_id,
     )
 
-    # 7.
+    # 8.
     graph_run_results = await graph.run(
         DetermineStudentIntent(), deps=deps, persistence=fsp, state=state
     )
 
-    # 8.
+    # 9.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
-    # 9.
+    # 10.
     snapshot_json = fsp.dump_json()
     await redis_client.set(redis_cache_key, snapshot_json)
 
-    # 10.
+    # 11.
     log_chat_history(
         chat_history=chat_history,
         context="Chatur Agent: END",
@@ -675,7 +695,7 @@ async def chatur(
 
 async def load_state(
     *,
-    chatur_query: ChaturQueryUnion,
+    last_graph_run_results_cache_key: str | None,
     persistence: FullStatePersistence,
     redis_client: aioredis.Redis,
     reset_state: bool,
@@ -693,8 +713,7 @@ async def load_state(
 
     Otherwise,
 
-    3. We append the latest query object to the list.
-    4. We pull any changes to graph run results made by the frontend from Redis. Note
+    3. We pull any changes to graph run results made by the frontend from Redis. Note
         that we only pull changes for the last graph run results since the frontend
         should never see more than one set of results at a time.
 
@@ -707,8 +726,8 @@ async def load_state(
 
     Parameters
     ----------
-    chatur_query
-        The query object.
+    last_graph_run_results_cache_key
+        The Redis cache key for the last graph run results.
     persistence
         The persistence object for the graph.
     redis_client
@@ -729,7 +748,7 @@ async def load_state(
         If the last assistant call is unknown.
     """
 
-    redis_cache_key = f"{REDIS_CACHE_PREFIX_GRAPH_CHATUR}_Chatur_Agent_{session_id}"
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_CHATUR_AGENT}_{session_id}"
     state = None
 
     # 1.
@@ -743,31 +762,26 @@ async def load_state(
     # 2.
     if reset_state or not agent_cache_exists:
         if state is not None:
+            assert last_graph_run_results_cache_key
             await redis_client.delete(redis_cache_key)
             await redis_client.delete(state.last_graph_run_results_cache_key)
-        return redis_cache_key, ChaturState(
-            chatur_queries=[chatur_query], session_id=session_id
-        )
+        return redis_cache_key, ChaturState()
 
+    assert last_graph_run_results_cache_key
     assert state is not None
 
     # 3.
-    state.chatur_queries.append(chatur_query)
-
-    # 4.
-    last_graph_run_results = await redis_client.get(
-        state.last_graph_run_results_cache_key
-    )
+    last_graph_run_results = await redis_client.get(last_graph_run_results_cache_key)
     last_graph_run_results = json.loads(last_graph_run_results)
     last_assistant_call = state.last_assistant_call
     match last_assistant_call:
         case None:
             model_class = None
-        case "registration.register_student":
+        case Settings._INTERNAL_REGISTER_STUDENT:
             model_class = RegisterStudentResults
-        case "login.login_student":
+        case Settings._INTERNAL_LOGIN_STUDENT:
             model_class = LoginStudentResults
-        case "profile.complete_profile":
+        case Settings._INTERNAL_PROFILE_COMPLETION:
             model_class = ProfileCompletionResults
         case _:
             raise ValueError(f"Unknown last assistant call: {last_assistant_call}")
@@ -778,3 +792,54 @@ async def load_state(
         )
 
     return redis_cache_key, state
+
+
+async def reset_assistants(
+    *,
+    chatur_query_user_id: str,
+    csm: AsyncChatSessionManager,
+    redis_client: aioredis.Redis,
+    reset_chat_and_graph_state: bool,
+) -> None:
+    """Reset the chat session and graph state for all assistants.
+
+    Parameters
+    ----------
+    chatur_query_user_id
+        The user ID for the chatur query.
+    csm
+        An async chat session manager that manages the chat sessions for each user.
+    redis_client
+        The Redis client.
+    reset_chat_and_graph_state
+        Specifies whether to reset the chat session and the graph state for the user.
+         This can be used to clear the chat history and graph state, effectively
+         starting a completely new session. This is useful for testing or debugging
+         purposes.
+    """
+
+    if not reset_chat_and_graph_state:
+        return
+
+    for namespace, user_id_prefix, redis_cache_key_prefix in [
+        (
+            AGENTS_REGISTER_STUDENT,
+            GRAPHS_REGISTER_STUDENT,
+            REDIS_CACHE_PREFIX_REGISTER_STUDENT,
+        ),
+        (AGENTS_LOGIN_STUDENT, GRAPHS_LOGIN_STUDENT, REDIS_CACHE_PREFIX_LOGIN_STUDENT),
+        (
+            AGENTS_PROFILE_COMPLETION,
+            GRAPHS_PROFILE_COMPLETION,
+            REDIS_CACHE_PREFIX_PROFILE_COMPLETION,
+        ),
+    ]:
+        chat_session_exists, session_id = await csm.check_if_chat_session_exists(
+            namespace=namespace,
+            signed=True,
+            user_id=f"{user_id_prefix}_{chatur_query_user_id}",
+        )
+        if chat_session_exists:
+            await redis_client.delete(csm.get_redis_key(session_id=session_id))
+            redis_cache_key = f"{redis_cache_key_prefix}_{session_id}"
+            await redis_client.delete(redis_cache_key)

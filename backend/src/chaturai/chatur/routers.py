@@ -8,10 +8,11 @@ from fastapi.requests import Request
 
 # Package Library
 from chaturai.auth.utils import get_api_key
-from chaturai.chatur.schemas import ChaturFlowResults, ChaturQueryUnion
+from chaturai.chatur.schemas import BaseQuery, ChaturFlowResults
 from chaturai.chatur.utils import translation_sandwich
 from chaturai.graphs.chatur import chatur
 from chaturai.utils.chat import AsyncChatSessionManager, get_chat_session_manager
+from chaturai.utils.general import llm_enhanced_validation
 
 TAG_METADATA = {
     "description": "_Requires API key._ Chatur automation flow",
@@ -20,18 +21,22 @@ TAG_METADATA = {
 router = APIRouter(tags=[TAG_METADATA["name"]])
 
 
+@llm_enhanced_validation(pydantic_models=BaseQuery)
 @router.post("/chatur-flow", response_model=ChaturFlowResults)
 @logfire.instrument("Running Chatur flow endpoint...")
 @translation_sandwich
 async def chatur_flow(
-    chatur_query: ChaturQueryUnion,
+    chatur_query: BaseQuery,
     request: Request,
-    api_key: str = Depends(get_api_key),
+    api_key: str = Depends(get_api_key),  # pylint: disable=W0613
     csm: AsyncChatSessionManager = Depends(get_chat_session_manager),
     generate_graph_diagrams: bool = False,
     reset_chat_and_graph_state: bool = False,
 ) -> ChaturFlowResults:
     """Chatur flow.
+
+    NB: Do not declare a `_pydantic_models` variable within this function since it is
+    assigned by the `llm_enhanced_validation` decorator.
 
     Parameters
     ----------

@@ -20,16 +20,67 @@ import sys
 import time
 
 from pathlib import Path
-from typing import Any, Awaitable, Callable, NoReturn, ParamSpec, TypeVar
+from types import UnionType
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    NoReturn,
+    ParamSpec,
+    Protocol,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 # Third Party Library
 from loguru import logger
+from pydantic import BaseModel
 
 # Package Library
 from chaturai.schemas import Valid
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+
+class LLMEnhancedHandler(Protocol):
+    """Protocol for FastAPI route handlers that are enhanced with LLM-based validation
+    error explanations.
+
+    This protocol is used to inform type checkers (like mypy) that a given route
+    handler function has been annotated with additional attributes:
+
+    Attributes
+    ----------
+    _pydantic_models
+        The Pydantic model (or union of models) that should be used to validate the
+        incoming raw request data if validation fails. This model will be used in place
+        of FastAPI’s automatic validation to produce more contextually enriched error
+        summaries.
+    """
+
+    _pydantic_models: Type[BaseModel] | UnionType | tuple[Type[BaseModel], ...]
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[Any]:
+        """Called when the route handler is invoked by FastAPI.
+
+        This method represents the async signature of a FastAPI-compatible endpoint.
+        Parameters passed depend on the route's declared dependencies and inputs.
+
+        Parameters
+        ----------
+        args
+            Additional positional arguments.
+        kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        Awaitable[Any]
+            The result of the async function, which is typically a FastAPI response.
+        """
 
 
 def cleanup(  # type: ignore
@@ -195,6 +246,50 @@ def is_uppercase_letter(*, s: str) -> bool:
     """
 
     return len(s) == 1 and s.isalpha() and s.isupper()
+
+
+def llm_enhanced_validation(
+    *, pydantic_models: Type[BaseModel] | UnionType | tuple[Type[BaseModel], ...]
+) -> Callable[[Callable[..., Awaitable[Any]]], LLMEnhancedHandler]:
+    """Decorator to enable enhanced validation error handling using an LLM.
+
+    This decorator marks the route handler as eligible for LLM-based validation
+    explanations. It attaches metadata to the handler function so that the global
+    exception handler can detect it and revalidate the raw input against the supplied
+    Pydantic model or model union.
+
+    Parameters
+    ----------
+    pydantic_models
+        A Pydantic model class or a union of model classes using either `A | B | C`,
+        `Union[A, B, C]`, or a tuple of models.
+
+    Returns
+    -------
+    Callable[[Callable[..., Awaitable[Any]]], LLMEnhancedHandler]
+        The decorated async route handler function.
+    """
+
+    def wrapper(func: Callable[..., Awaitable[Any]]) -> LLMEnhancedHandler:
+        """Wrapper function to attach metadata to the route handler.
+
+        Parameters
+        ----------
+        func
+            The async route handler function to be decorated.
+
+        Returns
+        -------
+        LLMEnhancedHandler
+            The decorated async route handler function with metadata attached.
+        """
+
+        func = cast(LLMEnhancedHandler, func)
+        func._pydantic_models = pydantic_models
+
+        return func
+
+    return wrapper
 
 
 def make_dir(dir_: str | Path, verbose: bool = True) -> None:
@@ -422,6 +517,32 @@ def telemetry_timer(
         return wrapper
 
     return decorator
+
+
+def unwrap_union_type(*, model_union: Any) -> tuple[type[BaseModel], ...]:
+    """Unwrap a union of model types if a union type is passed (e.g. A | B | C) and
+    extract the individual types.
+
+    Parameters
+    ----------
+    model_union
+        The model union to unwrap. This can be a union of model types or a single
+        model type.
+
+    Returns
+    -------
+    tuple[type[BaseModel], ...]
+        A tuple of model types. If a single model type is passed, it will be returned
+        as a tuple with one element.
+    """
+
+    if isinstance(model_union, UnionType):  # Python 3.10+
+        return model_union.__args__
+    if hasattr(model_union, "__origin__") and model_union.__origin__ is Union:
+        return model_union.__args__
+    if isinstance(model_union, tuple):
+        return model_union
+    return (model_union,)
 
 
 def write_to_csv(

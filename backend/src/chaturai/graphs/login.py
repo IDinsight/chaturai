@@ -21,11 +21,7 @@ from pydantic_graph.persistence.in_mem import FullStatePersistence
 from redis import asyncio as aioredis
 
 # Package Library
-from chaturai.chatur.schemas import (
-    LoginStudentQuery,
-    LoginStudentResults,
-    NextChatAction,
-)
+from chaturai.chatur.schemas import BaseQuery, LoginStudentResults, NextChatAction
 from chaturai.chatur.utils import (
     fill_login_email,
     persist_browser_and_page,
@@ -39,9 +35,12 @@ from chaturai.utils.browser import BrowserSessionStore
 from chaturai.utils.chat import AsyncChatSessionManager, log_chat_history
 from chaturai.utils.general import telemetry_timer
 
+AGENTS_LOGIN_STUDENT = Settings.AGENTS_LOGIN_STUDENT
+GRAPHS_LOGIN_STUDENT = Settings.GRAPHS_LOGIN_STUDENT
 LITELLM_MODEL_CHAT = Settings.LITELLM_MODEL_CHAT
 PLAYWRIGHT_HEADLESS = Settings.PLAYWRIGHT_HEADLESS
-TEXT_GENERATION_GEMINI = Settings.TEXT_GENERATION_GEMINI
+REDIS_CACHE_PREFIX_LOGIN_STUDENT = Settings.REDIS_CACHE_PREFIX_LOGIN_STUDENT
+TEXT_GENERATION_BEDROCK = Settings.TEXT_GENERATION_BEDROCK
 
 
 @dataclass
@@ -49,7 +48,7 @@ class LoginStudentState:
     """The state tracks the progress of the student login graph."""
 
     browser_state: dict[str, Any]
-    session_id: int | str
+    login_results: LoginStudentResults = field(default_factory=dict)
 
 
 @dataclass
@@ -58,21 +57,12 @@ class LoginStudentDeps:
 
     browser: BrowserType
     browser_session_store: BrowserSessionStore
-    chat_history: list[dict[str, str | None]]
-    chat_params: dict[str, Any]
-    explanation_for_call: str
-    login_student_query: LoginStudentQuery
+    login_student_query: BaseQuery
     redis_client: aioredis.Redis
+    session_id: int | str
 
     login_get_otp_url: str = "https://api.apprenticeshipindia.gov.in/auth/login-get-otp"
     login_url: str = "https://www.apprenticeshipindia.gov.in/candidate-login"
-    role_labels: dict[str, str] = field(
-        default_factory=lambda: {
-            "assistant": "Login Student Agent",
-            "system": "System",
-            "user": "Student",
-        }
-    )
 
 
 @dataclass
@@ -86,7 +76,7 @@ class LoginExistingStudent(
     async def run(
         self, ctx: GraphRunContext[LoginStudentState, LoginStudentDeps]
     ) -> Annotated[
-        End[LoginStudentResults],
+        End[dict],
         Edge(
             label="Submit student's email for an OTP activation email on the candidate "
             "portal"
@@ -109,8 +99,8 @@ class LoginExistingStudent(
 
         Returns
         -------
-        End[LoginStudentResults]
-            The results of the graph run.
+        End[dict]
+            The end result of the graph run.
         """
 
         # 1.
@@ -141,12 +131,10 @@ class LoginExistingStudent(
             message = f"Cannot initiate login. {str(e)}"
             next_action = NextChatAction.GO_TO_HELPDESK
 
-        end = End(
-            LoginStudentResults(  # type: ignore
-                next_chat_action=next_action,
-                session_id=ctx.state.session_id,
-                summary_of_page_results=message,
-            )
+        ctx.state.login_results = LoginStudentResults(
+            next_chat_action=next_action,
+            session_id=ctx.deps.session_id,
+            summary_of_page_results=message,
         )
 
         # 4.
@@ -157,10 +145,62 @@ class LoginExistingStudent(
             overwrite_browser_session=False,
             page=page,
             redis_client=ctx.deps.redis_client,
-            session_id=ctx.state.session_id,
+            session_id=ctx.deps.session_id,
         )
 
-        return end  # type: ignore
+        return End({})
+
+
+async def load_state(
+    *,
+    persistence: FullStatePersistence,
+    redis_client: aioredis.Redis,
+    reset_state: bool,
+    session_id: int | str,
+) -> tuple[str, LoginStudentState]:
+    """Load state for the graph.
+
+    The process is as follows:
+
+    1. If a previous state does not exist, then we initialize a new, clean state.
+    2. Otherwise, we load the last state for the graph.
+
+    NB: The Login Student graph currently overwrites its state each time it's executed.
+    However, we leave the option to reload previous states here for future use.
+
+    Parameters
+    ----------
+    persistence
+        The persistence object for the graph.
+    redis_client
+        The Redis client.
+    reset_state
+        Specifies whether to reset the state.
+    session_id
+        The session ID for the graph.
+
+    Returns
+    -------
+    tuple[str, LoginStudentState]
+        The Redis cache key and the state for the graph.
+    """
+
+    browser_state = await load_browser_state(
+        redis_client=redis_client, session_id=session_id
+    )
+    redis_cache_key = f"{REDIS_CACHE_PREFIX_LOGIN_STUDENT}_{session_id}"
+
+    # 1.
+    if reset_state or not await redis_client.exists(redis_cache_key):
+        return redis_cache_key, LoginStudentState(browser_state=browser_state)
+
+    # 2.
+    raw_snapshot = await redis_client.get(redis_cache_key)
+    persistence.load_json(raw_snapshot)
+    snapshot = await persistence.load_all()
+    state = snapshot[-1].state
+
+    return redis_cache_key, state
 
 
 @telemetry_timer(metric_fn=login_agent_hist, unit="s")
@@ -168,9 +208,8 @@ async def login_student(
     *,
     browser: BrowserType,
     browser_session_store: BrowserSessionStore,
-    chatur_query: LoginStudentQuery,
+    chatur_query: BaseQuery,
     csm: AsyncChatSessionManager,
-    explanation_for_call: str = "No explanation provided.",
     generate_graph_diagram: bool = False,
     redis_client: aioredis.Redis,
     reset_chat_session: bool = False,
@@ -233,8 +272,6 @@ async def login_student(
         The query object.
     csm
         An async chat session manager that manages the chat sessions for each user.
-    explanation_for_call
-        An explanation as to why the assistant is being called.
     generate_graph_diagram
         Specifies whether to generate ALL graph diagrams using the Mermaid API (free).
     redis_client
@@ -250,15 +287,15 @@ async def login_student(
 
     assert chatur_query.user_query_translated
     chatur_query = deepcopy(chatur_query)
-    chatur_query.user_id = f"Login_Student_Agent_Graph_{chatur_query.user_id}"
+    chatur_query.user_id = f"{GRAPHS_LOGIN_STUDENT}_{chatur_query.user_id}"
 
     # 1. Initialize the chat history, chat parameters, and the session ID for the agent.
-    chat_history, chat_params, session_id = await csm.init_chat_session(
+    chat_history, _, session_id = await csm.init_chat_session(
         model_name="chat",
-        namespace="login-student-agent",
+        namespace=AGENTS_LOGIN_STUDENT,
         reset_chat_session=reset_chat_session,
         system_message=ChaturPrompts.system_messages["login_student_agent"],
-        text_generation_params=TEXT_GENERATION_GEMINI,
+        text_generation_params=TEXT_GENERATION_BEDROCK,
         topic=None,
         user_id=chatur_query.user_id,
     )
@@ -266,7 +303,7 @@ async def login_student(
     # 2. Create the graph.
     graph = Graph(
         auto_instrument=True,
-        name="Login_Student_Agent_Graph",
+        name=GRAPHS_LOGIN_STUDENT,
         nodes=[LoginExistingStudent],
         state_type=LoginStudentState,
     )
@@ -279,33 +316,35 @@ async def login_student(
     deps = LoginStudentDeps(
         browser=browser,
         browser_session_store=browser_session_store,
-        chat_history=chat_history,
-        chat_params=chat_params,
-        explanation_for_call=explanation_for_call,
         login_student_query=chatur_query,
         redis_client=redis_client,
+        session_id=session_id,
     )
 
     # 5. Set graph persistence.
     fsp = FullStatePersistence(deep_copy=True)
     fsp.set_graph_types(graph)
 
-    # 6. Execute the graph until completion.
-    browser_state = await load_browser_state(
-        redis_client=redis_client, session_id=session_id
-    )
-    graph_run_results = await graph.run(
-        LoginExistingStudent(),
-        deps=deps,
+    # 6. Load the appropriate graph state.
+    redis_cache_key, state = await load_state(
         persistence=fsp,
-        state=LoginStudentState(browser_state=browser_state, session_id=session_id),
+        redis_client=redis_client,
+        reset_state=reset_chat_session,
+        session_id=session_id,
     )
 
-    # 7. Update the chat history for the agent.
+    # 7. Execute the graph until completion.
+    await graph.run(LoginExistingStudent(), deps=deps, persistence=fsp, state=state)
+
+    # 8. Update the chat history.
     await csm.update_chat_history(chat_history=chat_history, session_id=session_id)
     await csm.dump_chat_session_to_file(session_id=session_id)
 
-    # 8. Log the agent chat history at the end of each step (just for debugging
+    # 9. Save the graph snapshot to Redis.
+    snapshot_json = fsp.dump_json()
+    await redis_client.set(redis_cache_key, snapshot_json)
+
+    # 10. Log the agent chat history at the end of each step (just for debugging
     # purposes).
     log_chat_history(
         chat_history=chat_history,
@@ -313,4 +352,4 @@ async def login_student(
         session_id=session_id,
     )
 
-    return graph_run_results.output
+    return state.login_results
